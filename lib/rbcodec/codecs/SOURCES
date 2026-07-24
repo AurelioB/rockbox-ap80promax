@@ -46,6 +46,9 @@ sid.c
 kss.c
 #endif
 aac_bsf.c
+#ifdef HAVE_DSD
+dsd.c
+#endif
 
 #ifdef HAVE_RECORDING
 

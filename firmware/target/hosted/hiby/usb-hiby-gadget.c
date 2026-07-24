@@ -40,10 +40,6 @@
 #include "usb_ch9.h"
 #include "usb-dac-hiby.h"
 
-#ifdef HAVE_GENERAL_PURPOSE_LED
-#include "led-general-purpose.h"
-#endif
-
 #define LOGF_ENABLE
 #include "logf.h"
 #include <stdio.h>
@@ -189,12 +185,14 @@ void hiby_set_usb_mode(int mode) {
         apply_usb_audio();
 }
 
-/* TODO: implement usb detection properly */
+/*
+ * This is the cable-presence contract used by the vendor player and exposed
+ * by the AXP2101 power driver. Reading it must remain side-effect free:
+ * usb_detect() is polled, so driving the status LED here would override the
+ * target LED state machine.
+ */
 int usb_detect(void)
 {
-#ifdef HAVE_GENERAL_PURPOSE_LED
-    led_hw_on();
-#endif
     return power_input_status() == POWER_INPUT_USB_CHARGER ? USB_INSERTED : USB_EXTRACTED;
 }
 

@@ -152,6 +152,11 @@ struct codec_api ci = {
        the API gets incompatible */
     panicf,
 
+#ifdef HAVE_DSD
+    NULL, /* dsd_configure */
+    NULL, /* dsd_write */
+    NULL, /* dsd_close */
+#endif
 };
 
 void codec_get_full_path(char *path, const char *codec_root_fn)

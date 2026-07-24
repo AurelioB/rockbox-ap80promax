@@ -29,6 +29,9 @@
 #include "rbcodecconfig.h"
 #include "metadata.h"
 #include "audio.h"
+#ifdef HAVE_DSD
+#include "dsd.h"
+#endif
 #ifdef RB_PROFILE
 #include "profile.h"
 #include "thread.h"
@@ -79,7 +82,7 @@
  * when this happens please take the opportunity to sort in
  * any new functions "waiting" at the end of the list.
  */
-#define CODEC_API_VERSION 50
+#define CODEC_API_VERSION 51
 
 /* reasons for calling codec main entrypoint */
 enum codec_entry_call_reason {
@@ -224,6 +227,15 @@ struct codec_api {
     /* new stuff at the end, sort into place next time
        the API gets incompatible */
     void (*panicf)(const char *msg, ...);
+
+#ifdef HAVE_DSD
+    /* Input to dsd_write is interleaved, MSB-first stereo DSD:
+     * L0 R0 L1 R1 ... */
+    enum dsd_transport (*dsd_configure)(unsigned int sample_rate,
+                                        unsigned int channels);
+    ssize_t (*dsd_write)(const void *data, size_t size);
+    void (*dsd_close)(bool drain);
+#endif
 };
 
 /* codec header */

@@ -49,6 +49,15 @@ Head and Tail are stored
 #define BMPWIDTH_snake2_header  BMPWIDTH_snake2_header1
 #endif
 
+#if (LCD_WIDTH == 360) && (LCD_HEIGHT > 400)
+#define SNAKE2_LAYOUT_Y \
+    ((LCD_HEIGHT - (BMPHEIGHT_snake2_header + \
+                    BMPHEIGHT_snake2_left + \
+                    BMPHEIGHT_snake2_bottom)) / 2)
+#else
+#define SNAKE2_LAYOUT_Y 0
+#endif
+
 #if (LCD_WIDTH >= 640) && (LCD_HEIGHT >= 480)
     #define MULTIPLIER 20 /*Modifier for porting on other screens*/
     #define MODIFIER_1 20
@@ -66,13 +75,13 @@ Head and Tail are stored
     #define MODIFIER_1 12
     #define MODIFIER_2 10
     #define CENTER_X 12
-    #define CENTER_Y 40
+    #define CENTER_Y (40 + SNAKE2_LAYOUT_Y)
     #define TOP_X1 34  /* x-coord of the upperleft item (game type) */
     #define TOP_X2 320 /* x-coord of the upperright item (maze type) */
     #define TOP_X3 42  /* x-coord of the lowerleft item (speed) */
     #define TOP_X4 314 /* x-coord of the lowerright item (hi-score) */
-    #define TOP_Y1 4   /* y-coord of the top row of items */
-    #define TOP_Y2 25  /* y-coord of the bottom row of items */
+    #define TOP_Y1 (4 + SNAKE2_LAYOUT_Y)   /* top row */
+    #define TOP_Y2 (25 + SNAKE2_LAYOUT_Y)  /* bottom row */
 #elif (LCD_WIDTH >= 320) && (LCD_HEIGHT >= 240)
     #define MULTIPLIER 10 /*Modifier for porting on other screens*/
     #define MODIFIER_1 10
@@ -737,15 +746,19 @@ static void init_snake(void)
     || (LCD_WIDTH >= 128) && (LCD_HEIGHT >= 96) && (LCD_DEPTH >= 16)
 static void draw_frame_bitmap(int header_type)
 {
-    rb->lcd_bitmap(header_type==1? snake2_header1: snake2_header2, 0, 0,
+    rb->lcd_bitmap(header_type==1? snake2_header1: snake2_header2,
+                   0, SNAKE2_LAYOUT_Y,
                    BMPWIDTH_snake2_header, BMPHEIGHT_snake2_header);
-    rb->lcd_bitmap(snake2_left, 0, BMPHEIGHT_snake2_header,
+    rb->lcd_bitmap(snake2_left, 0,
+                   SNAKE2_LAYOUT_Y + BMPHEIGHT_snake2_header,
                    BMPWIDTH_snake2_left, BMPHEIGHT_snake2_left);
     rb->lcd_bitmap(snake2_right,
-                   LCD_WIDTH - BMPWIDTH_snake2_right, BMPHEIGHT_snake2_header,
+                   LCD_WIDTH - BMPWIDTH_snake2_right,
+                   SNAKE2_LAYOUT_Y + BMPHEIGHT_snake2_header,
                    BMPWIDTH_snake2_right, BMPHEIGHT_snake2_right);
     rb->lcd_bitmap(snake2_bottom,
-                   0, BMPHEIGHT_snake2_header + BMPHEIGHT_snake2_left,
+                   0, SNAKE2_LAYOUT_Y + BMPHEIGHT_snake2_header +
+                      BMPHEIGHT_snake2_left,
                    BMPWIDTH_snake2_bottom, BMPHEIGHT_snake2_bottom);
 }
 #endif

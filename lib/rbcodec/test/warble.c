@@ -647,6 +647,32 @@ static void ci_logf(const char *fmt, ...)
 
 static void stub_void_void(void) { }
 
+#ifdef HAVE_DSD
+static enum dsd_transport ci_dsd_configure(unsigned int rate,
+                                           unsigned int channels)
+{
+    if (channels != 2)
+        return DSD_TRANSPORT_ERROR;
+    if (rate / 16 <= 384000)
+        return DSD_TRANSPORT_DOP;
+    if (rate / 32 <= 384000)
+        return DSD_TRANSPORT_NATIVE;
+    return DSD_TRANSPORT_ERROR;
+}
+
+static ssize_t ci_dsd_write(const void *data, size_t size)
+{
+    if (mode == MODE_WRITE)
+        return write(output_fd, data, size);
+    return size;
+}
+
+static void ci_dsd_close(bool drain)
+{
+    (void)drain;
+}
+#endif
+
 static struct codec_api ci = {
 
     0,                   /* filesize */
@@ -719,6 +745,14 @@ static struct codec_api ci = {
     ci_round_value_to_list32,
 
 #endif /* HAVE_RECORDING */
+
+    panicf,
+
+#ifdef HAVE_DSD
+    ci_dsd_configure,
+    ci_dsd_write,
+    ci_dsd_close,
+#endif
 };
 
 static void print_mp3entry(const struct mp3entry *id3, FILE *f)

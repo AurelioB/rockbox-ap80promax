@@ -4226,6 +4226,29 @@ fi
     sysfont="20-Terminus"
     ;;
 
+    302|hidizsap80promax)
+    target_id=125
+    application=yes
+    app_type="hibyos"
+    modelname="hidizsap80promax"
+    target="HIDIZS_AP80_PRO_MAX"
+    memory=16 # Keep headroom for vendor services on the hosted Linux system
+    mipsellinuxcc
+    tool="cp "
+    boottool="cp "
+    bmp2rb_mono="$rootdir/tools/bmp2rb -f 0"
+    bmp2rb_native="$rootdir/tools/bmp2rb -f 4"
+    output="rockbox.ap80promax"
+    bootoutput="bootloader.ap80promax"
+    appextra="recorder:gui:hosted"
+    plugins="yes"
+    t_cpu="hosted"
+    t_manufacturer="hiby"
+    t_model="ap80promax"
+    sysfontbl="24-Terminus"
+    sysfont="20-Terminus"
+    ;;
+
 
    *)
     echo "Please select a supported target platform!"

@@ -576,21 +576,22 @@
 #define LEVEL_Y 142
 #define LINES_Y 218
 
-#elif (LCD_WIDTH == 360) && (LCD_HEIGHT == 400)
+#elif (LCD_WIDTH == 360) && (LCD_HEIGHT >= 400)
 
+#define ROCKBLOX_LAYOUT_Y ((LCD_HEIGHT - 400) / 2)
 #define BLOCK_WIDTH 19
 #define BLOCK_HEIGHT 19
 #define BOARD_X 27
-#define BOARD_Y 0
+#define BOARD_Y ROCKBLOX_LAYOUT_Y
 #define LABEL_X 258
-#define SCORE_Y 40
-#define LEVEL_Y 92
-#define LINES_Y 140
+#define SCORE_Y (40 + ROCKBLOX_LAYOUT_Y)
+#define LEVEL_Y (92 + ROCKBLOX_LAYOUT_Y)
+#define LINES_Y (140 + ROCKBLOX_LAYOUT_Y)
 #define HIGH_LABEL_X   258
-#define HIGH_SCORE_Y   200
-#define HIGH_LEVEL_Y   258
+#define HIGH_SCORE_Y   (200 + ROCKBLOX_LAYOUT_Y)
+#define HIGH_LEVEL_Y   (258 + ROCKBLOX_LAYOUT_Y)
 #define PREVIEW_X 258
-#define PREVIEW_Y 300
+#define PREVIEW_Y (300 + ROCKBLOX_LAYOUT_Y)
 
 #elif (LCD_WIDTH == 320) && (LCD_HEIGHT == 240)
 
@@ -816,7 +817,17 @@
 #define LINES_X LABEL_X
 #endif
 
-extern const fb_data rockblox_background[];
+#include "pluginbitmaps/rockblox_background.h"
+
+static void draw_rockblox_background(void)
+{
+    rb->lcd_clear_display();
+    rb->lcd_bitmap(rockblox_background,
+                   (LCD_WIDTH - BMPWIDTH_rockblox_background) / 2,
+                   (LCD_HEIGHT - BMPHEIGHT_rockblox_background) / 2,
+                   BMPWIDTH_rockblox_background,
+                   BMPHEIGHT_rockblox_background);
+}
 
 #ifndef HIGHSCORE_SPACE
 #define HIGHSCORE_SPACE " "
@@ -1098,7 +1109,7 @@ static void init_rockblox (bool resume)
                  tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
                  tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-    rb->lcd_bitmap (rockblox_background, 0, 0, LCD_WIDTH, LCD_HEIGHT);
+    draw_rockblox_background();
     if (!resume)
     {
         rockblox_status.level = 1;
@@ -1566,7 +1577,7 @@ static int rockblox_loop (void)
             backlight_ignore_timeout();
 
             /* get rid of the splash text */
-            rb->lcd_bitmap (rockblox_background, 0, 0, LCD_WIDTH, LCD_HEIGHT);
+            draw_rockblox_background();
             show_details ();
 #ifdef HIGH_SCORE_Y
             show_highscores ();

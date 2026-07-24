@@ -36,6 +36,7 @@ my $cppdef = $target;
 # These parameters are filled in as we parse wpslist
 my $req_t;
 my $theme;
+my $basetheme;
 my $has_wps;
 my $wps;
 my $has_rwps;
@@ -67,6 +68,10 @@ my $iconset;
 my $remoteiconset;
 my $viewericon;
 my $showicons;
+my $scrollbar;
+my $scrollbarwidth;
+my $batterydisplay;
+my $volumedisplay;
 my $remoteviewericon;
 my $lineselecttextcolor;
 my $filetylecolor;
@@ -178,9 +183,14 @@ sub copythemefont
     #copy the font specified by the theme
     my $o = $_[0];
 
-    $o =~ s/\.fnt/\.bdf/;
     mkdir "$tempdir/fonts";
-    system("$ROOT/tools/convbdf -f -o \"$tempdir/fonts/$_[0]\" \"$ROOT/fonts/$o\" ");
+    if (-f "$ROOT/fonts/$o") {
+        system("cp \"$ROOT/fonts/$o\" \"$tempdir/fonts/$_[0]\"");
+    }
+    else {
+        $o =~ s/\.fnt/\.bdf/;
+        system("$ROOT/tools/convbdf -f -o \"$tempdir/fonts/$_[0]\" \"$ROOT/fonts/$o\" ");
+    }
 }
 
 sub copythemeicon
@@ -208,6 +218,10 @@ sub uniq {
 
 sub copywps
 {
+    # Configuration-only variants can share another theme's installed skins
+    # and bitmap directory without creating duplicate copies.
+    return if defined($basetheme);
+
     # we assume that we copy the WPS files from the same dir the WPSLIST
     # file is located in
     my $dir;
@@ -218,6 +232,7 @@ sub copywps
                      "rsbs", $rsbs,
                      "rfms", $rfms);
     my @filelist;
+    my @fontlist;
     my $file;
 
     if($wpslist =~ /(.*)\/WPSLIST/) {
@@ -231,8 +246,14 @@ sub copywps
             open(SKIN, "$dir/$file");
             while (<SKIN>) {
                 $filelist[$#filelist + 1] = $1 if (/[\(,]([^,]*?.bmp)[\),]/);
+                while (/%Fl\([^,]+,([^)]+\.fnt)\)/g) {
+                    $fontlist[$#fontlist + 1] = $1;
+                }
             }
             close(SKIN);
+        }
+        foreach my $skinfont (uniq(@fontlist)) {
+            copythemefont($skinfont);
         }
 
         if ($#filelist >= 0) {
@@ -277,8 +298,10 @@ MOO
             # empty resets to built-in
             push @out, "$skin: -\n";
         } else {
-            # file name is always <theme>.{wps,rwps,...} (see copywps())
-            push @out, "$skin: $rbdir/wps/$theme.$skin\n";
+            # A base theme shares the exact installed skin and asset files.
+            # Otherwise the filename is <theme>.{wps,rwps,...} (copywps()).
+            my $skintheme = defined($basetheme) ? $basetheme : $theme;
+            push @out, "$skin: $rbdir/wps/$skintheme.$skin\n";
         }
     }
 
@@ -302,6 +325,10 @@ MOO
     push @out, "iconset: $iconset\n"            if (defined($iconset));
     push @out, "viewers iconset: $viewericon\n" if (defined($viewericon));
     push @out, "show icons: $showicons\n"       if (defined($viewericon) && defined($showicons));
+    push @out, "scrollbar: $scrollbar\n"        if (defined($scrollbar));
+    push @out, "scrollbar width: $scrollbarwidth\n" if (defined($scrollbarwidth));
+    push @out, "battery display: $batterydisplay\n" if (defined($batterydisplay));
+    push @out, "volume display: $volumedisplay\n" if (defined($volumedisplay));
     push @out, "ui viewport: $listviewport\n"   if (defined($listviewport));
 
     if ($has_remote) {
@@ -416,6 +443,7 @@ while(<WPS>) {
     if($l =~ /^ *<theme>/i) {
         # undef is a unary operator (!)
         undef $theme;
+        undef $basetheme;
         undef $has_wps;
         undef $has_rwps;
         undef $has_sbs;
@@ -447,6 +475,10 @@ while(<WPS>) {
         undef $remoteiconset;
         undef $viewericon;
         undef $showicons;
+        undef $scrollbar;
+        undef $scrollbarwidth;
+        undef $batterydisplay;
+        undef $volumedisplay;
         undef $remoteviewericon;
         undef $lineselecttextcolor;
         undef $filetylecolor;
@@ -455,6 +487,9 @@ while(<WPS>) {
     }
     elsif($l =~ /^Name: *(.*)/i) {
         $theme = $1;
+    }
+    elsif($l =~ /^Base Theme: *(.*)/i) {
+        $basetheme = $1;
     }
     elsif($l =~ /^Authors: *(.*)/i) {
         $author = $1;
@@ -531,6 +566,18 @@ while(<WPS>) {
             }
             elsif($l =~ /^show icons: *(.*)/i) {
                 $showicons = $1;
+            }
+            elsif($l =~ /^scrollbar: *(.*)/i) {
+                $scrollbar = $1;
+            }
+            elsif($l =~ /^scrollbar width: *(.*)/i) {
+                $scrollbarwidth = $1;
+            }
+            elsif($l =~ /^battery display: *(.*)/i) {
+                $batterydisplay = $1;
+            }
+            elsif($l =~ /^volume display: *(.*)/i) {
+                $volumedisplay = $1;
             }
             elsif($l =~ /^line selector text color: *(.*)/i) {
                 $lineselecttextcolor = $1;

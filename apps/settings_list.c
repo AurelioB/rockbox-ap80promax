@@ -331,7 +331,12 @@ static const char graphic_numeric[] = "graphic,numeric";
 #define DEFAULT_SBSNAME  "-"
 #define DEFAULT_FMS_NAME "cabbiev2"
 
-#if LCD_HEIGHT <= 64
+#if defined(HIDIZS_AP80_PRO_MAX)
+  /* The AP80's 249 dpi portrait panel needs a crisp, touch-friendly default.
+     The generic >=640px rule selects a 35px proportional font. */
+  #define DEFAULT_FONT_HEIGHT 32
+  #define DEFAULT_FONTNAME "32-Terminus"
+#elif LCD_HEIGHT <= 64
   #define DEFAULT_FONT_HEIGHT 8
   #define DEFAULT_FONTNAME "08-Rockfont"
 #elif LCD_HEIGHT <= 80
@@ -408,7 +413,13 @@ static const char graphic_numeric[] = "graphic,numeric";
 #define DEFAULT_THEME_SELECTOR_TEXT LCD_RGBPACK(0x00, 0x00, 0x00)
 #define DEFAULT_THEME_SEPARATOR  LCD_RGBPACK(0x80, 0x80, 0x80)
 
-#define DEFAULT_BACKDROP    BACKDROP_DIR "/cabbiev2.bmp"
+#ifdef HIDIZS_AP80_PRO_MAX
+  /* The AP80 WPS supplies its own backdrop. Avoid looking for a generic
+     full-screen backdrop that does not exist at 360x640. */
+  #define DEFAULT_BACKDROP "-"
+#else
+  #define DEFAULT_BACKDROP BACKDROP_DIR "/cabbiev2.bmp"
+#endif
 
 #ifdef HAVE_RECORDING
 /* these should be in the config.h files */
@@ -1207,10 +1218,17 @@ const struct settings_list settings[] = {
                 "scrollbar width",UNIT_INT, 3, MAX(LCD_WIDTH/10,25), 1,
                 NULL, NULL, NULL),
 #ifdef HAVE_TOUCHSCREEN
+#ifdef HIDIZS_AP80_PRO_MAX
+#define DEFAULT_LIST_LINE_PADDING 16
+#else
+#define DEFAULT_LIST_LINE_PADDING -1
+#endif
     TABLE_SETTING(F_ALLOW_ARBITRARY_VALS, list_line_padding, LANG_LIST_LINE_PADDING,
-                  -1, "list padding", "auto,off", UNIT_PIXEL, list_pad_formatter,
+                  DEFAULT_LIST_LINE_PADDING, "list padding", "auto,off",
+                  UNIT_PIXEL, list_pad_formatter,
                   list_pad_getlang, NULL, 16,
                   -1,0,2,4,6,8,10,12,16,20,24,28,32,38,44,50),
+#undef DEFAULT_LIST_LINE_PADDING
 #endif
 #if LCD_DEPTH > 1
     TABLE_SETTING(F_ALLOW_ARBITRARY_VALS, list_separator_height, LANG_LIST_SEPARATOR,
@@ -1304,8 +1322,11 @@ const struct settings_list settings[] = {
                   true, "accessory power supply", accessory_supply_set),
 #endif
 #ifdef HAVE_LINEOUT_POWEROFF
+#ifndef DEFAULT_LINEOUT_ACTIVE
+#define DEFAULT_LINEOUT_ACTIVE true
+#endif
     OFFON_SETTING(0, lineout_active, LANG_LINEOUT,
-                  true, "lineout", lineout_set),
+                  DEFAULT_LINEOUT_ACTIVE, "lineout", lineout_set),
 #endif
     /* tuner */
 #if CONFIG_TUNER

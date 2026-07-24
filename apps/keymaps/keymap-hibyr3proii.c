@@ -191,6 +191,17 @@ static const struct button_mapping button_context_pitchscreen[] =
     LAST_ITEM_IN_LIST__NEXTLIST(CONTEXT_STD)
 };
 
+#ifdef HAVE_RECORDING
+static const struct button_mapping button_context_recscreen[] =
+{
+    { ACTION_REC_PAUSE,          BUTTON_PLAY|BUTTON_REL,             BUTTON_PLAY },
+    { ACTION_REC_NEWFILE,        BUTTON_NEXT|BUTTON_REL,             BUTTON_NEXT },
+    { ACTION_STD_CANCEL,         BUTTON_POWER|BUTTON_REL,            BUTTON_POWER },
+
+    LAST_ITEM_IN_LIST__NEXTLIST(CONTEXT_SETTINGS),
+};
+#endif
+
 
 static const struct button_mapping button_context_radio[] =
 {
@@ -217,6 +228,9 @@ const struct button_mapping* target_get_context_mapping(int context)
         case CONTEXT_BOOKMARKSCREEN:            { return button_context_bmark; }
         case CONTEXT_QUICKSCREEN:               { return button_context_quickscreen; }
         case CONTEXT_PITCHSCREEN:               { return button_context_pitchscreen; }
+#ifdef HAVE_RECORDING
+        case CONTEXT_RECSCREEN:                  { return button_context_recscreen; }
+#endif
         case CONTEXT_CUSTOM | CONTEXT_SETTINGS:
         case CONTEXT_SETTINGS_RECTRIGGER:       { return button_context_settings_right_is_inc; }
         case CONTEXT_TREE:

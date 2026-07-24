@@ -22,6 +22,13 @@
 
 #include <config.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <sys/types.h>
+
+#ifdef HAVE_DSD
+#include "dsd.h"
+#endif
 
 #if defined(HAVE_ALSA_32BIT)
 
@@ -38,5 +45,16 @@ void pcm_alsa_set_capture_device(const char *device);
 
 unsigned int pcm_alsa_get_rate(void);
 unsigned int pcm_alsa_get_xruns(void);
+
+#ifdef HAVE_DSD
+/* Direct, bit-perfect path used by the DSD codec. Input bytes are normalized
+ * as L0 R0 L1 R1, MSB-first. */
+enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
+                                     unsigned int channels);
+ssize_t pcm_alsa_dsd_write(const void *data, size_t size);
+void pcm_alsa_dsd_pause(bool pause);
+void pcm_alsa_dsd_close(bool drain);
+bool pcm_alsa_dsd_active(void);
+#endif
 
 #endif /* __PCM_ALSA_RB_H__ */

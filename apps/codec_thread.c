@@ -34,6 +34,11 @@
 #include "metadata.h"
 #include "settings.h"
 
+#ifdef HAVE_DSD
+#include "pcm-alsa.h"
+#include "voice_thread.h"
+#endif
+
 /* Define LOGF_ENABLE to enable logf output in this file */
 /*#define LOGF_ENABLE*/
 #include "logf.h"
@@ -361,6 +366,31 @@ static void codec_configure_callback(int setting, intptr_t value)
     dsp_configure(ci.dsp, setting, value);
 }
 
+#ifdef HAVE_DSD
+static enum dsd_transport codec_dsd_configure_callback(
+        unsigned int sample_rate, unsigned int channels)
+{
+    /* DSD cannot share an endpoint with PCM DSP, voice, beeps, or fades. */
+    pcmbuf_play_stop();
+    voice_stop();
+    mixer_reset();
+    return pcm_alsa_dsd_open(sample_rate, channels);
+}
+
+static ssize_t codec_dsd_write_callback(const void *data, size_t size)
+{
+    return pcm_alsa_dsd_write(data, size);
+}
+
+static void codec_dsd_close_callback(bool drain)
+{
+    /* A voice/beep request made during DSD may have armed the PCM core even
+       though the ALSA sink correctly refused to mix it into the bitstream. */
+    mixer_reset();
+    pcm_alsa_dsd_close(drain);
+}
+#endif
+
 static long codec_get_command_callback(intptr_t *param)
 {
     yield();
@@ -391,9 +421,20 @@ static long codec_get_command_callback(intptr_t *param)
 
         case Q_CODEC_PAUSE: /* Stay here and wait */
             LOGFQUEUE("codec < Q_CODEC_PAUSE");
+#ifdef HAVE_DSD
+            if (pcm_alsa_dsd_active())
+                pcm_alsa_dsd_pause(true);
+#endif
             queue_wait(&codec_queue, &ev);  /* Remove message */
             codec_queue_ack(Q_CODEC_PAUSE);
             queue_wait(&codec_queue, NULL); /* Wait for next (no remove) */
+#ifdef HAVE_DSD
+            /* Do not briefly resume buffered DSD when the next request is a
+               seek or stop. Only Q_CODEC_RUN is an explicit resume. */
+            queue_peek(&codec_queue, &ev);
+            if (pcm_alsa_dsd_active() && ev.id == Q_CODEC_RUN)
+                pcm_alsa_dsd_pause(false);
+#endif
             continue;
 
         case Q_CODEC_SEEK:  /* Audio wants codec to seek */
@@ -569,6 +610,10 @@ static void seek_codec(unsigned long time)
 /* Handle Q_CODEC_UNLOAD */
 static void unload_codec(void)
 {
+#ifdef HAVE_DSD
+    if (pcm_alsa_dsd_active())
+        codec_dsd_close_callback(false);
+#endif
     /* Tell codec to clean up */
     codec_type = AFMT_UNKNOWN;
     codec_close();
@@ -655,7 +700,12 @@ void INIT_ATTR codec_thread_init(void)
     ci.configure        = codec_configure_callback;
     ci.get_command      = codec_get_command_callback;
     ci.loop_track       = codec_loop_track_callback;
-    ci.strip_filesize = codec_strip_filesize_callback;
+    ci.strip_filesize   = codec_strip_filesize_callback;
+#ifdef HAVE_DSD
+    ci.dsd_configure    = codec_dsd_configure_callback;
+    ci.dsd_write        = codec_dsd_write_callback;
+    ci.dsd_close        = codec_dsd_close_callback;
+#endif
 
     /* Init threading */
     queue_init(&codec_queue, false);

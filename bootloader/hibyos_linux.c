@@ -126,6 +126,17 @@
 #define BUTTON_LEFT   BUTTON_VOL_DOWN
 #define BUTTON_RIGHT  BUTTON_VOL_UP
 #include "bitmaps/hibyicon.h"
+#elif defined(HIDIZS_AP80_PRO_MAX)
+#define ICON_WIDTH  130
+#define ICON_HEIGHT 130
+#define ICON_NAME bm_hibyicon
+#define OF_NAME "HIBY PLAYER"
+#define BUTTON_UP     BUTTON_PREV
+#define BUTTON_DOWN   BUTTON_NEXT
+#define BUTTON_SELECT BUTTON_PLAY
+#define BUTTON_LEFT   BUTTON_VOL_DOWN
+#define BUTTON_RIGHT  BUTTON_VOL_UP
+#include "bitmaps/hibyicon.h"
 #else
 #error "must define ICON_WIDTH/HEIGHT"
 #endif
@@ -279,7 +290,7 @@ static enum boot_mode get_boot_mode(void)
     while(true)
     {
         /* on usb detect, immediately boot with last choice */
-#if !defined(HIBY_R3PROII) && !defined(HIBY_R1)
+#if !defined(HIBY_R3PROII) && !defined(HIBY_R1) && !defined(HIDIZS_AP80_PRO_MAX)
         if(!adb_running && power_input_status() & POWER_INPUT_USB_CHARGER)
         {
             /* save last choice */
@@ -526,7 +537,7 @@ static void adb(int start)
     pid_t pid = fork();
     if(pid == 0)
     {
-#if defined(HIBY_R3PROII) || defined(HIBY_R1)
+#if defined(HIBY_R3PROII) || defined(HIBY_R1) || defined(HIDIZS_AP80_PRO_MAX)
         execlp("/etc/init.d/T90adb", "T90adb", start ? "start" : "stop", NULL);
 #else
         execlp("/etc/init.d/K90adb", "K90adb", start ? "start" : "stop", NULL);
@@ -694,7 +705,7 @@ int main(int argc, char **argv)
         }
         else if(mode == BOOT_ROCKBOX)
         {
-#if defined(HIBY_R3PROII) || defined(HIBY_R1)
+#if defined(HIBY_R3PROII) || defined(HIBY_R1) || defined(HIDIZS_AP80_PRO_MAX)
             /* Suspend bluetooth as it's not currently supported */
             system("/usr/bin/bt_suspend");
 #endif

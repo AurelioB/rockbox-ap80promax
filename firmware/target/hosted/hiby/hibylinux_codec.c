@@ -44,6 +44,9 @@ static long int vol_r_hw = 255;
 static long int last_ps = -1;
 
 static int muted = -1;
+#ifdef HAVE_LINEOUT_POWEROFF
+static bool lineout_active;
+#endif
 
 void audiohw_mute(int mute)
 {
@@ -82,9 +85,25 @@ int hiby_get_outputs(void){
     return ps;
 }
 
+static void set_output_port(int ps)
+{
+    if (last_ps == ps)
+        return;
+
+    logf("set out %d/%d", ps, last_ps);
+    last_ps = ps;
+    alsa_controls_set_ints("Output Port Switch", 1, &last_ps);
+}
+
 void hiby_set_output(int ps)
 {
     if (!hw_init || muted) return;
+
+#ifdef HAVE_LINEOUT_POWEROFF
+    /* Jack events must not override an explicitly selected fixed line-out. */
+    if (lineout_active)
+        return;
+#endif
 
     // Default to headset if nothing was ever inserted; otherwise, R3 Pro II crashes on playback
     if (ps == 0)
@@ -94,13 +113,42 @@ void hiby_set_output(int ps)
 
     if (last_ps != ps)
     {
-        logf("set out %d/%d", ps, last_ps);
-        /* Output port switch */
-        last_ps = ps;
-        alsa_controls_set_ints("Output Port Switch", 1, &last_ps);
+        set_output_port(ps);
         audiohw_set_volume(vol_l_hw, vol_r_hw);
     }
 }
+
+#ifdef HAVE_LINEOUT_POWEROFF
+void lineout_set(bool enable)
+{
+    int ps;
+
+    lineout_active = enable;
+    if (!hw_init)
+        return;
+
+    /*
+     * The stock player maps line-out/headset/balanced to values 1/2/3.
+     * Mute around the route and gain change so selecting fixed line level
+     * cannot briefly expose the previous headphone gain.
+     */
+    audiohw_mute(true);
+    if (enable)
+    {
+        set_output_port(1);
+    }
+    else
+    {
+        ps = hiby_has_valid_output();
+        if (ps == 0)
+            ps = 2;
+        set_output_port(ps);
+    }
+
+    audiohw_set_volume(vol_l_hw, vol_r_hw);
+    audiohw_mute(false);
+}
+#endif
 
 void audiohw_preinit(void)
 {
@@ -116,6 +164,14 @@ void audiohw_postinit(void)
 {
     logf("hw postinit");
 }
+
+#ifdef HAVE_DSD
+void audiohw_set_dsd_mode(bool dop)
+{
+    if (hw_init > 0)
+        alsa_controls_set_bool("DOP_EN", dop);
+}
+#endif
 
 void audiohw_close(void)
 {
@@ -138,8 +194,19 @@ void audiohw_set_volume(int vol_l, int vol_r)
     vol_l_hw = vol_l;
     vol_r_hw = vol_r;
 
-    l = -vol_l/5;
-    r = -vol_r/5;
+#ifdef HAVE_LINEOUT_POWEROFF
+    if (lineout_active)
+    {
+        /* Stock LO_VOLUME_INDEX is 100, corresponding to fixed 0 dB. */
+        l = 0;
+        r = 0;
+    }
+    else
+#endif
+    {
+        l = -vol_l/5;
+        r = -vol_r/5;
+    }
 
     if (!hw_init)
         return;
@@ -161,3 +228,16 @@ void audiohw_set_filter_roll_off(int value)
 
 }
 
+#ifdef HAVE_RECORDING
+void audiohw_set_recvol(int left, int right, int type)
+{
+    /*
+     * The AP80 stock recorder does not expose a microphone gain ALSA control.
+     * Capture gain is owned by the vendor digital-microphone path, so do not
+     * invent a mixer control or write an unverified codec register.
+     */
+    (void)left;
+    (void)right;
+    (void)type;
+}
+#endif

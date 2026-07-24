@@ -580,6 +580,8 @@ Lyre prototype 1 */
 #include "config/hibyr3proii.h"
 #elif defined(HIBY_R1)
 #include "config/hibyr1.h"
+#elif defined(HIDIZS_AP80_PRO_MAX)
+#include "config/hidizsap80promax.h"
 #else
 #error "unknown hardware platform!"
 #endif

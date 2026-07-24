@@ -525,6 +525,13 @@
 #define UI_LCD_POSX                 77
 #define UI_LCD_POSY                 74
 
+#elif defined(HIDIZS_AP80_PRO_MAX)
+#define UI_TITLE                    "Hidizs AP80 Pro Max"
+#define UI_WIDTH                    360
+#define UI_HEIGHT                   640
+#define UI_LCD_POSX                 0
+#define UI_LCD_POSY                 0
+
 #elif defined(SIMULATOR)
 #error no UI defines
 #endif

@@ -138,15 +138,16 @@ enum {
 #define XOFS          128
 #define MAX_FPS       40
 
-#elif (LCD_WIDTH == 360) && (LCD_HEIGHT == 400)
+#elif (LCD_WIDTH == 360) && (LCD_HEIGHT >= 400)
 #define XOFS            86
-#define YOFS            100
+#define BUBBLES_LAYOUT_Y ((LCD_HEIGHT - 400) / 2)
+#define YOFS            (100 + BUBBLES_LAYOUT_Y)
 #define SCORE_TXT_X     28
 #define SCORE_TXT_WIDTH 32
-#define SCORE_TXT_Y     48
+#define SCORE_TXT_Y     (48 + BUBBLES_LAYOUT_Y)
 #define LEVEL_TXT_X     27
 #define LEVEL_TXT_WIDTH 32
-#define LEVEL_TXT_Y     5
+#define LEVEL_TXT_Y     (5 + BUBBLES_LAYOUT_Y)
 #define MAX_FPS         40
 
 /* 22x22 bubbles (iPod Video) */
@@ -1523,7 +1524,11 @@ static void bubbles_drawboard(struct game_context* bb) {
 #endif
     /* draw background */
 #ifdef HAVE_LCD_COLOR
-    rb->lcd_bitmap(bubbles_background, 0, 0, LCD_WIDTH, LCD_HEIGHT);
+    rb->lcd_bitmap(bubbles_background,
+                   (LCD_WIDTH - BMPWIDTH_bubbles_background) / 2,
+                   (LCD_HEIGHT - BMPHEIGHT_bubbles_background) / 2,
+                   BMPWIDTH_bubbles_background,
+                   BMPHEIGHT_bubbles_background);
 #endif
 
     /* display play board */

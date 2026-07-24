@@ -55,6 +55,10 @@
 
 #include "logf.h"
 
+#ifdef HAVE_DSD
+#include "dsd-ap80promax.h"
+#endif
+
 #include <pthread.h>
 #include <signal.h>
 
@@ -62,7 +66,9 @@
  * default doesnt seem to work with async callback but doesn't break
  * with multple applications running */
 #define DEFAULT_PLAYBACK_DEVICE "plughw:0,0"
+#ifndef DEFAULT_CAPTURE_DEVICE
 #define DEFAULT_CAPTURE_DEVICE "default"
+#endif
 
 #if MIX_FRAME_SAMPLES < 512
 #error "MIX_FRAME_SAMPLES needs to be at least 512!"
@@ -102,6 +108,17 @@ static pthread_mutex_t pcm_mtx;
 static long signal_stack[SIGSTKSZ/sizeof(long)];
 
 static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
+
+#ifdef HAVE_DSD
+#define DSD_INPUT_BUFFER_SIZE 8192u
+#define DSD_OUTPUT_BUFFER_SIZE (DSD_INPUT_BUFFER_SIZE * 2)
+
+static bool dsd_is_active;
+static enum dsd_transport dsd_transport;
+static uint8_t dsd_marker = 0x05;
+static unsigned int dsd_restore_rate;
+static uint8_t dsd_output[DSD_OUTPUT_BUFFER_SIZE] MEM_ALIGN_ATTR;
+#endif
 
 #ifdef HAVE_RECORDING
 static void *pcm_data_rec = DEFAULT_CAPTURE_DEVICE;
@@ -387,6 +404,12 @@ static void async_callback(snd_async_handler_t *ahandler)
 
     if (!ahandler) return;
 
+#ifdef HAVE_DSD
+    /* Direct DSD writes own the ALSA handle while this flag is set. */
+    if (dsd_is_active)
+        return;
+#endif
+
     snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
 
     if (!handle) return;
@@ -623,6 +646,11 @@ static void sink_set_freq_nolock(uint16_t freq)
 
     logf("PCM DMA Settings %d %lu", last_sample_rate, sampr);
 
+#ifdef HAVE_DSD
+    if (dsd_is_active)
+        return;
+#endif
+
     if (last_sample_rate != sampr)
     {
         last_sample_rate = sampr;
@@ -654,6 +682,11 @@ static void sink_dma_stop(void)
 {
     logf("PCM DMA stop (%d)", snd_pcm_state(handle));
 
+#ifdef HAVE_DSD
+    if (dsd_is_active)
+        return;
+#endif
+
     int err = snd_pcm_drain(handle);
     if (err < 0)
         if (err < 0)
@@ -666,6 +699,12 @@ static void sink_dma_stop(void)
 static void sink_dma_start(const void *addr, size_t size)
 {
     logf("PCM DMA start (%p %d)", addr, size);
+
+#ifdef HAVE_DSD
+    /* Voice/beep channels must not be mixed into an active DSD stream. */
+    if (dsd_is_active)
+        return;
+#endif
 
     pcm_data = addr;
     pcm_size = size;
@@ -769,6 +808,238 @@ unsigned int pcm_alsa_get_xruns(void)
 {
     return xruns;
 }
+
+#ifdef HAVE_DSD
+static int set_dsd_hwparams(unsigned int rate, enum dsd_transport transport)
+{
+    snd_pcm_hw_params_t *params;
+    snd_pcm_format_t dsd_format;
+    snd_pcm_uframes_t dsd_buffer_size = 16384;
+    snd_pcm_uframes_t dsd_period_size = 4096;
+    unsigned int exact_rate = rate;
+    int err;
+
+    dsd_format = transport == DSD_TRANSPORT_DOP ?
+                 SND_PCM_FORMAT_S32_LE : SND_PCM_FORMAT_S16_LE;
+
+    snd_pcm_hw_params_malloc(&params);
+    err = snd_pcm_hw_params_any(handle, params);
+    if (err < 0)
+        goto out;
+
+    err = snd_pcm_hw_params_set_access(handle, params,
+                                       SND_PCM_ACCESS_RW_INTERLEAVED);
+    if (err < 0)
+        goto out;
+
+    err = snd_pcm_hw_params_set_format(handle, params, dsd_format);
+    if (err < 0)
+        goto out;
+
+    err = snd_pcm_hw_params_set_channels(handle, params, 2);
+    if (err < 0)
+        goto out;
+
+    err = snd_pcm_hw_params_set_rate_near(handle, params, &exact_rate, 0);
+    if (err < 0 || exact_rate != rate)
+    {
+        if (err >= 0)
+            err = -EINVAL;
+        goto out;
+    }
+
+    snd_pcm_hw_params_set_buffer_size_near(handle, params, &dsd_buffer_size);
+    snd_pcm_hw_params_set_period_size_near(handle, params, &dsd_period_size,
+                                            NULL);
+    err = snd_pcm_hw_params(handle, params);
+
+out:
+    if (err < 0)
+        logf("DSD hwparams failed: %s", snd_strerror(err));
+    snd_pcm_hw_params_free(params);
+    return err;
+}
+
+enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
+                                     unsigned int channels)
+{
+    enum dsd_transport transport;
+    unsigned int carrier_rate;
+    int err;
+
+    if (!handle || channels != 2)
+        return DSD_TRANSPORT_ERROR;
+
+    transport = ap80promax_dsd_select_transport(dsd_rate);
+    carrier_rate = ap80promax_dsd_carrier_rate(dsd_rate, transport);
+    if (transport == DSD_TRANSPORT_ERROR || carrier_rate == 0)
+        return DSD_TRANSPORT_ERROR;
+
+    pthread_mutex_lock(&pcm_mtx);
+
+    if (dsd_is_active)
+    {
+        snd_pcm_drop(handle);
+        dsd_is_active = false;
+    }
+
+    dsd_restore_rate = last_sample_rate ?
+                       last_sample_rate : hw_freq_sampr[HW_FREQ_DEFAULT];
+    snd_pcm_drop(handle);
+
+    dsd_transport = transport;
+    dsd_marker = 0x05;
+    dsd_is_active = true; /* Keep the async callback away from the handle. */
+    audiohw_set_dsd_mode(transport == DSD_TRANSPORT_DOP);
+
+    err = set_dsd_hwparams(carrier_rate, transport);
+    if (err >= 0)
+        err = snd_pcm_prepare(handle);
+
+    if (err < 0)
+    {
+        logf("DSD open failed: %s", snd_strerror(err));
+        audiohw_set_dsd_mode(false);
+        dsd_is_active = false;
+        dsd_transport = DSD_TRANSPORT_ERROR;
+        set_hwparams(handle, dsd_restore_rate);
+        set_swparams(handle);
+        pthread_mutex_unlock(&pcm_mtx);
+        return DSD_TRANSPORT_ERROR;
+    }
+
+    real_sample_rate = carrier_rate;
+    logf("DSD open: rate=%u carrier=%u mode=%s", dsd_rate, carrier_rate,
+         transport == DSD_TRANSPORT_DOP ? "dop" : "native");
+    pthread_mutex_unlock(&pcm_mtx);
+    return transport;
+}
+
+ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
+{
+    const uint8_t *src = data;
+    size_t packed_size;
+    size_t frame_bytes;
+    size_t frames_left;
+    uint8_t *out;
+
+    if (!data || size == 0 || (size & 3) ||
+        size > DSD_INPUT_BUFFER_SIZE)
+        return -EINVAL;
+
+    pthread_mutex_lock(&pcm_mtx);
+    if (!dsd_is_active)
+    {
+        pthread_mutex_unlock(&pcm_mtx);
+        return -ENODEV;
+    }
+
+    if (dsd_transport == DSD_TRANSPORT_DOP)
+    {
+        packed_size = ap80promax_dsd_pack_dop(
+                dsd_output, sizeof(dsd_output), src, size, &dsd_marker);
+        frame_bytes = 8; /* S32_LE stereo */
+    }
+    else
+    {
+        packed_size = ap80promax_dsd_pack_native(
+                dsd_output, sizeof(dsd_output), src, size);
+        frame_bytes = 4; /* S16_LE stereo; stock native framing */
+    }
+
+    if (packed_size == 0)
+    {
+        pthread_mutex_unlock(&pcm_mtx);
+        return -EINVAL;
+    }
+
+    out = dsd_output;
+    frames_left = packed_size / frame_bytes;
+
+    while (frames_left > 0)
+    {
+        snd_pcm_sframes_t written = snd_pcm_writei(handle, out, frames_left);
+        if (written == -EPIPE || written == -ESTRPIPE)
+        {
+            xruns++;
+            written = snd_pcm_recover(handle, written, 1);
+            if (written >= 0)
+                continue;
+        }
+
+        if (written < 0)
+        {
+            logf("DSD write failed: %s", snd_strerror(written));
+            pthread_mutex_unlock(&pcm_mtx);
+            return written;
+        }
+
+        out += written * frame_bytes;
+        frames_left -= written;
+    }
+
+    pthread_mutex_unlock(&pcm_mtx);
+    return size;
+}
+
+void pcm_alsa_dsd_pause(bool pause)
+{
+    pthread_mutex_lock(&pcm_mtx);
+    if (dsd_is_active)
+    {
+        int err = snd_pcm_pause(handle, pause ? 1 : 0);
+        if (err < 0)
+        {
+            /* Some ALSA drivers do not implement hardware pause. Dropping
+               pending frames gives deterministic silence; prepare re-arms
+               the stream when Rockbox explicitly resumes. */
+            if (pause)
+                snd_pcm_drop(handle);
+            else
+                snd_pcm_prepare(handle);
+        }
+    }
+    pthread_mutex_unlock(&pcm_mtx);
+}
+
+void pcm_alsa_dsd_close(bool drain)
+{
+    pthread_mutex_lock(&pcm_mtx);
+    if (!dsd_is_active)
+    {
+        pthread_mutex_unlock(&pcm_mtx);
+        return;
+    }
+
+    if (drain)
+        snd_pcm_drain(handle);
+    else
+        snd_pcm_drop(handle);
+
+    audiohw_set_dsd_mode(false);
+    dsd_is_active = false;
+    dsd_transport = DSD_TRANSPORT_ERROR;
+
+    if (set_hwparams(handle, dsd_restore_rate) >= 0)
+    {
+        set_swparams(handle);
+        last_sample_rate = dsd_restore_rate;
+        real_sample_rate = dsd_restore_rate;
+    }
+    else
+    {
+        last_sample_rate = 0;
+    }
+
+    logf("DSD closed");
+    pthread_mutex_unlock(&pcm_mtx);
+}
+
+bool pcm_alsa_dsd_active(void)
+{
+    return dsd_is_active;
+}
+#endif /* HAVE_DSD */
 
 struct pcm_sink builtin_pcm_sink = {
     .caps = {

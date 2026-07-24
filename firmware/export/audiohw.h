@@ -445,6 +445,12 @@ void audiohw_postinit(void);
  */
 void audiohw_close(void);
 
+#ifdef HAVE_DSD
+/* Select whether the DAC should look for DoP markers. Native DSD keeps this
+ * disabled and is selected by the serial data framing itself. */
+void audiohw_set_dsd_mode(bool dop);
+#endif
+
 #ifdef AUDIOHW_HAVE_MONO_VOLUME
   /**
  * Set new volume value

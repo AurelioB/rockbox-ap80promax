@@ -23,4 +23,8 @@
 // This is pretty generic and probably needs adjusting
 AUDIOHW_SETTING(VOLUME,      "dB",   0,  1, -80,   0,   0)
 
+#ifdef HAVE_RECORDING
+AUDIOHW_SETTING(MIC_GAIN,    "dB",   0,  1,   0,   0,   0)
+#endif
+
 #endif /* _SDL_CODEC_H */

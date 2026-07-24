@@ -687,7 +687,7 @@ CONFIG_KEYPAD == MROBE500_PAD
 #define LIVES_X 8
 #define MAX_Y 15
 
-#elif (LCD_WIDTH == 360) && (LCD_HEIGHT == 400)
+#elif (LCD_WIDTH == 360) && (LCD_HEIGHT >= 400)
 
 /* Shanling Q1
  */
@@ -1615,8 +1615,12 @@ static void move_ufo(void)
 
 static void draw_background(void)
 {
-
-    rb->lcd_bitmap(invadrox_background, 0, 0, LCD_WIDTH, LCD_HEIGHT);
+    rb->lcd_clear_display();
+    rb->lcd_bitmap(invadrox_background,
+                   (LCD_WIDTH - BMPWIDTH_invadrox_background) / 2,
+                   (LCD_HEIGHT - BMPHEIGHT_invadrox_background) / 2,
+                   BMPWIDTH_invadrox_background,
+                   BMPHEIGHT_invadrox_background);
     rb->lcd_update();
 }
 
