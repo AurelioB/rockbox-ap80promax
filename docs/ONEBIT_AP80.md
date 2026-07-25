@@ -53,3 +53,10 @@ to eishiya in the original OneBit_OLED package.
   LanaPixel font and original 360p icon set. Their content viewport is
   440 pixels wide with only 20-pixel side margins; the original 360-pixel
   WPS composition and its bitmap artwork remain unchanged.
+- AP80 menu and playback headers use the full framebuffer width. Navigation
+  text uses the 21-pixel UI font, compact status values use the bundled
+  14-pixel font, and battery level is available numerically as well as
+  graphically.
+
+General sizing and interaction requirements for AP80 themes are documented
+in [AP80_PRO_MAX_UI_SPEC.md](AP80_PRO_MAX_UI_SPEC.md).

@@ -38,14 +38,14 @@
 %Vi(menu,20,90,440,450,-)%Vf(-)%Vb(-)
 
 # Menu Title
-%Vl(info,85,25,123,15,2)
+%Vl(info,20,10,240,48,-)
 %al%Lt%s
 
 # Load Indicator
 %?lh<%Vd(loadstatus)|%Vd(loadstatic)>
-%Vl(loadstatic,232,24,16,16,-)
+%Vl(loadstatic,272,23,16,16,-)
 %xd(load,1)
-%Vl(loadstatus,232,24,16,16,-)
+%Vl(loadstatus,272,23,16,16,-)
 %t(0.2)%xd(load,2);%t(0.2)%xd(load,3);%t(0.2)%xd(load,4);%t(0.2)%xd(load,5);%t(0.2)%xd(load,6);%t(0.2)%xd(load,7);%t(0.2)%xd(load,8);%t(0.2)%xd(load,9);%t(0.3)%xd(load,10);%t(0.3)%xd(load,9)%t(0.3)%xd(load,8);%t(0.2)%xd(load,9);%t(0.2)%xd(load,10);%t(0.2)%xd(load,9);%t(0.2)%xd(load,8);%t(0.2)%xd(load,7);%t(0.2)%xd(load,6);%t(0.2)%xd(load,5);%t(0.2)%xd(load,4);%t(0.1)%xd(load,3);%t(0.1)%xd(load,2);%t(0.2)%xd(load,1)
 
 #Hold indicator
@@ -54,12 +54,12 @@
 %?mh<LOCKED|>
 
 # Clock
-%Vl(info,310,25,50,15,2)
+%Vl(info,300,21,72,20,3)
 %ac%cl:%cM%cp
 
 # Battery (numerical)
-#%Vl(info,273,17,27,13,2)
-#%ar%bl%%
+%Vl(info,378,21,50,20,3)
+%ar%bl%%
 
 #__Now Playing
 %Vl(info,118,590,252,16,2)
@@ -70,7 +70,7 @@
 %?if(%mp, >, 1)<%xd(playmodes,%mp)|>
 
 # Battery (graphical)
-%Vl(info,367,28,23,10,-)
+%Vl(info,437,26,23,10,-)
 %?if(%bl,>,90)<%xd(battery,10)|%?if(%bl,>,80)<%xd(battery,9)|%?if(%bl,>,70)<%xd(battery,8)|%?if(%bl,>,60)<%xd(battery,7)|%?if(%bl,>,50)<%xd(battery,6)|%?if(%bl,>,40)<%xd(battery,5)|%?if(%bl,>,30)<%xd(battery,4)|%?if(%bl,>,20)<%xd(battery,3)|%?if(%bl,>,10)<%xd(battery,2)|%?if(%bl,>,-1)<%xd(battery,1)>>>>>>>>>>
 
 #__USB

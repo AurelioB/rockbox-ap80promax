@@ -66,57 +66,63 @@
 #######################
 
 # Playback Mode Icons
-%V(85,30,13,13,-)
+%V(20,25,13,13,-)
 %Vf(-)
 %xd(playmodes,%mp)
 
 # Track Number (repeat)
-%Vl(repeatModeDark,119,28,100,20,2)%Vf(5f605f)
+%Vl(repeatModeDark,54,21,180,20,3)%Vf(5f605f)
 %al%pp OF %pe
-%Vl(repeatModeLight,119,28,100,20,2)%Vf(9C9E9C)
+%Vl(repeatModeLight,54,21,180,20,3)%Vf(9C9E9C)
 %al%pp OF %pe
 
 # Track Number (no repeat)
-%Vl(noRepeatDark,110,28,100,20,2)%Vf(5f605f)
+%Vl(noRepeatDark,45,21,189,20,3)%Vf(5f605f)
 %al%pp OF %pe
-%Vl(noRepeatLight,110,28,100,20,2)%Vf(9C9E9C)
+%Vl(noRepeatLight,45,21,189,20,3)%Vf(9C9E9C)
 %al%pp OF %pe
 
 # Repeat
-%Vl(repeatModeDark,100,30,13,13,-)%Vf(-)
+%Vl(repeatModeDark,35,25,13,13,-)%Vf(-)
 %t(5)%?ps<%xd(S)|%?mm<|%xd(R,%mm,-1)>>;%t(5)%?mm<%?ps<%xd(S)>|%xd(R,%mm,-1)>
-%Vl(repeatModeLight,100,30,13,13,-)%Vf(-)
+%Vl(repeatModeLight,35,25,13,13,-)%Vf(-)
 %t(5)%?ps<%xd(S)|%?mm<|%xd(R,%mm,-1)>>;%t(5)%?mm<%?ps<%xd(S)>|%xd(R,%mm,-1)>
 
 # Clock
-%Vl(darkFg,264,28,80,15,2)%Vf(5f605f)
+%Vl(darkFg,300,21,72,20,3)%Vf(5f605f)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
-%Vl(lightFg,264,28,80,15,2)%Vf(9C9E9C)
+%Vl(lightFg,300,21,72,20,3)%Vf(9C9E9C)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
 
 # Storage Access
-%V(348,31,12,12,-)
+%V(272,25,12,12,-)
 %Vf(-)
 %xd(X,%lh)
 
 # Hold
-%V(363,31,9,12,-)
+%V(287,25,9,12,-)
 %Vf(-)
 %xd(L,%mh)
+
+# Battery (numerical)
+%Vl(darkFg,378,21,50,20,3)%Vf(5f605f)
+%ar%bl%%
+%Vl(lightFg,378,21,50,20,3)%Vf(9C9E9C)
+%ar%bl%%
 
 # Battery viewport selector (flash when low, animates when charging)
 %?bc<%Vd(battCharging)|%?if(%bl,>=,15)<%Vd(batt)|%Vd(lowBatt)>>
 
 # Battery (graphical)
-%Vl(batt,377,32,23,10,-)
+%Vl(batt,437,26,23,10,-)
 %Vf(-)
 %?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>
 
-%Vl(lowBatt,377,32,23,10,-)
+%Vl(lowBatt,437,26,23,10,-)
 %Vf(-)
 %t(1)%?if(%bl,>=,10)<%xd(battery,2)|%xd(battery,1)>;%t(1)%xd(battery,12)
 
-%Vl(battCharging,377,32,23,10,-)
+%Vl(battCharging,437,26,23,10,-)
 %Vf(-)
 %t(0.1)%?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%xd(battery,11)
 

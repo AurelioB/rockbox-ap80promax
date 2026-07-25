@@ -40,21 +40,22 @@
 %Vi(menuLight,20,90,440,450,-)%Vf(7f7f7f)
 
 # Menu Title
-%Vl(infoDark,85,28,120,15,2)%Vf(4c4c4c)
+%Vl(infoDark,20,10,240,48,-)%Vf(4c4c4c)
 %al%s%Lt
-%Vl(infoLight,85,28,120,15,2)%Vf(7f7f7f)
+%Vl(infoLight,20,10,240,48,-)%Vf(7f7f7f)
 %al%s%Lt
 
 # Clock
-%Vl(infoDark,264,28,80,15,2)%Vf(4c4c4c)
+%Vl(infoDark,300,21,72,20,3)%Vf(4c4c4c)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
-%Vl(infoLight,264,28,80,15,2)%Vf(7f7f7f)
+%Vl(infoLight,300,21,72,20,3)%Vf(7f7f7f)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
-
 
 # Battery (numerical)
-#%Vl(info,273,17,27,13,2)
-#%ar%bl%%
+%Vl(infoDark,378,21,50,20,3)%Vf(4c4c4c)
+%ar%bl%%
+%Vl(infoLight,378,21,50,20,3)%Vf(7f7f7f)
+%ar%bl%%
 
 #__Now Playing
 %Vl(infoDark,118,590,252,16,2)%Vf(000000)
@@ -68,12 +69,12 @@
 %?if(%mp, >, 1)<%xd(playmodes,%mp)|>
 
 # Storage Access
-%Vl(info,348,31,12,12,-)
+%Vl(info,272,25,12,12,-)
 %Vf(-)
 %xd(X,%lh)
 
 # Hold
-%Vl(info,364,31,9,12,-)
+%Vl(info,287,25,9,12,-)
 %Vf(-)
 %xd(L,%mh)
 
@@ -81,15 +82,15 @@
 %?bc<%Vd(battCharging)|%?if(%bl,>=,15)<%Vd(batt)|%Vd(lowBatt)>>
 
 # Battery (graphical)
-%Vl(batt,377,32,23,10,-)
+%Vl(batt,437,26,23,10,-)
 %Vf(-)
 %?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>
 
-%Vl(lowBatt,377,32,23,10,-)
+%Vl(lowBatt,437,26,23,10,-)
 %Vf(-)
 %t(1)%?if(%bl,>=,10)<%xd(battery,2)|%xd(battery,1)>;%t(1)%xd(battery,12)
 
-%Vl(battCharging,377,32,23,10,-)
+%Vl(battCharging,437,26,23,10,-)
 %Vf(-)
 %t(0.1)%?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(1)%xd(battery,11)
 

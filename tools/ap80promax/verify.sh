@@ -92,6 +92,27 @@ do
     done
 done
 
+for ap80_skin in OneBitMono OneBitMono2 OneBit_OLED OneBit_VFD2 OneBit_VFD_ALT
+do
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
+         grep -Eq '^%Vl\([^,]+,20,10,240,48,-\)'
+    then
+        echo "Release theme has an undersized header title: $ap80_skin" >&2
+        exit 1
+    fi
+
+    for ap80_skin_type in sbs wps
+    do
+        if ! unzip -p "$ap80_zip" \
+             ".rockbox/wps/$ap80_skin.$ap80_skin_type" |
+             grep -Eq '^%Vl\([^,]+,378,21,50,20,3\)'
+        then
+            echo "Release theme is missing readable battery status: $ap80_skin.$ap80_skin_type" >&2
+            exit 1
+        fi
+    done
+done
+
 for ap80_elf in \
     "$ap80_dist/rockbox.ap80promax" \
     "$ap80_dist/bootloader.ap80promax"
