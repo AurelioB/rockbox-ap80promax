@@ -195,6 +195,7 @@ target/hosted/hiby/debug-hiby.c
 #ifndef BOOTLOADER
 target/hosted/hiby/ap80promax/dsd-ap80promax.c
 target/hosted/hiby/ap80promax/led-ap80promax.c
+target/hosted/hiby/ap80promax/services-ap80promax.c
 target/hosted/hiby/hibylinux_codec.c
 #endif
 #endif
