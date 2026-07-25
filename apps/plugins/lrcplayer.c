@@ -125,6 +125,12 @@ static int font_ui_height = 1;
 static struct viewport vp_info[NB_SCREENS];
 static struct viewport vp_lyrics[NB_SCREENS];
 
+#if defined(HIDIZS_AP80_PRO_MAX)
+#define LRC_HORIZONTAL_PADDING 12
+#else
+#define LRC_HORIZONTAL_PADDING 0
+#endif
+
 #define AUDIO_PAUSE (current.audio_status & AUDIO_STATUS_PAUSE)
 #define AUDIO_PLAY  (current.audio_status & AUDIO_STATUS_PLAY)
 #define AUDIO_STOP  (!(current.audio_status & AUDIO_STATUS_PLAY))
@@ -2693,6 +2699,11 @@ static int lrc_main(void)
         vp_info[i].font = uifont;
         vp_lyrics[i] = vp_info[i];
         vp_lyrics[i].flags &= ~VP_FLAG_ALIGNMENT_MASK;
+        if (vp_lyrics[i].width > LRC_HORIZONTAL_PADDING * 2)
+        {
+            vp_lyrics[i].x += LRC_HORIZONTAL_PADDING;
+            vp_lyrics[i].width -= LRC_HORIZONTAL_PADDING * 2;
+        }
         vp_lyrics[i].y += h;
         vp_lyrics[i].height -= h;
     }

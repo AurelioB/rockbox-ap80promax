@@ -335,10 +335,9 @@ static const char graphic_numeric[] = "graphic,numeric";
 #define DEFAULT_FMS_NAME "cabbiev2"
 
 #if defined(HIDIZS_AP80_PRO_MAX)
-  /* The AP80's 249 dpi portrait panel needs a crisp, touch-friendly default.
-     The generic >=640px rule selects a 35px proportional font. */
-  #define DEFAULT_FONT_HEIGHT 32
-  #define DEFAULT_FONTNAME "32-Terminus"
+  /* Keep long menu and plugin labels usable on the narrow portrait panel. */
+  #define DEFAULT_FONT_HEIGHT 20
+  #define DEFAULT_FONTNAME "20-Terminus"
 #elif LCD_HEIGHT <= 64
   #define DEFAULT_FONT_HEIGHT 8
   #define DEFAULT_FONTNAME "08-Rockfont"
