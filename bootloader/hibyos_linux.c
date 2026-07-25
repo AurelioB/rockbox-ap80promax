@@ -47,7 +47,10 @@
 #include <stdarg.h>
 #include "version.h"
 
-//#define ENABLE_LOGGING
+/* Keep recovery builds diagnosable without depending on the LCD path. */
+#ifdef HIDIZS_AP80_PRO_MAX
+#define ENABLE_LOGGING
+#endif
 //#define AUTO_ENABLE_ADB
 
 /* Basic configuration */
@@ -714,6 +717,10 @@ int main(int argc, char **argv)
     (void) argc;
     (void) argv;
 
+#ifdef HIDIZS_AP80_PRO_MAX
+    unlink("/tmp/rockbox-bootloader-ready");
+#endif
+
 #ifdef AUTO_ENABLE_ADB
     // Boot with adb for debugging
     adb(1);
@@ -744,6 +751,21 @@ int main(int argc, char **argv)
     button_init();
     backlight_init();
     backlight_set_brightness(DEFAULT_BRIGHTNESS_SETTING);
+#ifdef HIDIZS_AP80_PRO_MAX
+    /*
+     * The stock launcher watches this marker. Do not create it until every
+     * early subsystem that previously left the player on its splash screen
+     * has initialized successfully.
+     */
+    int ready_fd = open("/tmp/rockbox-bootloader-ready",
+                        O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (ready_fd >= 0)
+    {
+        write(ready_fd, rbversion, strlen(rbversion));
+        write(ready_fd, "\n", 1);
+        close(ready_fd);
+    }
+#endif
 //    /* try to load the extra font we install on the device */
 //    int font_id = font_load("/usr/local/share/rockbox/bootloader.fnt");
 //    if(font_id >= 0)

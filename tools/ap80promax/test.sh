@@ -37,6 +37,7 @@ mkdir -p "$ap80_warble_build"
 "$ap80_warble_build/test-ap80-services"
 
 "$ap80_rockbox_root/tests/test_ap80promax_usb_update.sh"
+"$ap80_rockbox_root/tests/test_ap80promax_recovery.sh"
 
 (
     cd "$ap80_warble_build"

@@ -32,7 +32,9 @@ does not flash anything.
 streaming DSD-to-PCM converter, builds the target-specific Warble codec
 runner, executes the direct and fallback DSD fixtures, exercises USB update,
 rollback, corrupt-archive, and wrong-target handling, then builds the
-simulator and validates all installed OneBit skins.
+simulator and validates all installed OneBit skins. The recovery test also
+exercises the SD bypass marker, early-exit fallback, and hung-bootloader
+watchdog.
 
 After the bootloader has been installed once, `update-usb.sh` updates only
 the SD card's `/.rockbox` tree over the boot menu's ADB connection. It stages
@@ -40,7 +42,10 @@ and validates the release before switching directories, preserves user data,
 and retains the previous complete installation for `--rollback`. It never
 writes a firmware partition or replaces the installed bootloader.
 
-`simulator.sh` builds the 360 x 640 Rockbox application simulator and validates
-the installed OneBit WPS/SBS files with a target-specific `checkwps`. It is
-useful for UI, theme, metadata, and touch testing, but it does not emulate the
-AP80 kernel, DAC, jack detection, USB, wireless hardware, or DSD transport.
+`simulator.sh` builds the 480 x 640 Rockbox application simulator and validates
+the installed OneBit WPS/SBS files with a target-specific `checkwps`. The
+physical framebuffer is 480 x 640; the stock CST8xx driver reports its
+touchscreen in a 360 x 640 logical coordinate space, which the hosted input
+driver scales. The simulator is useful for UI, theme, metadata, and touch
+testing, but it does not emulate the AP80 kernel, DAC, jack detection, USB,
+wireless hardware, or DSD transport.

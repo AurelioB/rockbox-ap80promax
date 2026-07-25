@@ -40,7 +40,9 @@ With the MIPS toolchain installed:
 
 `package.sh` requires a legally obtained `ap80max.upt` matching the installed
 firmware. It creates `dist/ap80max_rb.upt` and its checksum without flashing
-the player.
+the player. It then reopens the completed updater and verifies the embedded
+bootloader, recovery launcher, preserved stock launcher, and readiness
+watchdog.
 
 ## Install
 
@@ -59,6 +61,11 @@ the player.
 
 The first boot-menu choice waits ten seconds. After a choice has booted
 successfully, that choice is remembered and starts after a one-second delay.
+
+This recovery build starts ADB before Rockbox initializes the display. It also
+requires the bootloader to report that its system, 480 x 640 framebuffer,
+font, buttons, and backlight initialized within 15 seconds. Otherwise it kills
+the bootloader and starts the untouched HiBy player automatically.
 
 ## Boot-menu controls
 
@@ -179,6 +186,17 @@ Select **HIBY PLAYER** from the boot menu. A missing or invalid
 
 If storage needs attention, choose **TOOLS** and use **Remount SD** or start
 ADB. Do not run unknown scripts from the Tools menu.
+
+If the boot menu itself is not usable, shut down the player, put an empty file
+named `rockbox-force-hiby` in the SD-card root, reinsert the card, and boot.
+The launcher checks this visible marker before starting any Rockbox code and
+executes `/usr/bin/hiby_player` directly. The bypass remains active until the
+file is removed.
+
+The recovery launcher writes `rockbox-bootloader.log` in the SD-card root
+when the card is mounted, or `/tmp/rockbox-bootloader.log` otherwise. ADB is
+started before the framebuffer path, so `/tmp/rockbox-adb.log`, kernel logs,
+and the bootloader log can still be collected after an early failure.
 
 ### Original firmware does not start
 
