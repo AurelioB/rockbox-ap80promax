@@ -48,13 +48,17 @@ mkdir -p "$ap80_normal_build" "$ap80_boot_build" "$ap80_dist"
 cp "$ap80_normal_build/rockbox.ap80promax" "$ap80_dist/"
 cp "$ap80_normal_build/rockbox.zip" "$ap80_dist/rockbox-ap80promax.zip"
 cp "$ap80_boot_build/bootloader.ap80promax" "$ap80_dist/"
+cp "$ap80_rockbox_root/tools/ap80promax/update-usb.sh" "$ap80_dist/"
+cp "$ap80_rockbox_root/tools/ap80promax/update-device.sh" "$ap80_dist/"
 
 (
     cd "$ap80_dist"
     sha256sum \
         rockbox.ap80promax \
         rockbox-ap80promax.zip \
-        bootloader.ap80promax > SHA256SUMS
+        bootloader.ap80promax \
+        update-usb.sh \
+        update-device.sh > SHA256SUMS
 )
 
 echo "Device artifacts written to $ap80_dist"

@@ -96,4 +96,6 @@ jobs:
             ${{ runner.temp }}/ap80-dist/rockbox.ap80promax
             ${{ runner.temp }}/ap80-dist/rockbox-ap80promax.zip
             ${{ runner.temp }}/ap80-dist/bootloader.ap80promax
+            ${{ runner.temp }}/ap80-dist/update-usb.sh
+            ${{ runner.temp }}/ap80-dist/update-device.sh
             ${{ runner.temp }}/ap80-dist/SHA256SUMS

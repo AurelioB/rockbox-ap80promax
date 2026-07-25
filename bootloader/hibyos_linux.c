@@ -562,13 +562,76 @@ static void adb(int start)
 #endif
 }
 
+#ifdef HIDIZS_AP80_PRO_MAX
+static void usb_rockbox_update(void)
+{
+    const char *success = "/tmp/rockbox-usb-update-ok";
+    const char *error = "/tmp/rockbox-usb-update-error";
+
+    unlink(success);
+    unlink(error);
+    adb(1);
+
+    while (true)
+    {
+        bool complete = access(success, F_OK) == 0;
+        bool failed = access(error, F_OK) == 0;
+
+        lcd_clear_display();
+        lcd_set_foreground(LCD_RGBPACK(255, 201, 0));
+        display_text_center(20, "USB ROCKBOX UPDATE");
+        lcd_set_foreground(LCD_WHITE);
+
+        if (complete)
+        {
+            display_text_center(120, "Update complete");
+            display_text_center(180, "Play: restart");
+        }
+        else if (failed)
+        {
+            lcd_set_foreground(LCD_RGBPACK(255, 0, 0));
+            display_text_center(120, "Update failed");
+            lcd_set_foreground(LCD_WHITE);
+            display_text_center(180, "Check the computer");
+            display_text_center(240, "Power: back");
+        }
+        else
+        {
+            display_text_center(100, "Connect USB");
+            display_text_center(160, "Run update-usb.sh");
+            display_text_center(220, "Waiting...");
+            display_text_center(300, "Power: cancel");
+        }
+
+        lcd_update();
+        int button = button_get_w_tmo(HZ / 4);
+        if (complete && (button & BUTTON_PLAY))
+            system_reboot();
+        if (button & BUTTON_POWER)
+        {
+            adb(0);
+            return;
+        }
+    }
+}
+#endif
+
 static void tools_screen(void)
 {
     const char *extra[] = { MODEL_NAME, rbversion };
     printf("Version: %s\n", rbversion);
     printf("%s\n", MODEL_NAME);
+#ifdef HIDIZS_AP80_PRO_MAX
+    const char *choices[] =
+    {
+        "ADB start", "ADB stop", "Run script", "Remount SD", "Restart",
+        "Shutdown", "Recovery", "USB Rockbox update", "Back"
+    };
+    int choice = choice_screen("TOOLS MENU", true, 9, choices, 2, extra);
+#else
     const char *choices[] = {"ADB start", "ADB stop", "Run script", "Remount SD", "Restart", "Shutdown", "Recovery", "Back"};
     int choice = choice_screen("TOOLS MENU", true, 8, choices, 2, extra);
+#endif
     if(choice == 0)
     {
         /* run service menu */
@@ -608,10 +671,21 @@ static void tools_screen(void)
             close(fd);
         }
     }
+#ifdef HIDIZS_AP80_PRO_MAX
+    else if (choice == 7)
+    {
+        usb_rockbox_update();
+    }
+    else if (choice == 8)
+    {
+        return;
+    }
+#else
     else if (choice == 7)
     {
         return;
     }
+#endif
 }
 
 #ifdef ENABLE_LOGGING

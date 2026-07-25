@@ -10,6 +10,8 @@ for ap80_required in \
     "$ap80_dist/rockbox.ap80promax" \
     "$ap80_zip" \
     "$ap80_dist/bootloader.ap80promax" \
+    "$ap80_dist/update-usb.sh" \
+    "$ap80_dist/update-device.sh" \
     "$ap80_dist/SHA256SUMS"
 do
     if [ ! -f "$ap80_required" ]; then
@@ -22,6 +24,17 @@ done
     cd "$ap80_dist"
     sha256sum -c SHA256SUMS
 )
+
+for ap80_script in \
+    "$ap80_dist/update-usb.sh" \
+    "$ap80_dist/update-device.sh"
+do
+    if [ ! -x "$ap80_script" ]; then
+        echo "USB update helper is not executable: $ap80_script" >&2
+        exit 1
+    fi
+    sh -n "$ap80_script"
+done
 
 if [ "${AP80_REQUIRE_UPDATER:-0}" = "1" ] ||
    [ -f "$ap80_dist/ap80max_rb.upt" ] ||
