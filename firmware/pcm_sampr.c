@@ -37,13 +37,17 @@ const unsigned long audio_master_sampr_list[SAMPR_NUM_FREQ] =
     [FREQ_16] = SAMPR_16,
     [FREQ_12] = SAMPR_12,
     [FREQ_11] = SAMPR_11,
-    [FREQ_8 ] = SAMPR_8, 
+    [FREQ_8 ] = SAMPR_8,
+    [FREQ_384] = SAMPR_384,
+    [FREQ_352] = SAMPR_352,
 };
 
 /* List of all hardware rates supported (set or subset of master list) */
 const unsigned long hw_freq_sampr[HW_NUM_FREQ] =
 {
     [0 ... HW_NUM_FREQ-1] = -1,
+    HW_HAVE_384_([HW_FREQ_384] = SAMPR_384,)
+    HW_HAVE_352_([HW_FREQ_352] = SAMPR_352,)
     HW_HAVE_192_([HW_FREQ_192] = SAMPR_192,)
     HW_HAVE_176_([HW_FREQ_176] = SAMPR_176,)
     HW_HAVE_96_([HW_FREQ_96] = SAMPR_96,)

@@ -59,7 +59,7 @@
 #define HAVE_HIBY_LINUX_CODEC
 #define HAVE_SW_TONE_CONTROLS
 #define HAVE_ALSA_32BIT
-#define HW_SAMPR_CAPS SAMPR_CAP_ALL_192
+#define HW_SAMPR_CAPS SAMPR_CAP_ALL_384
 
 /*
  * The stock output router maps line-out and I2S-to-S/PDIF to Output Port

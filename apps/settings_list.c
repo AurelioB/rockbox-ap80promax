@@ -1146,7 +1146,13 @@ const struct settings_list settings[] = {
                   UNIT_KHZ, formatter_freq_unit_0_is_auto,
                   getlang_freq_unit_0_is_auto,
                   playback_frequency_callback,
-#if HAVE_PLAY_FREQ >= 192
+#if HAVE_PLAY_FREQ >= 384
+                  9,0,SAMPR_44,SAMPR_48,SAMPR_88,SAMPR_96,SAMPR_176,SAMPR_192,
+                  SAMPR_352,SAMPR_384),
+#elif HAVE_PLAY_FREQ >= 352
+                  8,0,SAMPR_44,SAMPR_48,SAMPR_88,SAMPR_96,SAMPR_176,SAMPR_192,
+                  SAMPR_352),
+#elif HAVE_PLAY_FREQ >= 192
                   7,0,SAMPR_44,SAMPR_48,SAMPR_88,SAMPR_96,SAMPR_176,SAMPR_192),
 #elif HAVE_PLAY_FREQ >= 96
                   5,0,SAMPR_44,SAMPR_48,SAMPR_88,SAMPR_96),

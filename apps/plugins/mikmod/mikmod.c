@@ -514,6 +514,8 @@ static const struct configdata config[] =
 
 // XXX dynamically generate this list at runtime.
 static const struct opt_items sr_names[SAMPR_NUM_FREQ] = {
+    [FREQ_384] = { "384kHz",     TALK_ID(384, UNIT_KHZ) },
+    [FREQ_352] = { "352.8kHz",   TALK_ID(352, UNIT_KHZ) },
     [FREQ_192] = { "192kHz",     TALK_ID(192, UNIT_KHZ) },
     [FREQ_176] = { "176.4kHz",   TALK_ID(176, UNIT_KHZ) },
     [FREQ_96] = { "96kHz",     TALK_ID(96, UNIT_KHZ) },
@@ -532,6 +534,8 @@ static const struct opt_items sr_names[SAMPR_NUM_FREQ] = {
 
 static const unsigned long sr_nums[SAMPR_NUM_FREQ] =
 {
+    [FREQ_384] = SAMPR_384,
+    [FREQ_352] = SAMPR_352,
     [FREQ_192] = SAMPR_192,
     [FREQ_176] = SAMPR_176,
     [FREQ_96] = SAMPR_96,

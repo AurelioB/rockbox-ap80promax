@@ -131,7 +131,19 @@
  *                     as the DSP core. DSP never exceeds *MAX to lessen
  *                     buffer allocation demands and overhead.
  */
-#if (HW_SAMPR_CAPS & SAMPR_CAP_192)
+#if (HW_SAMPR_CAPS & SAMPR_CAP_384)
+#define HAVE_PLAY_FREQ 384
+# define PLAY_SAMPR_MIN     SAMPR_44
+# define PLAY_SAMPR_MAX     SAMPR_384
+# define PLAY_SAMPR_DEFAULT SAMPR_44
+# define PLAY_SAMPR_HW_MIN  HW_SAMPR_MIN
+#elif (HW_SAMPR_CAPS & SAMPR_CAP_352)
+#define HAVE_PLAY_FREQ 352
+# define PLAY_SAMPR_MIN     SAMPR_44
+# define PLAY_SAMPR_MAX     SAMPR_352
+# define PLAY_SAMPR_DEFAULT SAMPR_44
+# define PLAY_SAMPR_HW_MIN  HW_SAMPR_MIN
+#elif (HW_SAMPR_CAPS & SAMPR_CAP_192)
 #define HAVE_PLAY_FREQ 192
 # define PLAY_SAMPR_MIN     SAMPR_44
 # define PLAY_SAMPR_MAX     SAMPR_192

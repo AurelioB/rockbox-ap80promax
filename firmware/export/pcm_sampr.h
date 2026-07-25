@@ -31,8 +31,9 @@
 #endif
 
 /* These must be macros for comparison with SAMPR_CAP_* flags by the
-   preprocessor. Add samplerate index in descending order renumbering
-   the ones later in the list if any */
+   preprocessor. New master-list indexes are appended so existing capability
+   bits and persisted settings remain stable. Hardware enums below are still
+   emitted in descending sample-rate order. */
 #define FREQ_192         0
 #define FREQ_176         1
 #define FREQ_96          2
@@ -47,9 +48,13 @@
 #define FREQ_12         11
 #define FREQ_11         12
 #define FREQ_8          13
-#define SAMPR_NUM_FREQ  14
+#define FREQ_384        14
+#define FREQ_352        15
+#define SAMPR_NUM_FREQ  16
 
 /* sample rate values in HZ */
+#define SAMPR_384       384000
+#define SAMPR_352       352800
 #define SAMPR_192       192000
 #define SAMPR_176       176400
 #define SAMPR_96        96000
@@ -80,6 +85,15 @@
 #define SAMPR_CAP_12    (1 << FREQ_12)
 #define SAMPR_CAP_11    (1 << FREQ_11)
 #define SAMPR_CAP_8     (1 << FREQ_8)
+#define SAMPR_CAP_384   (1 << FREQ_384)
+#define SAMPR_CAP_352   (1 << FREQ_352)
+
+#define SAMPR_CAP_ALL_384   (SAMPR_CAP_384 | SAMPR_CAP_352 | \
+                         SAMPR_CAP_192 | SAMPR_CAP_176 | \
+                         SAMPR_CAP_96 | SAMPR_CAP_88 | SAMPR_CAP_64 | \
+                         SAMPR_CAP_48 | SAMPR_CAP_44 | SAMPR_CAP_32 | \
+                         SAMPR_CAP_24 | SAMPR_CAP_22 | SAMPR_CAP_16 | \
+                         SAMPR_CAP_12 | SAMPR_CAP_11 | SAMPR_CAP_8)
 
 #define SAMPR_CAP_ALL_192   (SAMPR_CAP_192 | SAMPR_CAP_176 | \
                          SAMPR_CAP_96 | SAMPR_CAP_88 | SAMPR_CAP_64 | \
@@ -97,7 +111,8 @@
                          SAMPR_CAP_12 | SAMPR_CAP_11 | SAMPR_CAP_8)
 
 /* List of sampling rates that are good enough for most purposes. */
-#define SAMPR_CAP_ALL_GE_22   (SAMPR_CAP_192 | SAMPR_CAP_176 | \
+#define SAMPR_CAP_ALL_GE_22   (SAMPR_CAP_384 | SAMPR_CAP_352 | \
+                               SAMPR_CAP_192 | SAMPR_CAP_176 | \
                                SAMPR_CAP_96 | SAMPR_CAP_88 | SAMPR_CAP_64 | \
                                SAMPR_CAP_48 | SAMPR_CAP_44 | SAMPR_CAP_32 | \
                                SAMPR_CAP_24 | SAMPR_CAP_22)
@@ -116,6 +131,22 @@ enum hw_freq_indexes
 {
     __HW_FREQ_START_INDEX = -1, /* Make sure first in list is 0 */
 
+/* 384000 */
+#if (HW_SAMPR_CAPS & SAMPR_CAP_384)    /* Macros and enums for each FREQ: */
+    HW_FREQ_384,                       /* Index in enumeration */
+#define HW_HAVE_384                    /* Defined if this FREQ is defined */
+#define HW_HAVE_384_(...) __VA_ARGS__  /* Output its parameters for this FREQ */
+#else
+#define HW_HAVE_384_(...)              /* Discards its parameters for this FREQ */
+#endif
+/* 352800 */
+#if (HW_SAMPR_CAPS & SAMPR_CAP_352)
+    HW_FREQ_352,
+#define HW_HAVE_352
+#define HW_HAVE_352_(...) __VA_ARGS__
+#else
+#define HW_HAVE_352_(...)
+#endif
 /* 192000 */
 #if (HW_SAMPR_CAPS & SAMPR_CAP_192)    /* Macros and enums for each FREQ: */
     HW_FREQ_192,                       /* Index in enumeration */
@@ -246,7 +277,11 @@ extern const unsigned long hw_freq_sampr[HW_NUM_FREQ];
 #endif
 
 
-#if HW_SAMPR_CAPS & SAMPR_CAP_192
+#if HW_SAMPR_CAPS & SAMPR_CAP_384
+# define HW_SAMPR_MAX   SAMPR_384
+#elif HW_SAMPR_CAPS & SAMPR_CAP_352
+# define HW_SAMPR_MAX   SAMPR_352
+#elif HW_SAMPR_CAPS & SAMPR_CAP_192
 # define HW_SAMPR_MAX   SAMPR_192
 #elif HW_SAMPR_CAPS & SAMPR_CAP_176
 # define HW_SAMPR_MAX   SAMPR_176

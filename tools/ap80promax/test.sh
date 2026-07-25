@@ -4,8 +4,23 @@ set -eu
 ap80_rockbox_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 ap80_warble_build=${AP80_WARBLE_BUILD:-"$ap80_rockbox_root/build-warble-ap80"}
 ap80_jobs=${AP80_JOBS:-$(getconf _NPROCESSORS_ONLN)}
+ap80_host_cc=${HOSTCC:-cc}
 
 mkdir -p "$ap80_warble_build"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -I"$ap80_rockbox_root/firmware/export" \
+    -DTEST_HW_SAMPR_CAPS=0x3fffu \
+    "$ap80_rockbox_root/tests/test_pcm_sampr.c" \
+    -o "$ap80_warble_build/test-pcm-sampr-legacy"
+"$ap80_warble_build/test-pcm-sampr-legacy"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -I"$ap80_rockbox_root/firmware/export" \
+    -DTEST_HW_SAMPR_CAPS=0xffffu \
+    "$ap80_rockbox_root/tests/test_pcm_sampr.c" \
+    -o "$ap80_warble_build/test-pcm-sampr-extended"
+"$ap80_warble_build/test-pcm-sampr-extended"
 
 (
     cd "$ap80_warble_build"
