@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install host dependencies
         run: |
@@ -41,10 +41,10 @@ jobs:
   target-build:
     name: MIPS application and bootloader
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install toolchain dependencies
         run: |
@@ -64,7 +64,7 @@ jobs:
             zip
 
       - name: Cache Rockbox MIPS toolchain
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ci/toolchain
           key: rockbox-mips-${{ runner.os }}-${{ hashFiles('tools/rockboxdev.sh', 'tools/toolchain-patches/**') }}
@@ -89,7 +89,7 @@ jobs:
         run: ./tools/ap80promax/build.sh
 
       - name: Upload engineering artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ap80promax-engineering-build
           path: |
