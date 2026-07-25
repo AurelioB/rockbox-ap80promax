@@ -27,3 +27,15 @@ AUDIOHW_SETTING(MIC_GAIN, "dB", 0, 1, 0, 0, 0)
 void audiohw_mute(int mute);
 void hiby_set_output(int ps);
 int hiby_get_outputs(void);
+
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+enum hiby_output_mode
+{
+    HIBY_OUTPUT_AUTO = 0,
+    HIBY_OUTPUT_LINEOUT,
+    HIBY_OUTPUT_SPDIF,
+    HIBY_OUTPUT_NUM_MODES
+};
+
+int audiohw_set_output_mode(int mode);
+#endif

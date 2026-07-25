@@ -62,11 +62,15 @@
 #define HW_SAMPR_CAPS SAMPR_CAP_ALL_192
 
 /*
- * The stock output router maps line-out to Output Port Switch value 1.
- * Keep it opt-in: the port is fixed at 0 dB and is unsafe for headphones.
+ * The stock output router maps line-out and I2S-to-S/PDIF to Output Port
+ * Switch values 1 and 4. The digital endpoint is ALSA card 0/device 1.
  */
-#define HAVE_LINEOUT_POWEROFF
-#define DEFAULT_LINEOUT_ACTIVE false
+#ifndef SIMULATOR
+#define HAVE_HIBY_OUTPUT_SELECT
+#define DEFAULT_PLAYBACK_DEVICE "hw:0,0"
+#define HIBY_ANALOG_PLAYBACK_DEVICE "hw:0,0"
+#define HIBY_SPDIF_PLAYBACK_DEVICE "hw:0,1"
+#endif
 
 /*
  * The stock digital-microphone path opens hw:0,0 for interleaved S16_LE,

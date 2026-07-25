@@ -30,6 +30,9 @@
 #include "button.h"
 #include "backlight.h"
 #include "sound.h"
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+#include "audiohw.h"
+#endif
 #include "pcm_sink.h"
 #include "settings.h"
 #include "rbpaths.h"
@@ -947,6 +950,17 @@ static void hp_lo_select_apply(int arg)
 }
 #endif
 
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+static void hiby_output_mode_apply(int mode)
+{
+    /*
+     * The target returns the last working mode if the ALSA endpoint cannot
+     * be opened, keeping the visible setting consistent with the hardware.
+     */
+    global_settings.hiby_output_mode = audiohw_set_output_mode(mode);
+}
+#endif
+
 #endif /* __PCTOOL__ */
 
 const struct settings_list settings[] = {
@@ -1321,12 +1335,12 @@ const struct settings_list settings[] = {
     OFFON_SETTING(0, accessory_supply, LANG_ACCESSORY_SUPPLY,
                   true, "accessory power supply", accessory_supply_set),
 #endif
-#ifdef HAVE_LINEOUT_POWEROFF
-#ifndef DEFAULT_LINEOUT_ACTIVE
-#define DEFAULT_LINEOUT_ACTIVE true
-#endif
-    OFFON_SETTING(0, lineout_active, LANG_LINEOUT,
-                  DEFAULT_LINEOUT_ACTIVE, "lineout", lineout_set),
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+    CHOICE_SETTING(F_CB_ONLY_IF_CHANGED, hiby_output_mode, LANG_OUTPUT_MODE,
+                   HIBY_OUTPUT_AUTO, "output mode", "auto,lineout,spdif",
+                   hiby_output_mode_apply, HIBY_OUTPUT_NUM_MODES,
+                   ID2P(LANG_OUTPUT_AUTOMATIC), ID2P(LANG_LINEOUT),
+                   ID2P(LANG_SPDIF_OUTPUT)),
 #endif
     /* tuner */
 #if CONFIG_TUNER

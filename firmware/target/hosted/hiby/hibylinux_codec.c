@@ -44,8 +44,8 @@ static long int vol_r_hw = 255;
 static long int last_ps = -1;
 
 static int muted = -1;
-#ifdef HAVE_LINEOUT_POWEROFF
-static bool lineout_active;
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+static int output_mode = HIBY_OUTPUT_AUTO;
 #endif
 
 void audiohw_mute(int mute)
@@ -99,9 +99,9 @@ void hiby_set_output(int ps)
 {
     if (!hw_init || muted) return;
 
-#ifdef HAVE_LINEOUT_POWEROFF
-    /* Jack events must not override an explicitly selected fixed line-out. */
-    if (lineout_active)
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+    /* Jack events must not override an explicitly selected fixed route. */
+    if (output_mode != HIBY_OUTPUT_AUTO)
         return;
 #endif
 
@@ -118,35 +118,65 @@ void hiby_set_output(int ps)
     }
 }
 
-#ifdef HAVE_LINEOUT_POWEROFF
-void lineout_set(bool enable)
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+int audiohw_set_output_mode(int mode)
 {
-    int ps;
+    const char *device;
+    int old_mode = output_mode;
+    int old_port = last_ps;
+    int port;
 
-    lineout_active = enable;
+    if (mode < HIBY_OUTPUT_AUTO || mode >= HIBY_OUTPUT_NUM_MODES)
+        return old_mode;
     if (!hw_init)
-        return;
+    {
+        output_mode = mode;
+        return mode;
+    }
+    if (mode == old_mode)
+        return mode;
 
     /*
-     * The stock player maps line-out/headset/balanced to values 1/2/3.
-     * Mute around the route and gain change so selecting fixed line level
-     * cannot briefly expose the previous headphone gain.
+     * The stock player maps line-out/headset/balanced/S/PDIF to values
+     * 1/2/3/4. Mute around both the route and ALSA endpoint transition.
      */
     audiohw_mute(true);
-    if (enable)
+    switch (mode)
     {
-        set_output_port(1);
-    }
-    else
-    {
-        ps = hiby_has_valid_output();
-        if (ps == 0)
-            ps = 2;
-        set_output_port(ps);
+        case HIBY_OUTPUT_LINEOUT:
+            port = 1;
+            device = HIBY_ANALOG_PLAYBACK_DEVICE;
+            break;
+        case HIBY_OUTPUT_SPDIF:
+            port = 4;
+            device = HIBY_SPDIF_PLAYBACK_DEVICE;
+            break;
+        case HIBY_OUTPUT_AUTO:
+        default:
+            port = hiby_has_valid_output();
+            if (port == 0)
+                port = 2;
+            device = HIBY_ANALOG_PLAYBACK_DEVICE;
+            break;
     }
 
+    /*
+     * Select the matching mixer route before the backend restarts playback.
+     * If opening/configuring the new endpoint fails, restore the old route
+     * and leave the setting on the last working mode.
+     */
+    set_output_port(port);
+    if (!pcm_alsa_switch_playback_device(device))
+    {
+        set_output_port(old_port > 0 ? old_port : 2);
+        audiohw_mute(false);
+        return old_mode;
+    }
+
+    output_mode = mode;
     audiohw_set_volume(vol_l_hw, vol_r_hw);
     audiohw_mute(false);
+    return mode;
 }
 #endif
 
@@ -158,6 +188,10 @@ void audiohw_preinit(void)
 
     audiohw_mute(false);  /* No need ? */
     alsa_controls_set_bool("DOP_EN", 0); //isDSD
+#if defined(HAVE_ALSA_32BIT)
+    /* S16 samples are expanded into S32 ALSA slots; zero dB is unity. */
+    pcm_set_mixer_volume(0, 0);
+#endif
 }
 
 void audiohw_postinit(void)
@@ -194,8 +228,8 @@ void audiohw_set_volume(int vol_l, int vol_r)
     vol_l_hw = vol_l;
     vol_r_hw = vol_r;
 
-#ifdef HAVE_LINEOUT_POWEROFF
-    if (lineout_active)
+#ifdef HAVE_HIBY_OUTPUT_SELECT
+    if (output_mode == HIBY_OUTPUT_LINEOUT)
     {
         /* Stock LO_VOLUME_INDEX is 100, corresponding to fixed 0 dB. */
         l = 0;

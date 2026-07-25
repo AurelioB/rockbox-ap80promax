@@ -16931,15 +16931,66 @@
   user: core
   <source>
     *: none
-    erosqnative,lineout_poweroff: "Line Out"
+    erosqnative,lineout_poweroff,hiby_output_select: "Line Out"
   </source>
   <dest>
     *: none
-    erosqnative,lineout_poweroff: "Line Out"
+    erosqnative,lineout_poweroff,hiby_output_select: "Line Out"
   </dest>
   <voice>
     *: none
-    erosqnative,lineout_poweroff: "Line Out"
+    erosqnative,lineout_poweroff,hiby_output_select: "Line Out"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_OUTPUT_MODE
+  desc: AP80 Pro Max analog/digital output selector
+  user: core
+  <source>
+    *: none
+    hiby_output_select: "Output Mode"
+  </source>
+  <dest>
+    *: none
+    hiby_output_select: "Output Mode"
+  </dest>
+  <voice>
+    *: none
+    hiby_output_select: "Output Mode"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_OUTPUT_AUTOMATIC
+  desc: Automatic headphone output selection
+  user: core
+  <source>
+    *: none
+    hiby_output_select: "Automatic"
+  </source>
+  <dest>
+    *: none
+    hiby_output_select: "Automatic"
+  </dest>
+  <voice>
+    *: none
+    hiby_output_select: "Automatic"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_SPDIF_OUTPUT
+  desc: AP80 Pro Max coaxial S/PDIF output
+  user: core
+  <source>
+    *: none
+    hiby_output_select: "S/PDIF"
+  </source>
+  <dest>
+    *: none
+    hiby_output_select: "S/PDIF"
+  </dest>
+  <voice>
+    *: none
+    hiby_output_select: "S P D I F"
   </voice>
 </phrase>
 <phrase>

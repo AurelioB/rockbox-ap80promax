@@ -27,6 +27,8 @@ source repository.
 - [x] Add recording key mappings and a fixed-gain codec description; the
       stock digital-microphone path exposes no verified gain control.
 - [x] Build all recording encoders and the portrait recorder UI.
+- [x] Keep capture in the stock `S16_LE` format even though playback uses
+      32-bit ALSA slots, and restore the playback endpoint/rate on exit.
 - [ ] Validate WAV headers, duration, channel order, levels, and restoration
       of playback on hardware.
 
@@ -43,9 +45,10 @@ Stock-player disassembly establishes the exact `Output Port Switch` mapping:
 | 5 | no analog route |
 
 - [x] Keep automatic 3.5/4.4 mm jack routing.
-- [x] Add an opt-in line-out setting which mutes around route changes, fixes
-      the output at the stock 0 dB level, ignores jack rerouting while active,
-      and restores the saved headphone volume when disabled.
+- [x] Add a mutually exclusive `Automatic / Line Out / S/PDIF` selector.
+      Line-out mutes around route changes, fixes the output at the stock 0 dB
+      level, ignores jack rerouting while active, and restores the saved
+      headphone volume when disabled.
 - [ ] Validate the warning and transition behavior with inexpensive hardware
       before treating line-out as safe.
 
@@ -55,16 +58,20 @@ The stock configuration identifies digital ALSA card 0/device 1, supports
 44.1 through 192 kHz, and pairs it with output-route value 4. This is not the
 TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 
-- [ ] Add an atomic hosted-ALSA endpoint switch between analog `hw:0,0` and
-      digital `hw:0,1`. The switch must coordinate with Rockbox's asynchronous
-      PCM callback; changing only the mixer route can stall or misroute audio.
-- [ ] Expose S/PDIF only after the endpoint transition has deterministic
-      stop/restart and rollback behavior.
+- [x] Add an atomic hosted-ALSA endpoint switch between analog `hw:0,0` and
+      digital `hw:0,1`, coordinated with the asynchronous PCM callback.
+- [x] Expose S/PDIF with deterministic mute, route, stop/reopen/restart, and
+      rollback behavior. A failed endpoint open restores the visible setting
+      and last working route.
+- [ ] Validate 44.1 through 192 kHz, live route changes, receiver lock, and
+      rollback behavior on physical S/PDIF hardware.
 
 ### PCM precision and rates
 
 - [x] Use the hosted ALSA 32-bit sink so Rockbox's internal high-precision
       samples reach the AP80 driver in `S32_LE` slots.
+- [x] Initialize the S16-to-S32 expansion multiplier at unity while retaining
+      the ES9219 hardware volume controls.
 - [x] Retain the proven Rockbox rate range through 192 kHz.
 - [ ] Extend Rockbox's global sample-rate enumeration for 352.8/384 kHz. This
       is core work, not an AP80-only target define, and must preserve every
