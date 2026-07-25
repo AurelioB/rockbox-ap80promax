@@ -34,6 +34,8 @@ With the MIPS toolchain installed:
 - `dist/rockbox.ap80promax`
 - `dist/rockbox-ap80promax.zip`
 - `dist/bootloader.ap80promax`
+- `dist/update-usb.sh`
+- `dist/update-device.sh`
 - `dist/SHA256SUMS`
 
 `package.sh` requires a legally obtained `ap80max.upt` matching the installed
@@ -67,8 +69,62 @@ successfully, that choice is remembered and starts after a one-second delay.
 | Play | Boot selected choice |
 
 The choices are **ROCKBOX**, **TOOLS**, and **HIBY PLAYER**. The Tools menu
-provides ADB start/stop, SD remount, restart, shutdown, and the vendor recovery
-request.
+provides USB Rockbox update, ADB start/stop, SD remount, restart, shutdown,
+and the vendor recovery request.
+
+## Update Rockbox over USB
+
+The firmware updater is required only for the initial bootloader
+installation. Later Rockbox builds can be installed through USB without
+flashing firmware or changing the bootloader.
+
+Install Android Platform Tools so the computer has `adb`, then:
+
+1. Download or build `rockbox-ap80promax.zip`, `update-usb.sh`, and
+   `update-device.sh`. Keep all three in the same directory.
+2. Restart the player into **TOOLS → USB Rockbox update**. If the currently
+   installed bootloader predates that menu item, choose **TOOLS → ADB start**
+   instead; no extra firmware flash is required.
+3. Connect the player directly to the computer with a data-capable USB cable.
+4. On Linux, macOS, WSL, or another POSIX shell, run:
+
+   ```sh
+   ./update-usb.sh
+   ```
+
+   From a source checkout, the same command is:
+
+   ```sh
+   ./tools/ap80promax/update-usb.sh
+   ```
+
+5. Wait for the computer to report success. The dedicated update screen also
+   reports **Update complete**; press Play there to restart. With an older
+   bootloader, select **Restart** from the Tools menu.
+
+To install a ZIP from another location, use:
+
+```sh
+./update-usb.sh --zip /path/to/rockbox-ap80promax.zip
+```
+
+The updater verifies the ZIP and connected target, checks the USB transfer
+checksum, copies the current installation into a staging directory, overlays
+the new release, and validates it before switching directories. Configuration,
+custom themes, the database, and the remembered boot choice are retained.
+The previous complete tree remains at `/.rockbox-backup`.
+
+If the new build does not work, return to **TOOLS → USB Rockbox update** (or
+**TOOLS → ADB start** on an older bootloader) and run:
+
+```sh
+./update-usb.sh --rollback
+```
+
+An interrupted transfer or extraction leaves the active `/.rockbox`
+directory untouched. Do not use Mass Storage mode for this procedure; the
+ADB updater keeps filesystem ownership on the player and avoids concurrent
+host/device writes.
 
 ## Rockbox physical controls
 

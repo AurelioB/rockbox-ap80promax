@@ -30,8 +30,15 @@ does not flash anything.
 
 `test.sh` checks both legacy and extended sample-rate enumerations, tests the
 streaming DSD-to-PCM converter, builds the target-specific Warble codec
-runner, executes the direct and fallback DSD fixtures, then builds the
+runner, executes the direct and fallback DSD fixtures, exercises USB update,
+rollback, corrupt-archive, and wrong-target handling, then builds the
 simulator and validates all installed OneBit skins.
+
+After the bootloader has been installed once, `update-usb.sh` updates only
+the SD card's `/.rockbox` tree over the boot menu's ADB connection. It stages
+and validates the release before switching directories, preserves user data,
+and retains the previous complete installation for `--rollback`. It never
+writes a firmware partition or replaces the installed bootloader.
 
 `simulator.sh` builds the 360 x 640 Rockbox application simulator and validates
 the installed OneBit WPS/SBS files with a target-specific `checkwps`. It is

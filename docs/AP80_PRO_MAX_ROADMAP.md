@@ -9,8 +9,13 @@ require a physical player.
       from one source state.
 - [x] Verify ELF architecture, ZIP integrity, seven AP80 OneBit presets, and
       SHA-256 manifests with `tools/ap80promax/verify.sh`.
+- [x] Add a no-reflash USB update and rollback workflow using the boot
+      menu's ADB gadget, staged same-filesystem directory swaps, target
+      validation, and transfer checksums.
 - [x] Read USB cable presence from the vendor `usb/online` power-supply node
       without changing the indicator LED from a polling function.
+- [ ] Validate USB update, interrupted transfer, rollback, and repeated
+      updates on the physical player.
 - [ ] Exercise charge-only, ADB, USB-DAC, storage, repeated hotplug, and host
       suspend on the device.
 
