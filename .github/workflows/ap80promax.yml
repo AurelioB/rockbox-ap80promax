@@ -1,0 +1,96 @@
+name: AP80 Pro Max
+
+on:
+  push:
+    branches:
+      - master
+      - "agent/**"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ap80promax-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host-validation:
+    name: DSD, simulator, and themes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libasound2-dev \
+            libsdl2-dev \
+            libudev-dev \
+            libusb-1.0-0-dev \
+            unzip \
+            zip \
+            zlib1g-dev
+
+      - name: Run host validation
+        env:
+          AP80_JOBS: "2"
+        run: ./tools/ap80promax/test.sh
+
+  target-build:
+    name: MIPS application and bootloader
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            bison \
+            build-essential \
+            flex \
+            libtool-bin \
+            texinfo \
+            unzip \
+            zip
+
+      - name: Cache Rockbox MIPS toolchain
+        uses: actions/cache@v4
+        with:
+          path: .ci/toolchain
+          key: rockbox-mips-${{ runner.os }}-${{ hashFiles('tools/rockboxdev.sh', 'tools/toolchain-patches/**') }}
+
+      - name: Build Rockbox MIPS toolchain
+        run: |
+          if [ ! -x .ci/toolchain/bin/mipsel-rockbox-linux-gnu-gcc ]; then
+            ./tools/rockboxdev.sh \
+              --target=y \
+              --prefix="$PWD/.ci/toolchain" \
+              --dlwhere="$RUNNER_TEMP/rockbox-downloads" \
+              --builddir="$RUNNER_TEMP/rockbox-toolchain-build" \
+              --makeflags="-j2"
+          fi
+
+      - name: Build and verify target artifacts
+        env:
+          AP80_DIST_DIR: ${{ runner.temp }}/ap80-dist
+          AP80_JOBS: "2"
+          AP80_TOOLCHAIN_BIN: ${{ github.workspace }}/.ci/toolchain/bin
+        run: ./tools/ap80promax/build.sh
+
+      - name: Upload engineering artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ap80promax-engineering-build
+          path: |
+            ${{ runner.temp }}/ap80-dist/rockbox.ap80promax
+            ${{ runner.temp }}/ap80-dist/rockbox-ap80promax.zip
+            ${{ runner.temp }}/ap80-dist/bootloader.ap80promax
+            ${{ runner.temp }}/ap80-dist/SHA256SUMS

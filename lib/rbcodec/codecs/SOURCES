@@ -50,7 +50,7 @@ aac_bsf.c
 dsd.c
 #endif
 
-#ifdef HAVE_RECORDING
+#if defined(HAVE_RECORDING) && !defined(WARBLE)
 
 /* encoders */
 
@@ -59,4 +59,4 @@ mp3_enc.c
 wav_enc.c
 wavpack_enc.c
 
-#endif /* HAVE_RECORDING */
+#endif /* HAVE_RECORDING && !WARBLE */

@@ -4,7 +4,8 @@ set -eu
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 work_dir="${TMPDIR:-/tmp}/rockbox-dsd-tests"
 fixture_tool="$work_dir/make_dsd_fixtures"
-warble="$repo_dir/build-warble-ap80/warble.hidizsap80promax"
+warble_build=${AP80_WARBLE_BUILD:-"$repo_dir/build-warble-ap80"}
+warble="$warble_build/warble.hidizsap80promax"
 
 mkdir -p "$work_dir"
 

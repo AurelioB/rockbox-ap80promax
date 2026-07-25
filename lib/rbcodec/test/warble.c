@@ -729,20 +729,14 @@ static struct codec_api ci = {
     qsort,
 
 #ifdef HAVE_RECORDING
-    ci_enc_get_inputs,
-    ci_enc_set_parameters,
-    ci_enc_get_chunk,
-    ci_enc_finish_chunk,
-    ci_enc_get_pcm_data,
-    ci_enc_unget_pcm_data,
-
-    /* file */
-    open,
-    close,
-    read,
-    lseek,
-    write,
-    ci_round_value_to_list32,
+    NULL, /* enc_pcmbuf_read */
+    NULL, /* enc_pcmbuf_advance */
+    NULL, /* enc_encbuf_get_buffer */
+    NULL, /* enc_encbuf_finish_buffer */
+    NULL, /* enc_stream_read */
+    NULL, /* enc_stream_lseek */
+    NULL, /* enc_stream_write */
+    NULL, /* round_value_to_list32 */
 
 #endif /* HAVE_RECORDING */
 
