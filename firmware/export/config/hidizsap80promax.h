@@ -10,10 +10,16 @@
 #define PIVOT_ROOT "/data/mnt/sd_0"
 #define MULTIDRIVE_DIR "/data/mnt/usb"
 
-/* 2.95-inch portrait LCD, as configured by cst8xx_touch.sh. */
-#define LCD_WIDTH 360
+/*
+ * The ST7701 panel timing is 480x640. The vendor UI and CST8xx driver use a
+ * 360x640 logical coordinate space, so hosted input scales touch X below.
+ */
+#define LCD_WIDTH 480
 #define LCD_HEIGHT 640
-#define LCD_DPI 249
+#define LCD_DPI 271
+
+#define TOUCHSCREEN_RAW_WIDTH 360
+#define TOUCHSCREEN_RAW_HEIGHT 640
 
 #define HAVE_LCD_SLEEP
 #define LCD_SLEEP_TIMEOUT (2*HZ)

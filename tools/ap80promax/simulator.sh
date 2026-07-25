@@ -57,7 +57,7 @@ fi
 
 echo "Simulator storage: $ap80_sim_root"
 echo "Keys: Up/Down or Left/Right, Enter/Space, Escape/Backspace, +/-"
-echo "F5 writes a 360x640 screen dump into the simulator storage."
+echo "F5 writes a 480x640 screen dump into the simulator storage."
 
 exec "$ap80_sim_build/rockboxui" \
     --root "$ap80_sim_root" \

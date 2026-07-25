@@ -23,7 +23,10 @@ to eishiya in the original OneBit_OLED package.
 
 ## AP80 adaptation
 
-- Target resolution: 360 x 640, 16-bit color.
+- Physical framebuffer: 480 x 640, 16-bit color.
+- The original 360 x 640 composition is centered with 60-pixel side margins.
+  Viewports and touch regions are adapted, while the source bitmaps and fonts
+  remain unchanged.
 - Original font files are packaged without conversion.
 - Original WPS/SBS image-backed animations, peak meters, progress bars,
   volume bars, conditional settings, USB screen, and hold screen are retained.

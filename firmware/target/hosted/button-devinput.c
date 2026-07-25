@@ -131,6 +131,17 @@ static enum
 
 static int ts_enabled = 1;
 
+#if defined(TOUCHSCREEN_RAW_WIDTH) || defined(TOUCHSCREEN_RAW_HEIGHT)
+static int touchscreen_scale_coordinate(int value, int raw_size, int lcd_size)
+{
+    if (value <= 0)
+        return 0;
+
+    value = value * lcd_size / raw_size;
+    return value < lcd_size ? value : lcd_size - 1;
+}
+#endif
+
 void touchscreen_last_state(int *x, int *y, int *state)
 {
     *x = _last_x;
@@ -150,6 +161,10 @@ static void handle_touchscreen_event(__u16 code, __s32 value)
         case ABS_X:
         case ABS_MT_POSITION_X:
         {
+#ifdef TOUCHSCREEN_RAW_WIDTH
+            value = touchscreen_scale_coordinate(value, TOUCHSCREEN_RAW_WIDTH,
+                                                  LCD_WIDTH);
+#endif
             _last_x = value;
             break;
         }
@@ -157,6 +172,10 @@ static void handle_touchscreen_event(__u16 code, __s32 value)
         case ABS_Y:
         case ABS_MT_POSITION_Y:
         {
+#ifdef TOUCHSCREEN_RAW_HEIGHT
+            value = touchscreen_scale_coordinate(value, TOUCHSCREEN_RAW_HEIGHT,
+                                                  LCD_HEIGHT);
+#endif
             _last_y = value;
             break;
         }

@@ -112,7 +112,8 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 
 ## UI and upstream integration
 
-- [x] Provide native 360 x 640 Cabbie and original-file OneBit variants.
+- [x] Provide physical 480 x 640 Cabbie and centered original-file OneBit
+      variants, with the stock 360-wide touch coordinates scaled in input.
 - [x] Add touch regions while retaining physical-button behavior.
 - [x] Make plugin layouts bounds-safe at portrait resolution.
 - [x] Add a simulator target for menus, themes, touch, metadata, and plugins.

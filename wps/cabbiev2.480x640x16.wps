@@ -1,0 +1,92 @@
+# Cabbie v2 for the Hidizs AP80 Pro Max
+# Original 360x640 layout centered on the 480x640 physical framebuffer
+#
+%wd
+%X(wpsbackdrop-480x640x16.bmp)
+
+# Bottom control sprites. Each strip keeps the same frame count as Cabbie v2.
+%xl(C,volume-360x640x16.bmp,35,45,10)
+%xl(D,shuffle-360x640x16.bmp,145,50)
+%xl(E,repeat-360x640x16.bmp,270,40,4)
+%xl(F,playmode-360x640x16.bmp,155,85,5)
+%xl(G,popup-360x640x16.bmp,0,0)
+%xl(H,rew-360x640x16.bmp,45,85)
+%xl(I,ff-360x640x16.bmp,264,85)
+%xl(vol,volumebar-360x640x16.bmp,0,0)
+%xl(volbd,volumebar-backdrop-360x640x16.bmp,0,0)
+
+# Album-art geometry must be declared against the full-screen default viewport.
+%Cl(0,0,264,264,c,c)
+
+# Header: library shortcut, battery/charge state, and hardware volume.
+%V(75,8,330,30,1)
+%alLIBRARY%ac%?bc<CHG|BAT %bl>%arVOL %pv
+%T(0,0,105,30,browse)
+%T(225,0,105,30,contextmenu)
+
+# Album art is large enough for the AP80's portrait display. Tapping it opens
+# the playlist; a long press opens the track context menu.
+%?vg(show_vol)<%Vd(a)|%Vd(t)|%Vd(vol)>
+
+# The fallback and album art share one viewport. Rockbox renders the text first
+# and paints a decoded cover over it afterward; a failed decoder therefore
+# leaves useful format information instead of a blank panel.
+%Vl(a,108,98,264,264,1)
+%ac
+%acNO COVER
+
+%ac
+%ac%fc
+%ac%fk kHz
+%Cd
+%T(0,0,264,264,playlist)
+%T(0,0,264,264,contextmenu,repeat_press)
+
+# Track identity and technical format. Long values scroll inside the screen.
+%V(80,366,320,96,1)
+%s%ac%?it<%it|%fn>
+%s%ac%?ia<%ia|Unknown artist> - %?id<%id|Unknown album>
+%ac%fc  %fk kHz  %fb kbps
+
+# Seekable progress bar and elapsed/remaining time.
+%V(60,452,360,48,1)
+%pb(23,17,315,23,pb-360x640x16.bmp)
+%T(20,5,320,46,progressbar)
+%V(80,500,320,28,1)
+%al%pc%ac%pp / %pe%ar%pr
+
+# Primary controls. The visible sprites occupy the centre of larger,
+# finger-friendly touch regions.
+%V(60,490,360,150,1)
+%?pv<%xd(Ca)|%xd(Cb)|%xd(Cc)|%xd(Cd)|%xd(Ce)|%xd(Cf)|%xd(Cg)|%xd(Ch)|%xd(Ci)|%xd(Cj)>
+%?ps<%xd(D)>
+%xd(E,%mm,-1)
+%?Tp<%?mp<%xd(F,1)|%xd(F,3)|%xd(F,2)|%xd(F,4)|%xd(F,5)||||>|%xd(F,%mp)>
+%xd(H)%xd(I)
+
+%T(small_vol,15,30,95,58,none)
+%T(115,30,120,58,shuffle)
+%T(245,25,110,65,repmode)
+%T(0,80,120,70,rwd,repeat_press)
+%T(0,80,120,70,prev)
+%T(120,80,120,70,play)
+%T(120,80,120,70,stop,repeat_press)
+%T(240,80,120,70,ffwd,repeat_press)
+%T(240,80,120,70,next)
+
+# Volume overlay, shown after tapping the volume icon or using the hardware
+# volume ring.
+%Vl(vol,71,340,338,153,-)
+%pv(0,0,338,153,image,vol,backdrop,volbd)
+%T(0,0,338,153,volume)
+
+# Quick overlay reached from a short tap on otherwise unused fallback artwork.
+%Vl(t,71,340,338,153,-)
+%xd(G)
+%T(20,18,120,112,browse)
+%T(140,18,88,112,quickscreen)
+%T(228,18,90,112,contextmenu)
+
+# Touch/volume state must be evaluated last because it selects the visible
+# metadata, popup, or volume viewports.
+%?Tl(small_vol,2.0)<%vs(show_vol,set,3)|%?mv(2.0)<%vs(show_vol,set,3)|%?Tl<%vs(show_vol,set,2)|%vs(show_vol,set,1)>>>
