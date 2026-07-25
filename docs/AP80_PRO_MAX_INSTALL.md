@@ -157,7 +157,9 @@ host/device writes.
 
 The touchscreen remains available. The AP80 OneBit themes add large invisible
 touch regions for the header, playlist/context actions, volume, seek, and the
-bottom transport controls.
+bottom transport controls. In an OneBit menu, the left 120 x 80 header area is
+back/cancel and the right 120 x 80 area opens the context menu. These match the
+stock UI's 90 x 60 logical targets after panel scaling.
 
 Menus and file lists default to Rockbox's **Point** touchscreen mode:
 
@@ -171,7 +173,8 @@ Menus and file lists default to Rockbox's **Point** touchscreen mode:
 
 Now Playing uses the active theme's touch regions. AP80 Cabbie and OneBit
 themes provide large regions for play/pause, previous/next, seek, volume,
-browser, playlist, and context actions.
+browser, playlist, and context actions. On OneBit, the WPS header is browser
+on the left, main menu in the centre, and context menu on the right.
 
 Rockbox also offers **Settings → General Settings → Display → Touchscreen
 Settings → Touchscreen Mode → Grid**. In Grid mode, the screen becomes a 3 x
@@ -182,6 +185,24 @@ top-right, and the quick screen on bottom-left.
 
 For a reliable one-handed back action in any list or menu, press the physical
 Power button briefly. Holding Power remains the hardware power-off action.
+
+## Sleep, standby, and shutdown
+
+Rockbox turns off the backlight at the configured timeout and powers down the
+panel and touch controller two seconds later. Audio and the physical controls
+remain active. The default brightness for a fresh configuration is 60 percent,
+matching HiByOS rather than running the panel at maximum.
+
+HiByOS additionally enters kernel suspend-to-RAM while idle. This engineering
+build does not yet request suspend because analog PCM, S/PDIF, DSD/DoP, storage,
+and input must all be proven across resume on the physical player. Until that
+gate is complete, use **Settings → General Settings → Startup/Shutdown → Idle
+Poweroff** to control stopped/paused battery drain.
+
+When shutting down with the power knob, release it when the Rockbox shutdown
+message appears. Rockbox waits for that release before invoking Linux poweroff,
+so the PMIC does not interpret one continuing press as both shutdown and a new
+hardware action.
 
 ## Output modes
 

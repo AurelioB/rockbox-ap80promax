@@ -37,6 +37,15 @@ to eishiya in the original OneBit_OLED package.
   values from the original package and share the adapted `OneBitMono` skin,
   SBS, fonts, icons, and bitmaps rather than duplicating or recoloring them.
 - A visual-neutral, full-screen touch layer makes the themes practical on the
-  small display: header shortcuts, playlist/context actions, wide volume and
-  seek sliders, and 120 x 70 bottom transport zones. Holding the left, centre,
-  or right transport zone rewinds, stops, or fast-forwards respectively.
+  small display without changing their appearance. The three 120 x 80 header
+  targets exactly match the stock firmware's 90 x 60 logical header geometry
+  after its 360-to-480 panel scaling. The three 120 x 80 bottom transport
+  zones are comparable to its scaled 70 x 70 controls. Volume and seek accept
+  the full composition width. Holding the left, centre, or right transport
+  zone rewinds, stops, or fast-forwards respectively.
+- Tapping the WPS header's left, centre, or right zone opens the browser, main
+  menu, or context menu. In lists, the enlarged left header zone is a
+  dependable back/cancel target and the right zone opens the context menu.
+- Applying any AP80 OneBit preset selects automatic DPI-aware list padding.
+  At 271 dpi this gives roughly 90-pixel rows, close to the stock firmware's
+  scaled 68-to-80-pixel logical list items and much easier to select reliably.

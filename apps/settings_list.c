@@ -1237,11 +1237,7 @@ const struct settings_list settings[] = {
                 "scrollbar width",UNIT_INT, 3, MAX(LCD_WIDTH/10,25), 1,
                 NULL, NULL, NULL),
 #ifdef HAVE_TOUCHSCREEN
-#ifdef HIDIZS_AP80_PRO_MAX
-#define DEFAULT_LIST_LINE_PADDING 16
-#else
 #define DEFAULT_LIST_LINE_PADDING -1
-#endif
     TABLE_SETTING(F_ALLOW_ARBITRARY_VALS, list_line_padding, LANG_LIST_LINE_PADDING,
                   DEFAULT_LIST_LINE_PADDING, "list padding", "auto,off",
                   UNIT_PIXEL, list_pad_formatter,

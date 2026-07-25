@@ -72,6 +72,12 @@ do
         echo "Release ZIP is missing theme preset: $ap80_theme" >&2
         exit 1
     fi
+    if ! unzip -p "$ap80_zip" ".rockbox/themes/$ap80_theme.cfg" |
+         grep -qx "list padding: auto"
+    then
+        echo "Release theme does not enable touch-sized rows: $ap80_theme" >&2
+        exit 1
+    fi
 done
 
 for ap80_elf in \

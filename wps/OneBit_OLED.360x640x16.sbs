@@ -23,12 +23,17 @@
 %xl(X,seeking_icon.bmp)
 
 #__USB screen
-%?if(%cs, =, 21)<%VI(clearScreen)%Vd(usb)|%Vd(info)%?or(%if(%ss(0,1,%St(background color)),>,7),%if(%ss(0,1,%St(background color)),>=,a),%if(%ss(2,1,%St(background color)),>,7),%if(%ss(2,1,%St(background color)),>=,a),%if(%ss(4,1,%St(background color)),>,7),%if(%ss(4,1,%St(background color)),>=,a))<%VI(menuDark)%Vd(infoDark)|%VI(menuLight)%Vd(infoLight)>>
+%?if(%cs, =, 21)<%VI(clearScreen)%Vd(usb)|%Vd(navtouch)%Vd(info)%?or(%if(%ss(0,1,%St(background color)),>,7),%if(%ss(0,1,%St(background color)),>=,a),%if(%ss(2,1,%St(background color)),>,7),%if(%ss(2,1,%St(background color)),>=,a),%if(%ss(4,1,%St(background color)),>,7),%if(%ss(4,1,%St(background color)),>=,a))<%VI(menuDark)%Vd(infoDark)|%VI(menuLight)%Vd(infoLight)>>
 
 #__Clear Screen
 %Vi(clearScreen,0,0,1,1,-)
 
 # Display Viewports
+
+# Stock-sized, visual-neutral menu navigation targets.
+%Vl(navtouch,0,0,360,80,-)
+%T(0,0,120,80,cancel)
+%T(240,0,120,80,contextmenu)
 
 # Menu
 %Vi(menuDark,40,90,280,450,-)%Vf(4c4c4c)

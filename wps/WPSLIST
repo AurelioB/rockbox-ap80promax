@@ -62,6 +62,7 @@ show icons: on
 statusbar: off
 scrollbar: off
 scrollbar width: 8
+list padding: auto
 battery display: graphical
 ui viewport: -
 </main>
@@ -92,6 +93,7 @@ show icons: on
 statusbar: off
 scrollbar: off
 scrollbar width: 8
+list padding: auto
 battery display: graphical
 ui viewport: -
 </main>
@@ -121,6 +123,7 @@ viewers iconset: icons/modone_viewer_360p.bmp
 show icons: on
 statusbar: off
 scrollbar: off
+list padding: auto
 battery display: graphical
 volume display: graphic
 ui viewport: -
@@ -149,6 +152,7 @@ show icons: on
 statusbar: off
 scrollbar: off
 scrollbar width: 8
+list padding: auto
 battery display: numeric
 volume display: graphic
 ui viewport: -
@@ -178,6 +182,7 @@ show icons: on
 statusbar: off
 scrollbar: off
 scrollbar width: 8
+list padding: auto
 battery display: numeric
 volume display: graphic
 ui viewport: -
@@ -207,6 +212,7 @@ show icons: on
 statusbar: off
 scrollbar: off
 scrollbar width: 8
+list padding: auto
 battery display: numeric
 volume display: graphic
 ui viewport: -
@@ -235,6 +241,7 @@ show icons: on
 statusbar: off
 scrollbar: off
 scrollbar width: 8
+list padding: auto
 battery display: numeric
 volume display: graphic
 ui viewport: -

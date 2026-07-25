@@ -57,6 +57,7 @@ my $fgcolor;
 my $bgcolor;
 my $sepcolor;
 my $sep;
+my $listpadding;
 my $statusbar;
 my $remotestatusbar;
 my $author;
@@ -319,6 +320,7 @@ MOO
         push @out, "list separator height: $sep\n"                    if($sep);
         push @out, "list separator color: $sepcolor\n"                if($sepcolor);
     }
+    push @out, "list padding: $listpadding\n" if (defined($listpadding));
 
     push @out, "font: $font\n"                  if (defined($font));
     push @out, "statusbar: $statusbar\n"        if (defined($statusbar));
@@ -464,6 +466,7 @@ while(<WPS>) {
         undef $bgcolor;
         undef $sepcolor;
         undef $sep;
+        undef $listpadding;
         undef $statusbar;
         undef $remotestatusbar;
         undef $author;
@@ -548,6 +551,9 @@ while(<WPS>) {
             }
             elsif($_ = check_res_feature($l, "list separator height")) {
                 $sep = $_;
+            }
+            elsif($_ = check_res_feature($l, "list padding")) {
+                $listpadding = $_;
             }
             elsif($l =~ /^line selector start color: *(.*)/i) {
                 $lineselectstart = $1;

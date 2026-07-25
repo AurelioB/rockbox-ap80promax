@@ -22,12 +22,17 @@
 %xl(load,LoadStatus.bmp,10)
 
 #__USB screen
-%?if(%cs, =, 21)<%VI(clearScreen)%Vd(usb)|%VI(menu)%Vd(info)>
+%?if(%cs, =, 21)<%VI(clearScreen)%Vd(usb)|%VI(menu)%Vd(navtouch)%Vd(info)>
 
 #__Clear Screen
 %Vi(clearScreen,60,0,1,1,-)
 
 # Display Viewports
+
+# Stock-sized, visual-neutral menu navigation targets.
+%Vl(navtouch,60,0,360,80,-)
+%T(0,0,120,80,cancel)
+%T(240,0,120,80,contextmenu)
 
 # Menu
 %Vi(menu,100,90,280,450,-)%Vf(-)%Vb(-)

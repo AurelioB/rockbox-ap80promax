@@ -22,6 +22,20 @@ require a physical player.
 The vendor update and generated artifacts are deliberately not part of the
 source repository.
 
+## Power management
+
+- [x] Use framebuffer blanking to power down the panel and touch controller
+      after the backlight expires while preserving playback.
+- [x] Match the stock 60-percent default brightness instead of maximum output.
+- [x] Wait for the physical power knob to be released before Linux poweroff,
+      avoiding overlap between Rockbox shutdown and the PMIC long-press path.
+- [x] Recover HiByOS's ordered suspend/resume path, radio service boundaries,
+      kernel driver hooks, and actual wake-source GPIOs.
+- [ ] Measure stopped, paused, PCM, DoP, native DSD, and powered-off current on
+      the physical player.
+- [ ] Enable idle suspend-to-RAM only after repeated resume tests cover ALSA,
+      routing, storage, touch, wake buttons, USB, and wireless restoration.
+
 ## Audio
 
 ### Digital microphone recording
@@ -115,6 +129,8 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [x] Provide physical 480 x 640 Cabbie and centered original-file OneBit
       variants, with the stock 360-wide touch coordinates scaled in input.
 - [x] Add touch regions while retaining physical-button behavior.
+- [x] Match stock-sized header and transport touch targets and use DPI-aware
+      rows without altering OneBit artwork or visible layout.
 - [x] Make plugin layouts bounds-safe at portrait resolution.
 - [x] Add a simulator target for menus, themes, touch, metadata, and plugins.
 - [x] Add the engineering installation, controls, recovery, and validation
