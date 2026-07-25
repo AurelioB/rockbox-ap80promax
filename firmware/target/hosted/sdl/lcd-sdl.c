@@ -150,7 +150,11 @@ void sdl_set_gradient(SDL_Surface *surface, SDL_Color *start, SDL_Color *end,
 
 int lcd_get_dpi(void)
 {
+#ifdef SIMULATOR_LCD_DPI
+    return SIMULATOR_LCD_DPI;
+#else
     /* TODO: find a way to query it from the OS, SDL doesn't support it
      * directly; for now assume the more or less standard 96 */
     return 96;
+#endif
 }

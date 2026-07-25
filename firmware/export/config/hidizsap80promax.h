@@ -17,6 +17,8 @@
 #define LCD_WIDTH 480
 #define LCD_HEIGHT 640
 #define LCD_DPI 271
+/* Keep touch-row sizing representative in the SDL simulator. */
+#define SIMULATOR_LCD_DPI 271
 
 #define TOUCHSCREEN_RAW_WIDTH 360
 #define TOUCHSCREEN_RAW_HEIGHT 640
