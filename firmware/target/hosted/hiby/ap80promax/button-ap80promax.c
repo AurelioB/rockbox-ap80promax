@@ -50,10 +50,16 @@ int button_map(int keycode)
             return BUTTON_VOL_DOWN;
         case KEY_PLAYPAUSE:
             return BUTTON_PLAY;
+        /*
+         * The AP80 kernel assigns the two transport GPIOs names opposite to
+         * the legends on the enclosure.  Keep Rockbox's logical PREV/NEXT
+         * meanings aligned with the physical buttons; this also fixes menu
+         * direction in the bootloader, which uses the same target mapper.
+         */
         case KEY_NEXTSONG:
-            return BUTTON_NEXT;
-        case KEY_PREVIOUSSONG:
             return BUTTON_PREV;
+        case KEY_PREVIOUSSONG:
+            return BUTTON_NEXT;
         case KEY_POWER:
             return BUTTON_POWER;
         case BTN_TOUCH:
