@@ -68,6 +68,7 @@ jobs:
 
       - name: Build Rockbox MIPS toolchain
         run: |
+          mkdir -p .ci
           if [ ! -x .ci/toolchain/bin/mipsel-rockbox-linux-gnu-gcc ]; then
             ./tools/rockboxdev.sh \
               --target=y \
