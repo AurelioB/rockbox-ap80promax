@@ -159,19 +159,26 @@ The touchscreen remains available. The AP80 OneBit themes add large invisible
 touch regions for the header, playlist/context actions, volume, seek, and the
 bottom transport controls.
 
-Outside a theme-specific screen, Rockbox uses a 3 x 3 touch grid. The most
-important navigation zones are:
+Menus and file lists default to Rockbox's **Point** touchscreen mode:
 
-| Touch zone | Menus and file browser | Now Playing |
+| Gesture | Action |
 | --- | --- | --- |
-| Middle left | Back/cancel | Previous track; hold to seek back |
-| Centre | Select | Play/pause; hold to stop |
-| Middle right | Select | Next track; hold to seek forward |
-| Top middle / bottom middle | Previous/next item | Volume up/down |
-| Top left | Main menu | Main menu |
-| Top right | — | File browser |
-| Bottom left | Quick screen | Quick screen |
-| Bottom right | — | Playlist or hotkey |
+| Tap an item | Select or open it |
+| Hold an item | Open its context menu |
+| Drag vertically | Scroll the list |
+| Tap the title text, when visible | Back/cancel |
+| Tap the title icon, when visible | Main menu |
+
+Now Playing uses the active theme's touch regions. AP80 Cabbie and OneBit
+themes provide large regions for play/pause, previous/next, seek, volume,
+browser, playlist, and context actions.
+
+Rockbox also offers **Settings → General Settings → Display → Touchscreen
+Settings → Touchscreen Mode → Grid**. In Grid mode, the screen becomes a 3 x
+3 keypad: the middle-left zone is back, centre is select, top/bottom middle
+move through items, and top-left opens the menu. The Now Playing grid adds
+previous/next on middle-left/right, volume on top/bottom middle, browser on
+top-right, and the quick screen on bottom-left.
 
 For a reliable one-handed back action in any list or menu, press the physical
 Power button briefly. Holding Power remains the hardware power-off action.
