@@ -33,6 +33,10 @@ static inline void core_sleep(void)
     wait_for_interrupt();
 }
 
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+void system_notify_boot_complete(void);
+#endif
+
 #endif /* __PCTOOL__ */
 
 #if defined(WIN32) || defined(__PCTOOL__)

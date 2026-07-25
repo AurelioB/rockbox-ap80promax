@@ -465,6 +465,14 @@ static void init(void)
     talk_announce_voice_invalid(); /* notify user w/ voice prompt if voice file invalid */
     settings_apply_skins();
 
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+    /*
+     * The stock launcher supervises the bootloader-to-app handoff. Signal
+     * only after the hosted application and audio path are fully initialized.
+     */
+    system_notify_boot_complete();
+#endif
+
 /* do USB last so prompt (if enabled) can work correctly if USB was inserted with device off,
  * also doesn't hurt that it will display the nice pretty backdrop this way too. */
 #ifndef USB_NONE

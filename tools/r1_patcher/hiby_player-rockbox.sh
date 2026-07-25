@@ -2,18 +2,21 @@
 
 BOOTLOADER=${RB_BOOTLOADER:-/usr/bin/bootloader.rb}
 READY=${RB_READY:-/tmp/rockbox-bootloader-ready}
+HANDOFF=${RB_HANDOFF:-/tmp/rockbox-handoff-started}
+APP_READY=${RB_APP_READY:-/tmp/rockbox-app-ready}
 SD_ROOT=${RB_SD_ROOT:-/data/mnt/sd_0}
 HIBY_PLAYER=${RB_HIBY_PLAYER:-/usr/bin/hiby_player}
 ADB_INIT=${RB_ADB_INIT:-/etc/init.d/T90adb}
 KILLALL=${RB_KILLALL:-killall}
 SLEEP=${RB_SLEEP:-sleep}
 WATCHDOG_SECONDS=${RB_WATCHDOG_SECONDS:-15}
+HANDOFF_WATCHDOG_SECONDS=${RB_HANDOFF_WATCHDOG_SECONDS:-60}
 FORCE_HIBY="$SD_ROOT/rockbox-force-hiby"
 LOG=${RB_LOG:-/tmp/rockbox-bootloader.log}
 
 start_hiby()
 {
-    rm -f "$READY"
+    rm -f "$READY" "$HANDOFF" "$APP_READY"
     exec "$HIBY_PLAYER"
 }
 
@@ -38,31 +41,49 @@ if [ -z "${RB_LOG:-}" ] && [ -d "$SD_ROOT" ]; then
     LOG="$SD_ROOT/rockbox-bootloader.log"
 fi
 
-rm -f "$READY"
+rm -f "$READY" "$HANDOFF" "$APP_READY"
 "$BOOTLOADER" >>"$LOG" 2>&1 &
 BOOTLOADER_PID=$!
 
-# The bootloader creates READY only after its system, LCD, font, button and
-# backlight initialization succeeds.
+# Supervise both initialization and the bootloader-to-Rockbox handoff. Once
+# the app reports ready, keep watching only for an unexpected process exit.
+STATE=initializing
 COUNT=0
-while [ "$COUNT" -lt "$WATCHDOG_SECONDS" ]; do
-    if [ -f "$READY" ]; then
-        wait "$BOOTLOADER_PID"
-        start_hiby
-    fi
-
+while :; do
     if ! kill -0 "$BOOTLOADER_PID" 2>/dev/null; then
         wait "$BOOTLOADER_PID"
         start_hiby
     fi
 
+    if [ -f "$APP_READY" ]; then
+        STATE=running
+        COUNT=0
+    elif [ -f "$HANDOFF" ]; then
+        if [ "$STATE" != handoff ]; then
+            STATE=handoff
+            COUNT=0
+        fi
+        if [ "$COUNT" -ge "$HANDOFF_WATCHDOG_SECONDS" ]; then
+            echo "Rockbox app handoff timeout; starting HiBy" >>"$LOG"
+            break
+        fi
+        COUNT=$((COUNT + 1))
+    elif [ -f "$READY" ]; then
+        STATE=menu
+        COUNT=0
+    else
+        if [ "$COUNT" -ge "$WATCHDOG_SECONDS" ]; then
+            echo "Rockbox bootloader readiness timeout; starting HiBy" >>"$LOG"
+            break
+        fi
+        COUNT=$((COUNT + 1))
+    fi
+
     "$SLEEP" 1
-    COUNT=$((COUNT + 1))
 done
 
 kill "$BOOTLOADER_PID" >/dev/null 2>&1
 "$SLEEP" 1
 kill -9 "$BOOTLOADER_PID" >/dev/null 2>&1
 wait "$BOOTLOADER_PID" 2>/dev/null
-echo "Rockbox bootloader readiness timeout; starting HiBy" >>"$LOG"
 start_hiby

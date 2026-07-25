@@ -60,12 +60,16 @@ watchdog.
    Play.
 
 The first boot-menu choice waits ten seconds. After a choice has booted
-successfully, that choice is remembered and starts after a one-second delay.
+successfully, that choice is remembered and starts after a five-second delay,
+leaving time to override a failed saved choice.
 
 This recovery build starts ADB before Rockbox initializes the display. It also
 requires the bootloader to report that its system, 480 x 640 framebuffer,
 font, buttons, and backlight initialized within 15 seconds. Otherwise it kills
-the bootloader and starts the untouched HiBy player automatically.
+the bootloader and starts the untouched HiBy player automatically. Once
+Rockbox is selected, the screen displays **STARTING ROCKBOX...** and the
+launcher allows 60 seconds for the application and audio path to initialize.
+A failed or blocked handoff also falls back to the untouched HiBy player.
 
 ## Boot-menu controls
 
@@ -201,13 +205,20 @@ and the bootloader log can still be collected after an early failure.
 ### Original firmware does not start
 
 Choose **TOOLS → Recovery**. This writes the vendor `recovery` request to
-`/proc/jz/reset/reset`. Recovery behavior and the AP80's powered-off hardware
-key combination must be validated before they are treated as guaranteed
-unbrick procedures.
+`/proc/jz/reset/reset`. The behavior of that software request still requires
+physical validation and should not be treated as a guaranteed unbrick
+procedure.
 
-If the boot menu itself cannot be reached, stop and use only an official
-Hidizs recovery procedure for the exact AP80 Pro Max revision. Do not test
-update files from related HiBy or Hidizs products.
+The AP80 Pro Max powered-off updater was confirmed on physical hardware:
+
+1. Format a microSD card as FAT32 and place the single intended updater at
+   its root as `ap80max.upt`.
+2. Force the player fully off by holding Power.
+3. Hold **Previous**, then press and hold **Power**.
+4. Keep Previous held until the firmware updater appears.
+
+Do not interrupt an update once progress begins. Do not test updater files
+from related HiBy or Hidizs products.
 
 ## First hardware-validation pass
 

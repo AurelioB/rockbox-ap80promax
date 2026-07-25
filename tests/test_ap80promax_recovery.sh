@@ -26,19 +26,30 @@ cat > "$ap80_test_dir/bootloader-hangs" <<'EOF'
 : > "$RB_TEST_BOOTLOADER_STARTED"
 while :; do :; done
 EOF
+cat > "$ap80_test_dir/bootloader-handoff-hangs" <<'EOF'
+#!/bin/sh
+: > "$RB_TEST_BOOTLOADER_STARTED"
+: > "$RB_READY"
+: > "$RB_HANDOFF"
+while :; do :; done
+EOF
 chmod 0755 "$ap80_test_dir/hiby-player" "$ap80_test_dir/noop" \
-    "$ap80_test_dir/bootloader-exits" "$ap80_test_dir/bootloader-hangs"
+    "$ap80_test_dir/bootloader-exits" "$ap80_test_dir/bootloader-hangs" \
+    "$ap80_test_dir/bootloader-handoff-hangs"
 
 run_launcher()
 {
     RB_SD_ROOT="$ap80_test_dir/sd" \
     RB_READY="$ap80_test_dir/ready" \
+    RB_HANDOFF="$ap80_test_dir/handoff" \
+    RB_APP_READY="$ap80_test_dir/app-ready" \
     RB_HIBY_PLAYER="$ap80_test_dir/hiby-player" \
     RB_KILLALL="$ap80_test_dir/noop" \
     RB_ADB_INIT="$ap80_test_dir/noop" \
     RB_SLEEP="$ap80_test_dir/noop" \
     RB_LOG="$ap80_test_dir/bootloader.log" \
     RB_WATCHDOG_SECONDS=1 \
+    RB_HANDOFF_WATCHDOG_SECONDS=1 \
     RB_TEST_HIBY_STARTED="$ap80_test_dir/hiby-started" \
     RB_TEST_BOOTLOADER_STARTED="$ap80_test_dir/bootloader-started" \
         "$ap80_launcher"
@@ -64,9 +75,22 @@ test -f "$ap80_test_dir/bootloader-started"
 test -f "$ap80_test_dir/hiby-started"
 grep -q 'readiness timeout' "$ap80_test_dir/bootloader.log"
 
+# A hang after menu initialization but before Rockbox finishes starting must
+# also be killed and returned to the vendor player.
+rm -f "$ap80_test_dir/bootloader-started" "$ap80_test_dir/hiby-started" \
+    "$ap80_test_dir/bootloader.log"
+RB_BOOTLOADER="$ap80_test_dir/bootloader-handoff-hangs" run_launcher
+test -f "$ap80_test_dir/bootloader-started"
+test -f "$ap80_test_dir/hiby-started"
+grep -q 'app handoff timeout' "$ap80_test_dir/bootloader.log"
+
 grep -q '#define LCD_WIDTH 480' \
     "$ap80_repo/firmware/export/config/hidizsap80promax.h"
 grep -q '#define TOUCHSCREEN_RAW_WIDTH 360' \
     "$ap80_repo/firmware/export/config/hidizsap80promax.h"
+grep -q 'system_notify_boot_complete' \
+    "$ap80_repo/apps/main.c"
+grep -q 'rockbox-handoff-started' \
+    "$ap80_repo/bootloader/hibyos_linux.c"
 
 echo "AP80 recovery launcher tests passed"

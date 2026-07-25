@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ucontext.h>
 #include <backtrace.h>
+#include <fcntl.h>
 
 #include "system.h"
 #include "mv.h"
@@ -41,6 +42,20 @@ uintptr_t *stackend;
 
 /* forward-declare */
 bool os_file_exists(const char *ospath);
+
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+void system_notify_boot_complete(void)
+{
+    int fd = open("/tmp/rockbox-app-ready",
+                  O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    if (fd >= 0)
+    {
+        static const char ready[] = "ready\n";
+        write(fd, ready, sizeof(ready) - 1);
+        close(fd);
+    }
+}
+#endif
 
 static void sig_handler(int sig, siginfo_t *siginfo, void *context)
 {

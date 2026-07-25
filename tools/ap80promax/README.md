@@ -33,8 +33,8 @@ streaming DSD-to-PCM converter, builds the target-specific Warble codec
 runner, executes the direct and fallback DSD fixtures, exercises USB update,
 rollback, corrupt-archive, and wrong-target handling, then builds the
 simulator and validates all installed OneBit skins. The recovery test also
-exercises the SD bypass marker, early-exit fallback, and hung-bootloader
-watchdog.
+exercises the SD bypass marker, early-exit fallback, hung-bootloader watchdog,
+and the bootloader-to-application handoff watchdog.
 
 After the bootloader has been installed once, `update-usb.sh` updates only
 the SD card's `/.rockbox` tree over the boot menu's ADB connection. It stages

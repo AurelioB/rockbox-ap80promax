@@ -224,7 +224,16 @@ static int get_inactivity_tmo(int same_as_last)
     else
 #endif
         if (same_as_last)
+#ifdef HIDIZS_AP80_PRO_MAX
+            /*
+             * Keep a useful recovery window even after a mode was saved.
+             * One second is too short to override a failed first boot on
+             * this touchscreen player.
+             */
+            return 5 * HZ;
+#else
             return 1 * HZ; /* Timeout when mode is the same as the previous mode */
+#endif
         else
             return 10 * HZ; /* Default timeout */
 }
@@ -353,33 +362,41 @@ static enum boot_mode get_boot_mode(void)
         /* wait for a key  */
         int btn = button_get_w_tmo(HZ / 10);
 
-#if defined(HAS_BUTTON_HOLD)
-        /* record action, changing HOLD counts as action */
-        if(btn & BUTTON_MAIN || hold_status != button_hold())
-            last_activity = current_tick;
-
-        hold_status = button_hold();
-#else
-        if(btn & BUTTON_MAIN)
-            last_activity = current_tick;
-#endif
         /* ignore release, allow repeat */
         if(btn & BUTTON_REL)
             continue;
         if(btn & BUTTON_REPEAT)
             btn &= ~BUTTON_REPEAT;
-        /* play -> stop loop and return mode */
-        if(btn == BUTTON_SELECT)
+
+        /*
+         * Give Select priority over a simultaneous wheel event. Linux input
+         * reports a bitmap, so requiring exact equality made Play+wheel an
+         * unrecognised combination that could keep resetting the timeout.
+         */
+        if(btn & BUTTON_SELECT)
+        {
+            last_activity = current_tick;
             break;
+        }
+
         /* left/right/up/down: change mode */
-        if(btn == BUTTON_LEFT || btn == BUTTON_DOWN) {
+        if(btn & (BUTTON_LEFT | BUTTON_DOWN)) {
             mode = (mode + BOOT_COUNT - 1) % BOOT_COUNT;
             init_mode = BOOT_CANARY;
+            last_activity = current_tick;
         }
-        if(btn == BUTTON_RIGHT || btn == BUTTON_UP) {
+        else if(btn & (BUTTON_RIGHT | BUTTON_UP)) {
             mode = (mode + 1) % BOOT_COUNT;
             init_mode = BOOT_CANARY;
+            last_activity = current_tick;
         }
+
+#if defined(HAS_BUTTON_HOLD)
+        /* Changing HOLD counts as activity even though it is not a key. */
+        if(hold_status != button_hold())
+            last_activity = current_tick;
+        hold_status = button_hold();
+#endif
     }
 
     /* save mode */
@@ -719,6 +736,8 @@ int main(int argc, char **argv)
 
 #ifdef HIDIZS_AP80_PRO_MAX
     unlink("/tmp/rockbox-bootloader-ready");
+    unlink("/tmp/rockbox-handoff-started");
+    unlink("/tmp/rockbox-app-ready");
 #endif
 
 #ifdef AUTO_ENABLE_ADB
@@ -801,14 +820,56 @@ int main(int argc, char **argv)
         }
         else if(mode == BOOT_ROCKBOX)
         {
-#if defined(HIBY_R3PROII) || defined(HIBY_R1) || defined(HIDIZS_AP80_PRO_MAX)
+#ifdef HIDIZS_AP80_PRO_MAX
+            /*
+             * Tell the launcher to supervise this bounded handoff. Leave
+             * Bluetooth ownership unchanged: the stock bt_suspend helper can
+             * block, and Rockbox's AP80 services handle their own state.
+             */
+            int handoff_fd = open("/tmp/rockbox-handoff-started",
+                                  O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (handoff_fd >= 0)
+            {
+                write(handoff_fd, rbversion, strlen(rbversion));
+                write(handoff_fd, "\n", 1);
+                close(handoff_fd);
+            }
+
+            lcd_clear_display();
+            lcd_set_foreground(LCD_RGBPACK(255, 201, 0));
+            display_text_center(LCD_HEIGHT / 2, "STARTING ROCKBOX...");
+            lcd_update();
+
+            printf("AP80 handoff: copying Rockbox\n");
+            fflush(stdout);
+#elif defined(HIBY_R3PROII) || defined(HIBY_R1)
             /* Suspend bluetooth as it's not currently supported */
             system("/usr/bin/bt_suspend");
 #endif
             fflush(stdout);
             mount_storage(true);
-            system("/bin/cp " BASE_DIR "/.rockbox/" BOOTFILE " /tmp");
-            system("/bin/chmod +x /tmp/" BOOTFILE);
+            int copy_status =
+                system("/bin/cp " BASE_DIR "/.rockbox/" BOOTFILE " /tmp");
+            int chmod_status = copy_status == 0 ?
+                system("/bin/chmod +x /tmp/" BOOTFILE) : -1;
+
+            if (copy_status != 0 || chmod_status != 0)
+            {
+#ifdef HIDIZS_AP80_PRO_MAX
+                printf("AP80 handoff: copy=%d chmod=%d\n",
+                       copy_status, chmod_status);
+                fflush(stdout);
+                unlink("/tmp/rockbox-handoff-started");
+#endif
+                error_screen("Cannot load Rockbox from SD");
+                sleep(5 * HZ);
+                continue;
+            }
+
+#ifdef HIDIZS_AP80_PRO_MAX
+            printf("AP80 handoff: executing Rockbox\n");
+            fflush(stdout);
+#endif
 #ifdef HIBY_R1
             /* Load libasound from Rockbox directory */
             char *argvr1[] = { "/tmp/" BOOTFILE, 0 };
@@ -822,6 +883,10 @@ int main(int argc, char **argv)
             execl("/tmp/" BOOTFILE, BOOTFILE, NULL);
 #endif
             printf("execvp failed: %s\n", strerror(errno));
+#ifdef HIDIZS_AP80_PRO_MAX
+            fflush(stdout);
+            unlink("/tmp/rockbox-handoff-started");
+#endif
             error_screen("Cannot boot Rockbox!");
             mode = BOOT_TOOLS;
             sleep(2 * HZ);

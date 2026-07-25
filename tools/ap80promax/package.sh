@@ -50,9 +50,19 @@ cmp "$ap80_launcher" "$ap80_inspect/rootfs/usr/bin/hiby_player.sh"
 test -x "$ap80_inspect/rootfs/usr/bin/hiby_player.stock.sh"
 strings "$ap80_inspect/rootfs/usr/bin/bootloader.rb" |
     grep -q '/tmp/rockbox-bootloader-ready'
+strings "$ap80_inspect/rootfs/usr/bin/bootloader.rb" |
+    grep -q '/tmp/rockbox-handoff-started'
+if strings "$ap80_inspect/rootfs/usr/bin/bootloader.rb" |
+    grep -q '/usr/bin/bt_suspend'
+then
+    echo "AP80 bootloader must not invoke the unbounded bt_suspend helper" >&2
+    exit 1
+fi
 grep -q 'rockbox-force-hiby' \
     "$ap80_inspect/rootfs/usr/bin/hiby_player.sh"
 grep -q 'readiness timeout' \
+    "$ap80_inspect/rootfs/usr/bin/hiby_player.sh"
+grep -q 'app handoff timeout' \
     "$ap80_inspect/rootfs/usr/bin/hiby_player.sh"
 
 (
