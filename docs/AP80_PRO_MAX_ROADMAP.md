@@ -108,8 +108,9 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [x] Add touch regions while retaining physical-button behavior.
 - [x] Make plugin layouts bounds-safe at portrait resolution.
 - [x] Add a simulator target for menus, themes, touch, metadata, and plugins.
-- [ ] Add the target manual and recovery guide.
-- [ ] Add CI for the simulator, target build, DSD fixtures, theme validation,
+- [x] Add the engineering installation, controls, recovery, and validation
+      guide in `docs/AP80_PRO_MAX_INSTALL.md`.
+- [x] Add CI for the simulator, target build, DSD fixtures, theme validation,
       and release verifier.
 - [ ] Add Rockbox Utility support only after updater/recovery validation.
 
