@@ -159,6 +159,23 @@ The touchscreen remains available. The AP80 OneBit themes add large invisible
 touch regions for the header, playlist/context actions, volume, seek, and the
 bottom transport controls.
 
+Outside a theme-specific screen, Rockbox uses a 3 x 3 touch grid. The most
+important navigation zones are:
+
+| Touch zone | Menus and file browser | Now Playing |
+| --- | --- | --- |
+| Middle left | Back/cancel | Previous track; hold to seek back |
+| Centre | Select | Play/pause; hold to stop |
+| Middle right | Select | Next track; hold to seek forward |
+| Top middle / bottom middle | Previous/next item | Volume up/down |
+| Top left | Main menu | Main menu |
+| Top right | — | File browser |
+| Bottom left | Quick screen | Quick screen |
+| Bottom right | — | Playlist or hotkey |
+
+For a reliable one-handed back action in any list or menu, press the physical
+Power button briefly. Holding Power remains the hardware power-off action.
+
 ## Output modes
 
 Open **Settings → System → Output Mode**:
