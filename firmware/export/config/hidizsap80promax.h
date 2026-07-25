@@ -51,6 +51,14 @@
 /* Reuse the HiBy touchscreen/transport keymap. */
 #define CONFIG_KEYPAD HIBY_R3PROII_PAD
 #define HAVE_VOLUME_IN_LIST
+#define HAVE_SCROLLWHEEL
+
+/*
+ * HiByOS exposes the encoder as a pair of momentary key events. Scan more
+ * than the hosted default of five event nodes because their index depends on
+ * which vendor input services registered first.
+ */
+#define BUTTON_DEVINPUT_COUNT 16
 
 /* Battery and charger are exposed as "battery" and "usb". */
 #define BATTERY_TYPES_COUNT 1
@@ -65,6 +73,7 @@
 #define HAVE_HIBY_LINUX_CODEC
 #define HAVE_SW_TONE_CONTROLS
 #define HAVE_ALSA_32BIT
+#define HAVE_ALSA_POLLING
 #define HW_SAMPR_CAPS SAMPR_CAP_ALL_384
 
 /*

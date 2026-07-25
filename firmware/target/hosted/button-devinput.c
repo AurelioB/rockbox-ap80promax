@@ -50,7 +50,11 @@
    * Compute to angular velocity (degrees per second)
 
  */
-#define NR_POLL_DESC    5
+#ifndef BUTTON_DEVINPUT_COUNT
+#define BUTTON_DEVINPUT_COUNT 5
+#endif
+
+#define NR_POLL_DESC BUTTON_DEVINPUT_COUNT
 
 static int num_devices = 0;
 static struct pollfd poll_fds[NR_POLL_DESC];

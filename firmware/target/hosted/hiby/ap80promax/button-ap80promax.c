@@ -41,9 +41,11 @@ int button_map(int keycode)
     switch (keycode)
     {
         case KEY_LEFT:          /* clockwise encoder rotation */
+            return BUTTON_SCROLL_FWD;
+        case KEY_RIGHT:         /* counter-clockwise encoder rotation */
+            return BUTTON_SCROLL_BACK;
         case KEY_VOLUMEUP:
             return BUTTON_VOL_UP;
-        case KEY_RIGHT:         /* counter-clockwise encoder rotation */
         case KEY_VOLUMEDOWN:
             return BUTTON_VOL_DOWN;
         case KEY_PLAYPAUSE:

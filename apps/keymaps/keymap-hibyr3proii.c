@@ -52,6 +52,10 @@ static const struct button_mapping button_context_wps[] =
     { ACTION_WPS_VOLDOWN,        BUTTON_VOL_DOWN|BUTTON_REL,         BUTTON_NONE },
     { ACTION_WPS_VOLUP,          BUTTON_VOL_UP|BUTTON_REPEAT,        BUTTON_NONE },
     { ACTION_WPS_VOLDOWN,        BUTTON_VOL_DOWN|BUTTON_REPEAT,      BUTTON_NONE },
+#ifdef HAVE_SCROLLWHEEL
+    { ACTION_WPS_VOLUP,          BUTTON_SCROLL_FWD,                  BUTTON_NONE },
+    { ACTION_WPS_VOLDOWN,        BUTTON_SCROLL_BACK,                 BUTTON_NONE },
+#endif
     { ACTION_WPS_SKIPNEXT,       BUTTON_NEXT|BUTTON_REL,             BUTTON_NEXT },
     { ACTION_WPS_SKIPPREV,       BUTTON_PREV|BUTTON_REL,             BUTTON_PREV },
     { ACTION_WPS_SEEKFWD,        BUTTON_NEXT|BUTTON_REPEAT,          BUTTON_NONE },
@@ -69,6 +73,10 @@ static const struct button_mapping button_context_list[] =
 {
     { ACTION_LIST_VOLUP,    BUTTON_VOL_UP|BUTTON_REL,               BUTTON_NONE },
     { ACTION_LIST_VOLDOWN,  BUTTON_VOL_DOWN|BUTTON_REL,             BUTTON_NONE },
+#ifdef HAVE_SCROLLWHEEL
+    { ACTION_LIST_VOLUP,    BUTTON_SCROLL_FWD,                      BUTTON_NONE },
+    { ACTION_LIST_VOLDOWN,  BUTTON_SCROLL_BACK,                     BUTTON_NONE },
+#endif
 
     LAST_ITEM_IN_LIST__NEXTLIST(CONTEXT_STD),
 };
@@ -96,6 +104,10 @@ static const struct button_mapping button_context_settings[] =
 {
     { ACTION_SETTINGS_INC,       BUTTON_VOL_UP,       BUTTON_NONE },
     { ACTION_SETTINGS_DEC,       BUTTON_VOL_DOWN,     BUTTON_NONE },
+#ifdef HAVE_SCROLLWHEEL
+    { ACTION_SETTINGS_INC,       BUTTON_SCROLL_FWD,   BUTTON_NONE },
+    { ACTION_SETTINGS_DEC,       BUTTON_SCROLL_BACK,  BUTTON_NONE },
+#endif
 
     LAST_ITEM_IN_LIST__NEXTLIST(CONTEXT_STD),
 };
@@ -140,6 +152,10 @@ static const struct button_mapping button_context_keyboard[] =
 {
     { ACTION_KBD_LEFT,         BUTTON_VOL_DOWN,                          BUTTON_NONE },
     { ACTION_KBD_RIGHT,        BUTTON_VOL_UP,                            BUTTON_NONE },
+#ifdef HAVE_SCROLLWHEEL
+    { ACTION_KBD_LEFT,         BUTTON_SCROLL_BACK,                       BUTTON_NONE },
+    { ACTION_KBD_RIGHT,        BUTTON_SCROLL_FWD,                        BUTTON_NONE },
+#endif
     { ACTION_KBD_CURSOR_LEFT,  BUTTON_PLAY | BUTTON_VOL_DOWN,            BUTTON_NONE },
     { ACTION_KBD_CURSOR_RIGHT, BUTTON_PLAY | BUTTON_VOL_UP,              BUTTON_NONE },
     { ACTION_KBD_DONE,         BUTTON_PLAY | BUTTON_REPEAT,              BUTTON_NONE },
@@ -173,6 +189,10 @@ static const struct button_mapping button_context_quickscreen[] =
     { ACTION_QS_TOP,     BUTTON_VOL_UP|BUTTON_REPEAT,        BUTTON_NONE },
     { ACTION_QS_DOWN,    BUTTON_VOL_DOWN|BUTTON_REL,         BUTTON_NONE },
     { ACTION_QS_DOWN,    BUTTON_VOL_DOWN|BUTTON_REPEAT,      BUTTON_NONE },
+#ifdef HAVE_SCROLLWHEEL
+    { ACTION_QS_TOP,     BUTTON_SCROLL_FWD,                  BUTTON_NONE },
+    { ACTION_QS_DOWN,    BUTTON_SCROLL_BACK,                 BUTTON_NONE },
+#endif
     { ACTION_QS_LEFT,    BUTTON_PLAY|BUTTON_REL,             BUTTON_NONE },
     { ACTION_QS_LEFT,    BUTTON_PLAY|BUTTON_REPEAT,          BUTTON_NONE },
     { ACTION_QS_RIGHT,   BUTTON_NEXT|BUTTON_REL,             BUTTON_NONE },
@@ -186,6 +206,10 @@ static const struct button_mapping button_context_pitchscreen[] =
 {
     { ACTION_PS_INC_SMALL, BUTTON_VOL_UP,      BUTTON_NONE },
     { ACTION_PS_DEC_SMALL, BUTTON_VOL_DOWN,    BUTTON_NONE },
+#ifdef HAVE_SCROLLWHEEL
+    { ACTION_PS_INC_SMALL, BUTTON_SCROLL_FWD,  BUTTON_NONE },
+    { ACTION_PS_DEC_SMALL, BUTTON_SCROLL_BACK, BUTTON_NONE },
+#endif
     { ACTION_PS_EXIT,      BUTTON_POWER,       BUTTON_NONE },
 
     LAST_ITEM_IN_LIST__NEXTLIST(CONTEXT_STD)

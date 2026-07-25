@@ -106,11 +106,17 @@ static size_t       pcm_size = 0;
 
 static unsigned int xruns = 0;
 
-static snd_async_handler_t *ahandler = NULL;
 static pthread_mutex_t pcm_mtx;
 static bool pcm_mtx_initialized;
 static bool cleanup_registered;
+
+#ifdef HAVE_ALSA_POLLING
+static pthread_t pcm_poll_thread;
+static volatile bool pcm_poll_running;
+#else
+static snd_async_handler_t *ahandler = NULL;
 static long signal_stack[SIGSTKSZ/sizeof(long)];
+#endif
 
 static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
 
@@ -429,11 +435,9 @@ static bool copy_frames(bool first)
     return true;
 }
 
-static void async_callback(snd_async_handler_t *ahandler)
+static void pcm_service(snd_pcm_t *handle)
 {
     int err;
-
-    if (!ahandler) return;
 
 #ifdef HAVE_DSD
     /* Direct DSD writes own the ALSA handle while this flag is set. */
@@ -441,12 +445,13 @@ static void async_callback(snd_async_handler_t *ahandler)
         return;
 #endif
 
-    snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
-
     if (!handle) return;
 
     if (pthread_mutex_trylock(&pcm_mtx) != 0)
         return;
+
+    if (period_size <= 0 || !frames)
+        goto abort;
 
     snd_pcm_state_t state = snd_pcm_state(handle);
 
@@ -551,6 +556,27 @@ abort:
     pthread_mutex_unlock(&pcm_mtx);
 }
 
+#ifdef HAVE_ALSA_POLLING
+static void *pcm_poll_worker(void *arg)
+{
+    (void)arg;
+
+    while (pcm_poll_running)
+    {
+        pcm_service(handle);
+        usleep(2000);
+    }
+
+    return NULL;
+}
+#else
+static void async_callback(snd_async_handler_t *ahandler)
+{
+    if (ahandler)
+        pcm_service(snd_async_handler_get_pcm(ahandler));
+}
+#endif
+
 static void close_hwdev(bool drain)
 {
     logf("closedev (%p)", handle);
@@ -563,10 +589,12 @@ static void close_hwdev(bool drain)
 #ifdef AUDIOHW_MUTE_ON_STOP
         audiohw_mute(true);
 #endif
+#ifndef HAVE_ALSA_POLLING
         if (ahandler) {
             snd_async_del_handler(ahandler);
             ahandler = NULL;
         }
+#endif
         snd_pcm_close(handle);
 
         handle = NULL;
@@ -580,6 +608,13 @@ static void close_hwdev(bool drain)
 
 static void alsadev_cleanup(void)
 {
+#ifdef HAVE_ALSA_POLLING
+    if (pcm_poll_running)
+    {
+        pcm_poll_running = false;
+        pthread_join(pcm_poll_thread, NULL);
+    }
+#endif
     free(frames);
     frames = NULL;
     close_hwdev(true);
@@ -613,6 +648,7 @@ static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
     }
     last_sample_rate = 0;
 
+#ifndef HAVE_ALSA_POLLING
     /* assign alternative stack for the signal handlers */
     stack_t ss = {
         .ss_sp = signal_stack,
@@ -644,6 +680,7 @@ static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
         logf("Unable to install alternative signal stack: %s", strerror(err));
         goto error;
     }
+#endif
 
 #ifdef HAVE_RECORDING
     current_alsa_mode = mode;
@@ -660,9 +697,11 @@ static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
 
     return 0;
 
+#ifndef HAVE_ALSA_POLLING
 error:
     close_hwdev(false);
     return err;
+#endif
 }
 
 static void open_hwdev(const char *device, snd_pcm_stream_t mode)
@@ -691,6 +730,21 @@ static void sink_dma_init(void)
     audiohw_preinit();
 
     open_hwdev(playback_dev, SND_PCM_STREAM_PLAYBACK);
+
+#ifdef HAVE_ALSA_POLLING
+    if (!pcm_poll_running)
+    {
+        int err;
+
+        pcm_poll_running = true;
+        err = pthread_create(&pcm_poll_thread, NULL, pcm_poll_worker, NULL);
+        if (err != 0)
+        {
+            pcm_poll_running = false;
+            panicf("Cannot start ALSA worker: %s", strerror(err));
+        }
+    }
+#endif
 
     return;
 }
