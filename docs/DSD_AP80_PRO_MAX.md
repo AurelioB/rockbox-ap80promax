@@ -2,9 +2,10 @@
 
 ## Goal
 
-Play uncompressed stereo DSF and DSDIFF files without converting them to
-PCM. The implementation follows the transport choices observed in the stock
-`hiby_player`:
+Prefer bit-perfect playback of uncompressed stereo DSF and DSDIFF files, with
+a deterministic PCM fallback if the direct endpoint cannot be configured.
+The direct implementation follows the transport choices observed in the
+stock `hiby_player`:
 
 | Source | Preferred transport | ALSA carrier | Reason |
 | --- | --- | --- | --- |
@@ -39,8 +40,16 @@ The DSD codec therefore owns a small, synchronous output path:
 6. On stop, seek, error, or end-of-file, the DSD endpoint is closed and normal
    PCM parameters are restored.
 
-The synchronous path deliberately gives up gapless DSD-to-PCM transitions and
-software DSP. Hardware DAC volume remains available.
+The synchronous direct path deliberately gives up gapless DSD-to-PCM
+transitions and software DSP. Hardware DAC volume remains available.
+
+If direct setup fails, the same codec converts DSD64/128/256 to interleaved
+29-bit PCM at 176.4 kHz. A third-order CIC stage reduces the stream to
+352.8 kHz and a 31-tap half-band FIR filters and decimates it to the output
+rate. The converter is streaming, keeps independent channel state, and uses
+only GPL-compatible in-tree code. It does not load the stock
+`libdsd2pcm.so`, whose private ABI and redistribution terms remain unknown.
+DSD512 and DST-compressed DSDIFF remain unsupported.
 
 ## Implementation phases
 
@@ -52,12 +61,10 @@ software DSP. Hardware DAC volume remains available.
 - [x] Add DSF and uncompressed DSDIFF metadata parsing.
 - [x] Add the DSF/DSDIFF streaming codec with seeking.
 - [x] Add deterministic host tests for route selection and byte packing.
+- [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
-- [ ] Add DSD-to-PCM fallback. The bundled `libdsd2pcm.so` is a possible
-      optional runtime backend, but its private ABI and redistribution terms
-      must be resolved first.
 
 ## Device validation checklist
 
@@ -73,6 +80,8 @@ Use known-good stereo test files whose rates are independently verified.
 8. Confirm that DSD512 and DST-compressed DSDIFF fail safely without noise.
 9. Check the Rockbox log for short writes, ALSA recovery, or transport setup
    failures.
+10. Force a direct-endpoint failure and confirm the log reports the 176.4 kHz
+    PCM fallback without a crash or burst of noise.
 
 The native packing and `/32` carrier rule mirror the stock binary, but they
 remain the highest-risk part until measured on the device.

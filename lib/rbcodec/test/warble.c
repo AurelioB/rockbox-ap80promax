@@ -100,6 +100,7 @@ off_t filesize(int fd)
 static enum { MODE_PLAY, MODE_WRITE } mode;
 static bool use_dsp = true;
 static bool enable_loop = false;
+static bool force_dsd_pcm = false;
 static const char *config = "";
 
 /* Volume control */
@@ -397,6 +398,8 @@ static void perform_config(void)
                 return;
         } else if (!strncmp(name, "dither=", 7)) {
             dsp_dither_enable(atoi(val) ? true : false);
+        } else if (!strncmp(name, "dsdpcm=", 7)) {
+            force_dsd_pcm = atoi(val) != 0;
         } else if (!strncmp(name, "halt=", 5)) {
             if (atoi(val))
                 codec_action = CODEC_ACTION_HALT;
@@ -651,7 +654,7 @@ static void stub_void_void(void) { }
 static enum dsd_transport ci_dsd_configure(unsigned int rate,
                                            unsigned int channels)
 {
-    if (channels != 2)
+    if (channels != 2 || force_dsd_pcm)
         return DSD_TRANSPORT_ERROR;
     if (rate / 16 <= 384000)
         return DSD_TRANSPORT_DOP;
@@ -879,6 +882,7 @@ static void print_help(const char *progname)
                     "\n"
                     "configuration:\n"
                     "  dither=<0|1>  Enable/disable dithering [0]\n"
+                    "  dsdpcm=<0|1>  Force DSD-to-PCM fallback [0]\n"
                     "  halt=<0|1>    Stop decoding if 1 [0]\n"
                     "  loop=<0|1>    Enable/disable looping [0]\n"
                     "  offset=<n>    Start at byte offset within the file [0]\n"

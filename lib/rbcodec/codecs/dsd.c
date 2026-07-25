@@ -1,9 +1,11 @@
 /***************************************************************************
- * Uncompressed stereo DSF/DSDIFF codec with direct DSD output.
+ * Uncompressed stereo DSF/DSDIFF codec with direct DSD output and a
+ * DSD-to-PCM fallback.
  ***************************************************************************/
 
 #include "codeclib.h"
 #include "dsd.h"
+#include "dsd2pcm.h"
 
 CODEC_HEADER
 
@@ -24,6 +26,12 @@ enum dsd_play_result
     DSD_PLAY_ERROR = -2,
 };
 
+enum dsd_output
+{
+    DSD_OUTPUT_DIRECT,
+    DSD_OUTPUT_PCM,
+};
+
 struct dsd_file
 {
     enum dsd_container container;
@@ -41,6 +49,7 @@ struct dsd_file
 static uint8_t channel_l[DSF_BLOCK_MAX];
 static uint8_t channel_r[DSF_BLOCK_MAX];
 static uint8_t io_buffer[DSD_IO_SIZE + 4];
+static int32_t pcm_buffer[DSD_IO_SIZE / 2];
 
 static uint16_t get_be16(const uint8_t *p)
 {
@@ -212,7 +221,7 @@ static bool parse_dff(struct dsd_file *file)
     }
 
     if (!uncompressed || file->channels != 2 || file->rate == 0 ||
-        file->data_size == 0)
+        file->data_size == 0 || (file->data_size & 1))
         return false;
 
     file->samples = file->data_size * 8 / file->channels;
@@ -241,7 +250,9 @@ static uint8_t reverse_byte(uint8_t value)
     return ((value & 0xaa) >> 1) | ((value & 0x55) << 1);
 }
 
-static int check_command(uint64_t *byte_position, const struct dsd_file *file)
+static int check_command(uint64_t *byte_position, const struct dsd_file *file,
+                         enum dsd_output output,
+                         struct dsd2pcm_state *converter)
 {
     intptr_t param = 0;
     long action = ci->get_command(&param);
@@ -252,7 +263,8 @@ static int check_command(uint64_t *byte_position, const struct dsd_file *file)
     if (action != CODEC_ACTION_SEEK_TIME)
         return 0;
 
-    ci->dsd_close(false);
+    if (output == DSD_OUTPUT_DIRECT)
+        ci->dsd_close(false);
 
     uint64_t per_channel = (uint64_t)param * file->rate / 8000;
     uint64_t max_per_channel = (file->samples + 7) / 8;
@@ -267,25 +279,47 @@ static int check_command(uint64_t *byte_position, const struct dsd_file *file)
     ci->set_elapsed(per_channel * 8000 / file->rate);
     ci->seek_complete();
 
-    if (ci->dsd_configure(file->rate, file->channels) ==
-        DSD_TRANSPORT_ERROR)
+    if (output == DSD_OUTPUT_DIRECT)
+    {
+        if (ci->dsd_configure(file->rate, file->channels) ==
+            DSD_TRANSPORT_ERROR)
+            return DSD_PLAY_ERROR;
+    }
+    else if (!dsd2pcm_init(converter, file->rate))
+    {
         return DSD_PLAY_ERROR;
+    }
 
     return 1;
 }
 
-static bool write_dsd(const uint8_t *data, size_t size)
+static bool write_audio(uint8_t *data, size_t size, enum dsd_output output,
+                        struct dsd2pcm_state *converter)
 {
-    return ci->dsd_write(data, size) == (ssize_t)size;
+    if (output == DSD_OUTPUT_DIRECT)
+    {
+        size_t padded_size = size;
+        while (padded_size & 3)
+            data[padded_size++] = DSD_SILENCE;
+        return ci->dsd_write(data, padded_size) == (ssize_t)padded_size;
+    }
+
+    size_t frames = dsd2pcm_convert(converter, data, size, pcm_buffer,
+                                    ARRAYLEN(pcm_buffer) / 2);
+    if (frames > 0)
+        ci->pcmbuf_insert(pcm_buffer, NULL, frames);
+    return true;
 }
 
-static int play_dsf(const struct dsd_file *file, uint64_t *byte_position)
+static int play_dsf(const struct dsd_file *file, uint64_t *byte_position,
+                    enum dsd_output output,
+                    struct dsd2pcm_state *converter)
 {
     uint64_t bytes_per_channel = (file->samples + 7) / 8;
 
     while (*byte_position < bytes_per_channel)
     {
-        int command = check_command(byte_position, file);
+        int command = check_command(byte_position, file, output, converter);
         if (command < 0)
             return command;
         if (command > 0)
@@ -316,14 +350,7 @@ static int play_dsf(const struct dsd_file *file, uint64_t *byte_position)
             io_buffer[i * 2 + 1] = right;
         }
 
-        size_t output_size = valid * 2;
-        if (output_size & 3)
-        {
-            io_buffer[output_size++] = DSD_SILENCE;
-            io_buffer[output_size++] = DSD_SILENCE;
-        }
-
-        if (!write_dsd(io_buffer, output_size))
+        if (!write_audio(io_buffer, valid * 2, output, converter))
             return DSD_PLAY_ERROR;
 
         *byte_position += valid;
@@ -334,11 +361,13 @@ static int play_dsf(const struct dsd_file *file, uint64_t *byte_position)
     return DSD_PLAY_OK;
 }
 
-static int play_dff(const struct dsd_file *file, uint64_t *byte_position)
+static int play_dff(const struct dsd_file *file, uint64_t *byte_position,
+                    enum dsd_output output,
+                    struct dsd2pcm_state *converter)
 {
     while (*byte_position < file->data_size)
     {
-        int command = check_command(byte_position, file);
+        int command = check_command(byte_position, file, output, converter);
         if (command < 0)
             return command;
         if (command > 0)
@@ -350,11 +379,7 @@ static int play_dff(const struct dsd_file *file, uint64_t *byte_position)
                     io_buffer, valid) != valid)
             return DSD_PLAY_ERROR;
 
-        size_t output_size = valid;
-        while (output_size & 3)
-            io_buffer[output_size++] = DSD_SILENCE;
-
-        if (!write_dsd(io_buffer, output_size))
+        if (!write_audio(io_buffer, valid, output, converter))
             return DSD_PLAY_ERROR;
 
         *byte_position += valid;
@@ -368,17 +393,19 @@ static int play_dff(const struct dsd_file *file, uint64_t *byte_position)
 
 enum codec_status codec_main(enum codec_entry_call_reason reason)
 {
-    (void)reason;
+    if (reason == CODEC_LOAD)
+        ci->configure(DSP_SET_SAMPLE_DEPTH, 28);
     return CODEC_OK;
 }
 
 enum codec_status codec_run(void)
 {
     struct dsd_file file;
+    struct dsd2pcm_state converter;
+    enum dsd_output output;
     uint64_t byte_position;
 
-    if (codec_init() || !ci->dsd_configure || !ci->dsd_write ||
-        !ci->dsd_close || !parse_file(&file))
+    if (codec_init() || !parse_file(&file))
         return CODEC_ERROR;
 
     uint64_t per_channel =
@@ -392,35 +419,53 @@ enum codec_status codec_run(void)
 
     do
     {
-        enum dsd_transport transport =
-            ci->dsd_configure(file.rate, file.channels);
-        if (transport == DSD_TRANSPORT_ERROR)
-            return CODEC_ERROR;
+        enum dsd_transport transport = DSD_TRANSPORT_ERROR;
+        if (ci->dsd_configure && ci->dsd_write && ci->dsd_close)
+            transport = ci->dsd_configure(file.rate, file.channels);
 
-        DEBUGF("DSD: %u Hz, %s\n", file.rate,
-               transport == DSD_TRANSPORT_DOP ? "DoP" : "native");
+        if (transport != DSD_TRANSPORT_ERROR)
+        {
+            output = DSD_OUTPUT_DIRECT;
+            DEBUGF("DSD: %u Hz, %s\n", file.rate,
+                   transport == DSD_TRANSPORT_DOP ? "DoP" : "native");
+        }
+        else
+        {
+            if (!dsd2pcm_init(&converter, file.rate))
+                return CODEC_ERROR;
+
+            output = DSD_OUTPUT_PCM;
+            ci->configure(DSP_SET_FREQUENCY, DSD2PCM_OUTPUT_RATE);
+            ci->configure(DSP_SET_STEREO_MODE, STEREO_INTERLEAVED);
+            DEBUGF("DSD: %u Hz, PCM fallback at %u Hz\n", file.rate,
+                   DSD2PCM_OUTPUT_RATE);
+        }
 
         int result = file.container == DSD_CONTAINER_DSF ?
-                     play_dsf(&file, &byte_position) :
-                     play_dff(&file, &byte_position);
+                     play_dsf(&file, &byte_position, output, &converter) :
+                     play_dff(&file, &byte_position, output, &converter);
         if (result == DSD_PLAY_HALT)
         {
-            ci->dsd_close(false);
+            if (output == DSD_OUTPUT_DIRECT)
+                ci->dsd_close(false);
             return CODEC_OK;
         }
         if (result == DSD_PLAY_ERROR)
         {
-            ci->dsd_close(false);
+            if (output == DSD_OUTPUT_DIRECT)
+                ci->dsd_close(false);
             return CODEC_ERROR;
         }
 
         if (!ci->loop_track())
         {
-            ci->dsd_close(true);
+            if (output == DSD_OUTPUT_DIRECT)
+                ci->dsd_close(true);
             return CODEC_OK;
         }
 
-        ci->dsd_close(false);
+        if (output == DSD_OUTPUT_DIRECT)
+            ci->dsd_close(false);
         byte_position = 0;
         ci->set_elapsed(0);
     }

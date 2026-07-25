@@ -1,5 +1,6 @@
 codeclib.c
 ffmpeg_bitstream.c
+dsd2pcm.c
 
 mdct_lookup.c
 fft-ffmpeg.c
