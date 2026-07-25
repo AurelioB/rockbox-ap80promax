@@ -55,6 +55,9 @@ jobs:
             bison \
             build-essential \
             flex \
+            libgmp-dev \
+            libmpc-dev \
+            libmpfr-dev \
             libtool-bin \
             texinfo \
             unzip \
