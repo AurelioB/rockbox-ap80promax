@@ -162,10 +162,12 @@ back/cancel and the right 120 x 80 area opens the context menu. These match the
 stock UI's 90 x 60 logical targets after panel scaling.
 
 OneBit menus use nearly the full display width, with 20-pixel side margins,
-the bundled 21-pixel LanaPixel font, larger original icons, and DPI-sized
-rows. Their navigation headers use 21-pixel titles and 14-pixel status values.
-The Now Playing artwork retains the original theme composition. Theme authors
-should follow [the AP80 UI usability specification](AP80_PRO_MAX_UI_SPEC.md).
+the bundled 21-pixel LanaPixel font, original list glyphs enlarged into
+48 x 32 cells, and DPI-sized rows. Their navigation headers use 21-pixel
+titles and 14-pixel status values. Now Playing also uses a 440-pixel content
+column with 20-pixel side margins while preserving each original theme's
+composition and pixel-art treatment. Theme authors should follow
+[the AP80 UI usability specification](AP80_PRO_MAX_UI_SPEC.md).
 
 Menus and file lists default to Rockbox's **Point** touchscreen mode:
 

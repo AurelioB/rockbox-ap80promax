@@ -26,10 +26,10 @@ rockbox_y = stock_y
 ```
 
 Theme geometry must be authored in Rockbox's 480 x 640 coordinates. Do not
-place a 360-pixel-wide interactive layout in the center of the framebuffer:
-that discards 25 percent of the available width. Centered 360-pixel artwork
-is acceptable when preserving an existing composition, but its touch layer
-must still use the full 480-pixel canvas.
+place a 360-pixel-wide layout in the center of the framebuffer: that discards
+25 percent of the available width. When porting an existing composition,
+adapt its artwork to a 440-pixel content column and keep its touch layer on
+the full 480-pixel canvas.
 
 ## Baseline metrics
 
@@ -112,6 +112,9 @@ divides it into seven 80-pixel rows.
   persistent control occupies that space.
 - Reserve 12-16 pixels between an icon and its label. Use at least 8 pixels
   between unrelated visual elements.
+- With the preferred 21-pixel OneBit list font, use 48 x 32 icon cells. The
+  glyph should occupy most of the cell height without touching its bounds;
+  a 24-pixel-tall cell looks undersized beside this font.
 - Long labels should receive remaining width before decorative elements do.
   Truncate or scroll only after the usable width has been exhausted.
 
@@ -123,7 +126,8 @@ targets, commonly with about 20 logical pixels of invisible reach around the
 glyph.
 
 - A visible icon may be 24-36 pixels high, but its target must satisfy the
-  target sizes above.
+  target sizes above. In lists, aim for an icon height comparable to the
+  rendered capital height plus ascenders rather than the font's nominal size.
 - Primary playback controls must use targets at least 93 x 70 pixels.
 - The first and last controls in a row should extend their hit areas to the
   screen edges; do not leave narrow untappable edge strips.

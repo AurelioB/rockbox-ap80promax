@@ -18,12 +18,12 @@
 # Preload Images
 %xl(battery,battery.bmp,0,0,12)
 %xl(playmodes,playmodes.bmp,0,0,9)
-%xl(volbg,volbg.bmp,0,0)
-%xl(vol,vol.bmp,0,0)
-%xl(vuDark,level_meter.bmp,0,0,26)
-%xl(vuDarkL,level_meter_L.bmp,0,0,26)
-%xl(vuLight,level_meter_light.bmp,0,0,26)
-%xl(vuLightL,level_meter_light_L.bmp,0,0,26)
+%xl(volbg,volbg_ap80.bmp,0,0)
+%xl(vol,vol_ap80.bmp,0,0)
+%xl(vuDark,level_meter_ap80.bmp,0,0,26)
+%xl(vuDarkL,level_meter_L_ap80.bmp,0,0,26)
+%xl(vuLight,level_meter_light_ap80.bmp,0,0,26)
+%xl(vuLightL,level_meter_light_L_ap80.bmp,0,0,26)
 %xl(R,repeat_status.bmp,4)
 %xl(S,shuffle_status.bmp)
 %xl(L,lock.bmp)
@@ -32,20 +32,20 @@
 
 # Display Viewports
 # Dedicated AP80 touch viewport, activated before visible theme viewports.
-%Vl(touch,60,0,360,640,-)
-%T(0,0,120,80,browse)
-%T(120,0,120,80,menu)
-%T(240,0,120,80,contextmenu)
-%T(0,80,360,340,playlist)
-%T(0,80,360,340,contextmenu,long_press)
-%T(0,420,360,80,volume)
-%T(0,500,360,60,progressbar)
-%T(0,560,120,80,rwd,repeat_press)
-%T(0,560,120,80,prev)
-%T(120,560,120,80,play)
-%T(120,560,120,80,stop,long_press)
-%T(240,560,120,80,ffwd,repeat_press)
-%T(240,560,120,80,next)
+%Vl(touch,0,0,480,640,-)
+%T(0,0,160,80,browse)
+%T(160,0,160,80,menu)
+%T(320,0,160,80,contextmenu)
+%T(0,80,480,340,playlist)
+%T(0,80,480,340,contextmenu,long_press)
+%T(0,420,480,80,volume)
+%T(0,500,480,60,progressbar)
+%T(0,560,160,80,rwd,repeat_press)
+%T(0,560,160,80,prev)
+%T(160,560,160,80,play)
+%T(160,560,160,80,stop,long_press)
+%T(320,560,160,80,ffwd,repeat_press)
+%T(320,560,160,80,next)
 
 #%?mh<%Vd(lockscreen)|%Vd(metadata)>
 
@@ -56,9 +56,9 @@
 
 
 # Album Art
-%Cl(10,5,130,130,r,c)
+%Cl(0,0,140,140,r,c)
 %?and(%C,%if(%St(volume display), =, graphic))<%Vd(albumArt)>
-%Vl(albumArt,260,90,140,140,-)
+%Vl(albumArt,320,90,140,140,-)
 %Cd
 
 #######################
@@ -127,99 +127,99 @@
 %t(0.1)%?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%xd(battery,11)
 
 # Track Artist or Title
-%Vl(noAlbumArtDark,80,90,-20,27,3)
+%Vl(noAlbumArtDark,20,90,-20,27,3)
 %?ia<%Vf(5f605f)|%Vf(000000)>
 %aL%s%?ia<%ia|%?it<%it|%fn>>
-%Vl(noAlbumArtLight,80,90,-20,27,3)
+%Vl(noAlbumArtLight,20,90,-20,27,3)
 %?ia<%Vf(9C9E9C)|%Vf(ffffff)>
 %aL%s%?ia<%ia|%?it<%it|%fn>>
 
-%Vl(albumArtDark,80,90,160,27,3)
+%Vl(albumArtDark,20,90,280,27,3)
 %?ia<%Vf(5f605f)|%Vf(000000)>
 %aL%s%?ia<%ia|%?it<%it|%fn>>
-%Vl(albumArtLight,80,90,160,27,3)
+%Vl(albumArtLight,20,90,280,27,3)
 %?ia<%Vf(9C9E9C)|%Vf(ffffff)>
 %aL%s%?ia<%ia|%?it<%it|%fn>>
 
 # Track Title
-%Vl(noAlbumArtDark,80,130,-20,27,3)%Vf(000000)
+%Vl(noAlbumArtDark,20,130,-20,27,3)%Vf(000000)
 %aL%s%?ia<%?it<%it|%fn>>
-%Vl(noAlbumArtLight,80,130,-20,27,3)%Vf(ffffff)
+%Vl(noAlbumArtLight,20,130,-20,27,3)%Vf(ffffff)
 %aL%s%?ia<%?it<%it|%fn>>
 
-%Vl(albumArtDark,80,130,160,27,3)%Vf(000000)
+%Vl(albumArtDark,20,130,280,27,3)%Vf(000000)
 %aL%s%?ia<%?it<%it|%fn>>
-%Vl(albumArtLight,80,130,160,27,3)%Vf(ffffff)
+%Vl(albumArtLight,20,130,280,27,3)%Vf(ffffff)
 %aL%s%?ia<%?it<%it|%fn>>
 
 # Album Title and ID3 Year
 #%V(105,115,195,15,2)%Vf(9C9E9C)
-%Vl(noAlbumArtDark,80,230,-20,15,2)%Vf(5f605f)
+%Vl(noAlbumArtDark,20,230,-20,15,2)%Vf(5f605f)
 %aL%s%?id<%id|Unknown Album> %(%?iy<%ss(0,4, %iy)|?>%)
-%Vl(noAlbumArtLight,80,230,-20,15,2)%Vf(9C9E9C)
+%Vl(noAlbumArtLight,20,230,-20,15,2)%Vf(9C9E9C)
 %aL%s%?id<%id|Unknown Album> %(%?iy<%ss(0,4, %iy)|?>%)
 
-%Vl(albumArtDark,80,230,160,15,2)%Vf(5f605f)
+%Vl(albumArtDark,20,230,280,15,2)%Vf(5f605f)
 %aL%s%?id<%id|Unknown Album> %(%?iy<%ss(0,4, %iy)|?>%)
-%Vl(albumArtLight,80,230,160,15,2)%Vf(9C9E9C)
+%Vl(albumArtLight,20,230,280,15,2)%Vf(9C9E9C)
 %aL%s%?id<%id|Unknown Album> %(%?iy<%ss(0,4, %iy)|?>%)
 
 # Codec & Bitrate
 #%V(105,133,195,15,2)
-%Vl(darkFg,80,260,160,15,2)%Vf(676767)
+%Vl(darkFg,20,260,440,15,2)%Vf(676767)
 %aL%?fc<MP1|MP2|MP3|AIFF|WAV|VORBIS|FLAC|MPC|AC3|WAVPACK|ALAC|AAC|SHORTEN|SID|ADX|NSF|SPEEX|SPC|APE|WMA|WMAPRO|MOD|SAP|COOK|AAC|AC3|ATRAC3|CMC|CM3|CMR|CMS|DMC|DLT|MPT|MPD|RMT|TMC|TM8|TM2|ATRAC3|SMAF|AU|VOX|WAVE64|TRUEAUDIO|WMAVOICE|MUSEPACK|AAC-HE|AY|VTX|GBS|HES|SGC|VGM|KSS|OPUS|AAC|UNKNOWN?> %?fv<~>%fbkbps
 
-%Vl(lightFg,80,260,160,15,2)%Vf(989898)
+%Vl(lightFg,20,260,440,15,2)%Vf(989898)
 %aL%?fc<MP1|MP2|MP3|AIFF|WAV|VORBIS|FLAC|MPC|AC3|WAVPACK|ALAC|AAC|SHORTEN|SID|ADX|NSF|SPEEX|SPC|APE|WMA|WMAPRO|MOD|SAP|COOK|AAC|AC3|ATRAC3|CMC|CM3|CMR|CMS|DMC|DLT|MPT|MPD|RMT|TMC|TM8|TM2|ATRAC3|SMAF|AU|VOX|WAVE64|TRUEAUDIO|WMAVOICE|MUSEPACK|AAC-HE|AY|VTX|GBS|HES|SGC|VGM|KSS|OPUS|AAC|UNKNOWN?> %?fv<~>%fbkbps
 
 # Audio Meter
-%Vl(noAlbumArtDark,105,360,132,5,-)%Vf(-)
+%Vl(noAlbumArtDark,20,360,220,5,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuLightL,%pL)>
-%Vl(noAlbumArtDark,243,360,132,5,-)%Vf(-)
+%Vl(noAlbumArtDark,240,360,220,5,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuLight,%pR)>
 
-%Vl(albumArtDark,80,340,132,3,-)%Vf(-)
+%Vl(albumArtDark,20,340,280,3,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuLight,%pL)>
-%Vl(albumArtDark,80,350,132,3,-)%Vf(-)
+%Vl(albumArtDark,20,350,280,3,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuLight,%pR)>
 
 
-%Vl(noAlbumArtLight,105,360,132,5,-)%Vf(-)
+%Vl(noAlbumArtLight,20,360,220,5,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuDarkL,%pL)>
-%Vl(noAlbumArtLight,243,360,132,5,-)%Vf(-)
+%Vl(noAlbumArtLight,240,360,220,5,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuDark,%pR)>
 
-%Vl(albumArtLight,80,340,132,3,-)%Vf(-)
+%Vl(albumArtLight,20,340,280,3,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuDark,%pL)>
-%Vl(albumArtLight,80,350,132,3,-)%Vf(-)
+%Vl(albumArtLight,20,350,280,3,-)%Vf(-)
 %?if(%St(battery display), =, graphic)<%xd(vuDark,%pR)>
 
 # Volume Level Text
-%Vl(volume,370,540,30,15,2)%Vf(05cffc)
+%Vl(volume,413,540,40,15,2)%Vf(05cffc)
 %ac%?if(%pv, >, 0)<+|>%pvdB
 
-%Vl(volume,80,540,30,15,2)%Vf(05cffc)
+%Vl(volume,20,540,40,15,2)%Vf(05cffc)
 %alVOL-
 
 # Volume Bar
-%Vl(volume,140,548,200,2,-)%Vf(05cffc)
-%pv(0,0,200,2,vol,backdrop,volbg)
+%Vl(volume,80,548,320,2,-)%Vf(05cffc)
+%pv(0,0,320,2,vol,backdrop,volbg)
 
 # Time Elapsed
-%Vl(progDark,80,540,30,15,2)%Vf(000000)
+%Vl(progDark,20,540,40,15,2)%Vf(000000)
 %al%?if(%pc,<,600)< |>%pc
-%Vl(progLight,80,540,30,15,2)%Vf(ffffff)
+%Vl(progLight,20,540,40,15,2)%Vf(ffffff)
 %al%?if(%pc,<,600)< |>%pc
 
 # Progress Bar
-%Vl(progDark,134,546,212,5,-)%Vf(-)
+%Vl(progDark,80,546,320,5,-)%Vf(-)
 %pb(-,0,-,4)
 # Progress Bar
-%Vl(progLight,134,546,212,5,-)%Vf(-)
+%Vl(progLight,80,546,320,5,-)%Vf(-)
 %pb(-,0,-,4)
 
 # Total Track Time
-%Vl(progDark,370,540,30,15,2)%Vf(000000)
+%Vl(progDark,413,540,40,15,2)%Vf(000000)
 %ar%pt
-%Vl(progLight,370,540,30,15,2)%Vf(ffffff)
+%Vl(progLight,413,540,40,15,2)%Vf(ffffff)
 %ar%pt

@@ -56,9 +56,9 @@ line selector start color: 000000
 line selector end color: 000000
 line selector text color: FFFFFF
 selector type: bar (solid color)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off
@@ -89,9 +89,9 @@ line selector start color: 000000
 line selector end color: 000000
 line selector text color: FFFFFF
 selector type: bar (solid color)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off
@@ -122,9 +122,9 @@ line selector start color: 000000
 line selector end color: 000000
 line selector text color: FFFFFF
 selector type: bar (solid color)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off
@@ -152,9 +152,9 @@ Font.360x640x(16|24|32): 14-LanaPixel.fnt
 foreground color: FFFFFF
 background color: 000000
 selector type: bar (inverse)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off
@@ -184,9 +184,9 @@ Font.360x640x(16|24|32): 14-LanaPixel.fnt
 foreground color: ff6500
 background color: 390c00
 selector type: bar (inverse)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off
@@ -216,9 +216,9 @@ Font.360x640x(16|24|32): 14-LanaPixel.fnt
 foreground color: 4aff4a
 background color: 001400
 selector type: bar (inverse)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off
@@ -247,9 +247,9 @@ Font.360x640x(16|24|32): 14-LanaPixel.fnt
 foreground color: 000000
 background color: FFFFFF
 selector type: bar (inverse)
-iconset.480x640x(16|24|32): icons/modone_360p.bmp
+iconset.480x640x(16|24|32): icons/modone_ap80.bmp
 iconset.360x640x(16|24|32): icons/modone.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_360p.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
 viewers iconset.360x640x(16|24|32): icons/modone_viewer.bmp
 show icons: on
 statusbar: off

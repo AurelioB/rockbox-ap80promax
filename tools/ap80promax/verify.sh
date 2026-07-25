@@ -80,8 +80,8 @@ do
     fi
     for ap80_theme_setting in \
         "font: /.rockbox/fonts/21-LanaPixel.fnt" \
-        "iconset: /.rockbox/icons/modone_360p.bmp" \
-        "viewers iconset: /.rockbox/icons/modone_viewer_360p.bmp"
+        "iconset: /.rockbox/icons/modone_ap80.bmp" \
+        "viewers iconset: /.rockbox/icons/modone_viewer_ap80.bmp"
     do
         if ! unzip -p "$ap80_zip" ".rockbox/themes/$ap80_theme.cfg" |
              grep -Fqx "$ap80_theme_setting"
@@ -111,6 +111,33 @@ do
             exit 1
         fi
     done
+
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.wps" |
+         grep -Fqx '%T(160,0,160,80,menu)'
+    then
+        echo "Release theme does not use the full-width touch grid: $ap80_skin" >&2
+        exit 1
+    fi
+done
+
+for ap80_skin in OneBitMono OneBitMono2 OneBit_VFD2 OneBit_VFD_ALT
+do
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.wps" |
+         grep -Fqx '%Vl(metadata,20,360,220,30,-)'
+    then
+        echo "Release WPS does not use the AP80 content width: $ap80_skin" >&2
+        exit 1
+    fi
+done
+
+for ap80_icon in modone_ap80.bmp modone_viewer_ap80.bmp
+do
+    if ! printf '%s\n' "$ap80_zip_entries" |
+         grep -qx ".rockbox/icons/$ap80_icon"
+    then
+        echo "Release ZIP is missing AP80 list icons: $ap80_icon" >&2
+        exit 1
+    fi
 done
 
 for ap80_elf in \
