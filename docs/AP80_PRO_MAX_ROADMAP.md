@@ -73,7 +73,7 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [x] Initialize the S16-to-S32 expansion multiplier at unity while retaining
       the ES9219 hardware volume controls.
 - [x] Retain the proven Rockbox rate range through 192 kHz.
-- [ ] Extend Rockbox's global sample-rate enumeration for 352.8/384 kHz. This
+- [x] Extend Rockbox's global sample-rate enumeration for 352.8/384 kHz. This
       is core work, not an AP80-only target define, and must preserve every
       other target's indices and bit-identical output.
 
@@ -88,14 +88,17 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [ ] Validate DSD64/128/256 on both physical outputs.
 - [ ] Add `Automatic / Prefer DoP / Prefer native` only after both transports
       are measured. Unsupported preferences must visibly fall back.
-- [ ] Add explicit DSD-to-PCM fallback. Do not link the bundled
+- [x] Add explicit DSD-to-PCM fallback. Do not link the bundled
       `libdsd2pcm.so` until its private ABI and redistribution terms are known;
       an in-tree GPL-compatible decimator is the safe alternative.
 
 ## Wireless and services
 
-- [ ] Coordinate ownership of `cywdhd`, `wpa_supplicant`, DHCP, routes,
+- [x] Put ownership of `cywdhd`, `wpa_supplicant`, DHCP, routes,
       suspend/resume, and HiByOS handoff behind a small hosted platform API.
+      The transition calls remain compile-time disabled pending device tests.
+- [ ] Validate the stock service transitions and enable
+      `AP80_ENABLE_WIRELESS_TRANSITIONS`.
 - [ ] Add scan/connect/status UI independently of consumers.
 - [ ] Add file transfer, HiByLink, internet radio, and AirPlay as separate
       consumers.

@@ -22,6 +22,20 @@ mkdir -p "$ap80_warble_build"
     -o "$ap80_warble_build/test-pcm-sampr-extended"
 "$ap80_warble_build/test-pcm-sampr-extended"
 
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -I"$ap80_rockbox_root/lib/rbcodec/codecs/lib" \
+    "$ap80_rockbox_root/tests/test_dsd2pcm.c" \
+    "$ap80_rockbox_root/lib/rbcodec/codecs/lib/dsd2pcm.c" \
+    -o "$ap80_warble_build/test-dsd2pcm"
+"$ap80_warble_build/test-dsd2pcm"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -I"$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax" \
+    "$ap80_rockbox_root/tests/test_ap80promax_services.c" \
+    "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/services-ap80promax.c" \
+    -o "$ap80_warble_build/test-ap80-services"
+"$ap80_warble_build/test-ap80-services"
+
 (
     cd "$ap80_warble_build"
     "$ap80_rockbox_root/tools/configure" \

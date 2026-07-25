@@ -24,3 +24,8 @@ printf '\001\020\002\040\004\100\010\200' > "$work_dir/expected.raw"
 
 cmp "$work_dir/expected.raw" "$work_dir/dsf.raw"
 cmp "$work_dir/expected.raw" "$work_dir/dff.raw"
+
+"$warble" -r -c dsdpcm=1 "$work_dir/test.dsf" "$work_dir/dsf-pcm.raw"
+"$warble" -r -c dsdpcm=1 "$work_dir/test.dff" "$work_dir/dff-pcm.raw"
+test "$(wc -c < "$work_dir/dsf-pcm.raw")" -eq 16
+cmp "$work_dir/dsf-pcm.raw" "$work_dir/dff-pcm.raw"

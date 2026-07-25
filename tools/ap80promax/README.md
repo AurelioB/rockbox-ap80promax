@@ -28,9 +28,10 @@ release validation. Run `package.sh` only when a legally obtained stock
 `ap80max.upt` is available locally; it creates the engineering updater but
 does not flash anything.
 
-`test.sh` builds the target-specific Warble codec runner, executes the DSD
-transport and codec fixtures, then builds the simulator and validates all
-installed OneBit skins.
+`test.sh` checks both legacy and extended sample-rate enumerations, tests the
+streaming DSD-to-PCM converter, builds the target-specific Warble codec
+runner, executes the direct and fallback DSD fixtures, then builds the
+simulator and validates all installed OneBit skins.
 
 `simulator.sh` builds the 360 x 640 Rockbox application simulator and validates
 the installed OneBit WPS/SBS files with a target-specific `checkwps`. It is
