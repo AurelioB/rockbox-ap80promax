@@ -78,6 +78,18 @@ do
         echo "Release theme does not enable touch-sized rows: $ap80_theme" >&2
         exit 1
     fi
+    for ap80_theme_setting in \
+        "font: /.rockbox/fonts/21-LanaPixel.fnt" \
+        "iconset: /.rockbox/icons/modone_360p.bmp" \
+        "viewers iconset: /.rockbox/icons/modone_viewer_360p.bmp"
+    do
+        if ! unzip -p "$ap80_zip" ".rockbox/themes/$ap80_theme.cfg" |
+             grep -Fqx "$ap80_theme_setting"
+        then
+            echo "Release theme is missing AP80 sizing: $ap80_theme" >&2
+            exit 1
+        fi
+    done
 done
 
 for ap80_elf in \

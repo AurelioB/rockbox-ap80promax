@@ -49,3 +49,7 @@ to eishiya in the original OneBit_OLED package.
 - Applying any AP80 OneBit preset selects automatic DPI-aware list padding.
   At 271 dpi this gives roughly 90-pixel rows, close to the stock firmware's
   scaled 68-to-80-pixel logical list items and much easier to select reliably.
+- On the AP80's 480-pixel framebuffer, menus use the bundled 21-pixel
+  LanaPixel font and original 360p icon set. Their content viewport is
+  440 pixels wide with only 20-pixel side margins; the original 360-pixel
+  WPS composition and its bitmap artwork remain unchanged.

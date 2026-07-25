@@ -31,13 +31,13 @@
 # Display Viewports
 
 # Stock-sized, visual-neutral menu navigation targets.
-%Vl(navtouch,60,0,360,80,-)
+%Vl(navtouch,0,0,480,80,-)
 %T(0,0,120,80,cancel)
-%T(240,0,120,80,contextmenu)
+%T(360,0,120,80,contextmenu)
 
 # Menu
-%Vi(menuDark,100,90,280,450,-)%Vf(4c4c4c)
-%Vi(menuLight,100,90,280,450,-)%Vf(7f7f7f)
+%Vi(menuDark,20,90,440,450,-)%Vf(4c4c4c)
+%Vi(menuLight,20,90,440,450,-)%Vf(7f7f7f)
 
 # Menu Title
 %Vl(infoDark,85,28,120,15,2)%Vf(4c4c4c)

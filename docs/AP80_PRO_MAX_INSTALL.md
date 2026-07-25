@@ -161,6 +161,10 @@ bottom transport controls. In an OneBit menu, the left 120 x 80 header area is
 back/cancel and the right 120 x 80 area opens the context menu. These match the
 stock UI's 90 x 60 logical targets after panel scaling.
 
+OneBit menus use nearly the full display width, with 20-pixel side margins,
+the bundled 21-pixel LanaPixel font, larger original icons, and DPI-sized
+rows. The Now Playing artwork retains the original theme composition.
+
 Menus and file lists default to Rockbox's **Point** touchscreen mode:
 
 | Gesture | Action |
