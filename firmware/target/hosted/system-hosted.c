@@ -107,6 +107,21 @@ static void sig_handler(int sig, siginfo_t *siginfo, void *context)
 
 void power_off(void)
 {
+#if defined(HIDIZS_AP80_PRO_MAX)
+    /*
+     * Software poweroff is triggered while the power knob is still held.
+     * Let the PMIC see a clean release before asking init to power down;
+     * otherwise the continuing hardware-level press can overlap the final
+     * shutdown and leave the player in an ambiguous soft-off state.
+     *
+     * Do not wait forever: menu-, timer-, and emergency-initiated shutdowns
+     * must still complete if an input device gets stuck.
+     */
+    for (int polls = 0;
+         polls < 250 && (button_status() & BUTTON_POWER);
+         ++polls)
+        usleep(20000);
+#endif
     backlight_hw_off();
     button_close_device();
     sync();

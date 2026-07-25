@@ -112,7 +112,8 @@
 #define MIN_BRIGHTNESS_SETTING 1
 #define MAX_BRIGHTNESS_SETTING 100
 #define BRIGHTNESS_STEP 5
-#define DEFAULT_BRIGHTNESS_SETTING 100
+/* Match the stock boot/UI brightness instead of defaulting to full power. */
+#define DEFAULT_BRIGHTNESS_SETTING 60
 
 /* ROLO */
 #define BOOTFILE_EXT "ap80promax"
