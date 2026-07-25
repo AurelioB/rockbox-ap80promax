@@ -59,6 +59,9 @@ static const char* inbuilt_audio_filetypes[] = {
     "dlt", "mpt", "mpd", "rmt", "tmc", "tm8", "tm2", "oma", "aa3", "at3", "mmf",
     "au", "snd", "vox", "w64", "tta", "ay", "vtx", "gbs", "hes", "sgc", "vgm",
     "vgz", "kss", "aac",
+#ifdef HAVE_DSD
+    "dsf", "dff",
+#endif
 };
 
 struct filetype_inbuilt {
