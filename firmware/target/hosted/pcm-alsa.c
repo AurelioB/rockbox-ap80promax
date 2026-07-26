@@ -1100,10 +1100,13 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
     err = set_dsd_hwparams(carrier_rate, transport);
     if (err >= 0)
         err = snd_pcm_prepare(handle);
+    if (err >= 0)
+        err = snd_pcm_nonblock(handle, 1);
 
     if (err < 0)
     {
         logf("DSD open failed: %s", snd_strerror(err));
+        snd_pcm_nonblock(handle, 0);
         audiohw_set_dsd_mode(false);
         dsd_is_active = false;
         dsd_transport = DSD_TRANSPORT_ERROR;
@@ -1164,6 +1167,26 @@ ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
     while (frames_left > 0)
     {
         snd_pcm_sframes_t written = snd_pcm_writei(handle, out, frames_left);
+        if (written == -EAGAIN || written == 0)
+        {
+            /*
+             * The codec is a Rockbox thread, not a native pthread.  A
+             * blocking ALSA write therefore stalls the cooperative
+             * scheduler, including WPS progress and input handling.
+             * Release the native PCM lock while sleeping so stop/pause can
+             * take ownership of the endpoint.
+             */
+            pthread_mutex_unlock(&pcm_mtx);
+            sleep(1);
+            pthread_mutex_lock(&pcm_mtx);
+            if (!dsd_is_active)
+            {
+                pthread_mutex_unlock(&pcm_mtx);
+                return -ECANCELED;
+            }
+            continue;
+        }
+
         if (written == -EPIPE || written == -ESTRPIPE)
         {
             xruns++;
@@ -1209,6 +1232,8 @@ void pcm_alsa_dsd_pause(bool pause)
 
 void pcm_alsa_dsd_close(bool drain)
 {
+    int err = 0;
+
     pthread_mutex_lock(&pcm_mtx);
     if (!dsd_is_active)
     {
@@ -1217,10 +1242,30 @@ void pcm_alsa_dsd_close(bool drain)
     }
 
     if (drain)
-        snd_pcm_drain(handle);
+    {
+        /*
+         * In nonblocking mode drain reports EAGAIN until the final frames
+         * reach the DAC.  Yield between retries rather than freezing every
+         * Rockbox thread at the end of a DSD track.
+         */
+        while ((err = snd_pcm_drain(handle)) == -EAGAIN)
+        {
+            pthread_mutex_unlock(&pcm_mtx);
+            sleep(1);
+            pthread_mutex_lock(&pcm_mtx);
+            if (!dsd_is_active)
+            {
+                pthread_mutex_unlock(&pcm_mtx);
+                return;
+            }
+        }
+        if (err < 0)
+            snd_pcm_drop(handle);
+    }
     else
         snd_pcm_drop(handle);
 
+    snd_pcm_nonblock(handle, 0);
     audiohw_set_dsd_mode(false);
     dsd_is_active = false;
     dsd_transport = DSD_TRANSPORT_ERROR;

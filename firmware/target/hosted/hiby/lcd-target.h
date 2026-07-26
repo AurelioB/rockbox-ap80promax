@@ -28,8 +28,12 @@
 extern fb_data *framebuffer;
 extern unsigned int lcd_framebuffer_stride;
 #define LCD_FRAMEBUFFER_STRIDE lcd_framebuffer_stride
+#ifndef LCD_FBDEV_XOFFSET
+#define LCD_FBDEV_XOFFSET 0
+#endif
 #define LCD_FRAMEBUF_ADDR(col, row) \
-    (framebuffer + (row) * LCD_FRAMEBUFFER_STRIDE + (col))
+    (framebuffer + (row) * LCD_FRAMEBUFFER_STRIDE + \
+     LCD_FBDEV_XOFFSET + (col))
 
 extern void lcd_set_active(bool active);
 #endif /* __LCD_TARGET_H__ */

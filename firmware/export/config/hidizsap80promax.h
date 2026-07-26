@@ -25,6 +25,8 @@
  */
 #define LCD_FBDEV_WIDTH 480
 #define LCD_FBDEV_HEIGHT 640
+/* Centre the 360-pixel logical panel in the 480-pixel scanout. */
+#define LCD_FBDEV_XOFFSET ((LCD_FBDEV_WIDTH - LCD_WIDTH) / 2)
 #endif
 /* Keep touch-row sizing representative in the SDL simulator. */
 #define SIMULATOR_LCD_DPI 249

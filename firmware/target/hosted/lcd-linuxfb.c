@@ -45,6 +45,9 @@ unsigned int lcd_framebuffer_stride = LCD_WIDTH;
 #ifndef LCD_FRAMEBUFFER_STRIDE
 #define LCD_FRAMEBUFFER_STRIDE LCD_WIDTH
 #endif
+#ifndef LCD_FBDEV_XOFFSET
+#define LCD_FBDEV_XOFFSET 0
+#endif
 
 #ifdef FB_DOUBLEBUF
 static int fb_plane;
@@ -143,7 +146,7 @@ void lcd_init_device(void)
         panicf("Framebuffer stride is not pixel aligned");
 
     lcd_framebuffer_stride = finfo.line_length / sizeof(fb_data);
-    if (lcd_framebuffer_stride < LCD_WIDTH)
+    if (lcd_framebuffer_stride < LCD_FBDEV_XOFFSET + LCD_WIDTH)
         panicf("Framebuffer stride is too small: %u", lcd_framebuffer_stride);
 
     /* map framebuffer */
