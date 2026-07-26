@@ -970,6 +970,19 @@ void adjust_volume(int steps)
 #endif
 }
 
+int volume_action_steps(void)
+{
+#ifdef VOLUME_WHEEL_STEP
+    int button;
+
+    get_action_statuscode(&button);
+    if (button & (BUTTON_SCROLL_BACK | BUTTON_SCROLL_FWD))
+        return VOLUME_WHEEL_STEP;
+#endif
+
+    return 1;
+}
+
 void adjust_volume_ex(int steps, enum volume_adjust_mode mode)
 {
     switch (mode)

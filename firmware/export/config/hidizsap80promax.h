@@ -65,6 +65,11 @@
 #define CONFIG_KEYPAD HIBY_R3PROII_PAD
 #define HAVE_VOLUME_IN_LIST
 #define HAVE_SCROLLWHEEL
+/*
+ * The stock 0..100 volume UI advances by about two ES9219C 0.5 dB steps
+ * for each encoder event. Keep other volume inputs at Rockbox's fine step.
+ */
+#define VOLUME_WHEEL_STEP 2
 
 /*
  * HiByOS exposes the encoder as a pair of momentary key events. Scan more
