@@ -591,10 +591,18 @@ static void close_hwdev(bool drain)
     logf("closedev (%p)", handle);
 
     if (handle) {
-        if (drain)
-            snd_pcm_drain(handle);
-        else
+        /*
+         * The AP80 driver waits forever when asked to drain a PREPARED
+         * stream: no DMA is running, so its buffer can never empty.  This
+         * occurs when stopping an idle PCM core before direct DSD setup and
+         * can also hang application shutdown.
+         */
+        if (drain && snd_pcm_state(handle) == SND_PCM_STATE_RUNNING) {
+            if (snd_pcm_drain(handle) < 0)
+                snd_pcm_drop(handle);
+        } else {
             snd_pcm_drop(handle);
+        }
 #ifdef AUDIOHW_MUTE_ON_STOP
         audiohw_mute(true);
 #endif
@@ -880,17 +888,27 @@ static void sink_set_freq(uint16_t freq)
 
 static void sink_dma_stop(void)
 {
-    logf("PCM DMA stop (%d)", snd_pcm_state(handle));
+    snd_pcm_state_t state = snd_pcm_state(handle);
+    logf("PCM DMA stop (%d)", state);
 
 #ifdef HAVE_DSD
     if (dsd_is_active)
         return;
 #endif
 
-    int err = snd_pcm_drain(handle);
-    if (err < 0)
+    if (state == SND_PCM_STATE_RUNNING)
+    {
+        int err = snd_pcm_drain(handle);
         if (err < 0)
+        {
             logf("Drain failed: %s", snd_strerror(err));
+            snd_pcm_drop(handle);
+        }
+    }
+    else
+    {
+        snd_pcm_drop(handle);
+    }
 #ifdef AUDIOHW_MUTE_ON_STOP
     audiohw_mute(true);
 #endif
