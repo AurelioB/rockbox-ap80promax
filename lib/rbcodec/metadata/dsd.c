@@ -7,10 +7,42 @@
 
 #include "metadata.h"
 #include "metadata_common.h"
+#include "metadata_parsers.h"
 
 static bool read_exact(int fd, void *buf, size_t size)
 {
     return read(fd, buf, size) == (ssize_t)size;
+}
+
+static bool read_id3v2_at(int fd, struct mp3entry *id3, off_t offset,
+                          uint64_t available)
+{
+    uint8_t header[10];
+    uint32_t body_size;
+    uint64_t tag_size;
+
+    if (offset < 0 || available < sizeof(header) ||
+        lseek(fd, offset, SEEK_SET) < 0 ||
+        !read_exact(fd, header, sizeof(header)) ||
+        memcmp(header, "ID3", 3) != 0 ||
+        header[3] < 2 || header[3] > 4 ||
+        (header[6] | header[7] | header[8] | header[9]) & 0x80)
+        return false;
+
+    body_size = ((uint32_t)header[6] << 21) |
+                ((uint32_t)header[7] << 14) |
+                ((uint32_t)header[8] << 7) |
+                header[9];
+    tag_size = sizeof(header) + body_size;
+    if (tag_size > available)
+        return false;
+
+    id3->id3v2len = tag_size;
+    if (lseek(fd, offset, SEEK_SET) < 0)
+        return false;
+
+    setid3v2title(fd, id3);
+    return id3->id3version != 0;
 }
 
 static bool finish_metadata(struct mp3entry *id3, unsigned int rate,
@@ -37,10 +69,14 @@ static bool get_dsf_metadata(int fd, struct mp3entry *id3)
     uint32_t channels;
     uint32_t rate;
     off_t data_offset;
+    off_t file_size;
+    uint64_t metadata_offset;
 
     if (lseek(fd, 0, SEEK_SET) < 0 || !read_exact(fd, header, 28) ||
         memcmp(header, "DSD ", 4) != 0 || get_uint64_le(header + 4) < 28)
         return false;
+
+    metadata_offset = get_uint64_le(header + 20);
 
     if (!read_exact(fd, header, sizeof(header)) ||
         memcmp(header, "fmt ", 4) != 0)
@@ -62,13 +98,21 @@ static bool get_dsf_metadata(int fd, struct mp3entry *id3)
         get_uint64_le(header + 4) < 12)
         return false;
 
-    id3->filesize = filesize(fd);
-    return finish_metadata(id3, rate, channels, samples, data_offset + 12);
+    file_size = filesize(fd);
+    id3->filesize = file_size;
+    if (!finish_metadata(id3, rate, channels, samples, data_offset + 12))
+        return false;
+
+    if (metadata_offset != 0 && metadata_offset < (uint64_t)file_size)
+        read_id3v2_at(fd, id3, metadata_offset,
+                      (uint64_t)file_size - metadata_offset);
+
+    return true;
 }
 
 static bool parse_dff_prop(int fd, uint64_t prop_size,
                            unsigned int *rate, unsigned int *channels,
-                           bool *uncompressed)
+                           bool *uncompressed, struct mp3entry *id3)
 {
     uint8_t header[16];
     uint64_t left;
@@ -109,6 +153,10 @@ static bool parse_dff_prop(int fd, uint64_t prop_size,
             if (!read_exact(fd, header, 4))
                 return false;
             *uncompressed = memcmp(header, "DSD ", 4) == 0;
+        }
+        else if (memcmp(header, "ID3 ", 4) == 0)
+        {
+            read_id3v2_at(fd, id3, payload, size);
         }
 
         if (lseek(fd, payload + size + (size & 1), SEEK_SET) < 0)
@@ -151,8 +199,13 @@ static bool get_dff_metadata(int fd, struct mp3entry *id3)
 
         if (memcmp(header, "PROP", 4) == 0)
         {
-            if (!parse_dff_prop(fd, size, &rate, &channels, &uncompressed))
+            if (!parse_dff_prop(fd, size, &rate, &channels, &uncompressed,
+                                id3))
                 return false;
+        }
+        else if (memcmp(header, "ID3 ", 4) == 0)
+        {
+            read_id3v2_at(fd, id3, payload, size);
         }
         else if (memcmp(header, "DSD ", 4) == 0)
         {

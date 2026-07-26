@@ -783,7 +783,13 @@ static void print_mp3entry(const struct mp3entry *id3, FILE *f)
     if (id3->vbr) fprintf(f, "VBR: true\n");
     if (id3->has_toc) fprintf(f, "Has TOC: true\n");
     if (id3->needs_upsampling_correction) fprintf(f, "Needs upsampling correction: true\n");
-    /* TODO: replaygain; albumart; cuesheet */
+#ifdef HAVE_ALBUMART
+    if (id3->has_embedded_albumart)
+        fprintf(f, "Embedded album art: type %d, offset %ld, size %d\n",
+                id3->albumart.type, (long)id3->albumart.pos,
+                id3->albumart.size);
+#endif
+    /* TODO: replaygain; cuesheet */
     if (id3->mb_track_id) fprintf(f, "Musicbrainz track ID: %s\n", id3->mb_track_id);
 }
 
