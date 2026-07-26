@@ -33,7 +33,7 @@
  * Vendor module configuration:
  *   gpio keyboard: KEY_POWER, KEY_NEXTSONG
  *   ADC keyboard:  KEY_PLAYPAUSE, KEY_PREVIOUSSONG
- *   ring encoder:  clockwise KEY_LEFT, counter-clockwise KEY_RIGHT
+ *   ring encoder:  counter-clockwise KEY_LEFT, clockwise KEY_RIGHT
  *   CST8xx touch:  BTN_TOUCH plus absolute coordinates
  */
 int button_map(int keycode)
