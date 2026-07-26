@@ -89,6 +89,9 @@ extern void audio_codec_update_elapsed(unsigned long elapsed);
 extern void audio_codec_update_offset(size_t offset);
 extern void audio_codec_complete(int status);
 extern void audio_codec_seek_complete(void);
+#ifdef HAVE_DSD
+extern void audio_pcmbuf_sync_position(void);
+#endif
 extern struct codec_api ci; /* from codecs.c */
 
 /* Codec thread */
@@ -379,7 +382,18 @@ static enum dsd_transport codec_dsd_configure_callback(
 
 static ssize_t codec_dsd_write_callback(const void *data, size_t size)
 {
-    return pcm_alsa_dsd_write(data, size);
+    ssize_t written = pcm_alsa_dsd_write(data, size);
+    if (written > 0)
+    {
+        /*
+         * Direct DSD bypasses pcmbuf, whose completion callback normally
+         * publishes the codec's elapsed/offset values to the WPS. At this
+         * point the previous DSD block has reached ALSA, so expose its
+         * cached position before the codec advances to the current block.
+         */
+        audio_pcmbuf_sync_position();
+    }
+    return written;
 }
 
 static void codec_dsd_close_callback(bool drain)
@@ -388,6 +402,7 @@ static void codec_dsd_close_callback(bool drain)
        though the ALSA sink correctly refused to mix it into the bitstream. */
     mixer_reset();
     pcm_alsa_dsd_close(drain);
+    audio_pcmbuf_sync_position();
 }
 #endif
 
