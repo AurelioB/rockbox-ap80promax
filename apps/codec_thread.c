@@ -370,6 +370,9 @@ static void codec_configure_callback(int setting, intptr_t value)
 }
 
 #ifdef HAVE_DSD
+#define DSD_POSITION_SYNC_INTERVAL MAX(1, HZ / 10)
+static long dsd_last_position_sync;
+
 static enum dsd_transport codec_dsd_configure_callback(
         unsigned int sample_rate, unsigned int channels)
 {
@@ -377,6 +380,7 @@ static enum dsd_transport codec_dsd_configure_callback(
     pcmbuf_play_stop();
     voice_stop();
     mixer_reset();
+    dsd_last_position_sync = current_tick - DSD_POSITION_SYNC_INTERVAL;
     return pcm_alsa_dsd_open(sample_rate, channels);
 }
 
@@ -387,11 +391,17 @@ static ssize_t codec_dsd_write_callback(const void *data, size_t size)
     {
         /*
          * Direct DSD bypasses pcmbuf, whose completion callback normally
-         * publishes the codec's elapsed/offset values to the WPS. At this
-         * point the previous DSD block has reached ALSA, so expose its
-         * cached position before the codec advances to the current block.
+         * publishes elapsed/offset values to the WPS. DSD blocks can arrive
+         * hundreds of times per second, far faster than the UI can redraw,
+         * so limit position publication while retaining block-level command
+         * processing and bit-perfect audio writes.
          */
-        audio_pcmbuf_sync_position();
+        long now = current_tick;
+        if (now - dsd_last_position_sync >= DSD_POSITION_SYNC_INTERVAL)
+        {
+            audio_pcmbuf_sync_position();
+            dsd_last_position_sync = now;
+        }
     }
     return written;
 }
