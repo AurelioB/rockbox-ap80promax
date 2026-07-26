@@ -591,18 +591,23 @@ static void close_hwdev(bool drain)
     logf("closedev (%p)", handle);
 
     if (handle) {
+#ifdef HAVE_DSD
+        (void)drain;
         /*
-         * The AP80 driver waits forever when asked to drain a PREPARED
-         * stream: no DMA is running, so its buffer can never empty.  This
-         * occurs when stopping an idle PCM core before direct DSD setup and
-         * can also hang application shutdown.
+         * The AP80 endpoint can remain RUNNING without advancing its
+         * hardware pointer, so even a state-qualified drain may never
+         * return. Closing or reconfiguring this target must be immediate.
          */
+        snd_pcm_drop(handle);
+#else
+        /* A PREPARED stream has no running DMA to drain. */
         if (drain && snd_pcm_state(handle) == SND_PCM_STATE_RUNNING) {
             if (snd_pcm_drain(handle) < 0)
                 snd_pcm_drop(handle);
         } else {
             snd_pcm_drop(handle);
         }
+#endif
 #ifdef AUDIOHW_MUTE_ON_STOP
         audiohw_mute(true);
 #endif
@@ -888,13 +893,22 @@ static void sink_set_freq(uint16_t freq)
 
 static void sink_dma_stop(void)
 {
-    snd_pcm_state_t state = snd_pcm_state(handle);
-    logf("PCM DMA stop (%d)", state);
-
 #ifdef HAVE_DSD
+    logf("PCM DMA stop (%d)", snd_pcm_state(handle));
+
     if (dsd_is_active)
         return;
-#endif
+
+    /*
+     * A stopped AP80 PCM endpoint can still report RUNNING while its
+     * hardware pointer is stationary. Draining it blocks the cooperative
+     * Rockbox thread before DSD setup; dropping it is the required stop
+     * operation on this target.
+     */
+    snd_pcm_drop(handle);
+#else
+    snd_pcm_state_t state = snd_pcm_state(handle);
+    logf("PCM DMA stop (%d)", state);
 
     if (state == SND_PCM_STATE_RUNNING)
     {
@@ -909,6 +923,7 @@ static void sink_dma_stop(void)
     {
         snd_pcm_drop(handle);
     }
+#endif
 #ifdef AUDIOHW_MUTE_ON_STOP
     audiohw_mute(true);
 #endif
