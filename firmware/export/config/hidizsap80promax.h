@@ -33,6 +33,16 @@
 
 #define TOUCHSCREEN_RAW_WIDTH 360
 #define TOUCHSCREEN_RAW_HEIGHT 640
+/*
+ * The generic touchscreen path coalesces motion to 25 Hz and waits 16 dp
+ * before starting a drag.  On this small, high-DPI capacitive panel that
+ * means a 40 ms update interval and a 25-pixel dead zone.  Match the stock
+ * UI's direct manipulation more closely with 50 Hz active/kinetic updates
+ * and Android's usual 8 dp touch slop (12 pixels at 249 dpi).
+ */
+#define TOUCHSCREEN_REPEAT_INTERVAL (HZ/50)
+#define KINETIC_SCROLL_INTERVAL (HZ/50)
+#define TOUCHSCREEN_TOUCH_SLOP 8u
 
 #define HAVE_LCD_SLEEP
 #define LCD_SLEEP_TIMEOUT (2*HZ)

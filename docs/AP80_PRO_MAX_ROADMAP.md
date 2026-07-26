@@ -139,6 +139,8 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [x] Add touch regions while retaining physical-button behavior.
 - [x] Match stock-sized header and transport touch targets and use DPI-aware
       rows without altering OneBit artwork or visible layout.
+- [x] Match stock-like direct manipulation with a 12-pixel drag threshold and
+      50 Hz active list/kinetic scrolling.
 - [x] Make plugin layouts bounds-safe at portrait resolution.
 - [x] Add a simulator target for menus, themes, touch, metadata, and plugins.
 - [x] Add the engineering installation, controls, recovery, and validation

@@ -190,7 +190,9 @@ bool touchscreen_is_enabled(void)
 #if ((CONFIG_PLATFORM & PLATFORM_ANDROID) == 0) || defined(DX50) || defined(DX90)
 /* android has an API for this */
 
-#define TOUCH_SLOP      16u
+#ifndef TOUCHSCREEN_TOUCH_SLOP
+#define TOUCHSCREEN_TOUCH_SLOP 16u
+#endif
 #define REFERENCE_DPI   160
 
 int touchscreen_get_scroll_threshold(void)
@@ -209,7 +211,7 @@ int touchscreen_get_scroll_threshold(void)
      * + 0.5f is for rounding, we use fixed point math to achieve that
      */
 
-    int result = dpi * (TOUCH_SLOP<<1) / REFERENCE_DPI;
+    int result = dpi * (TOUCHSCREEN_TOUCH_SLOP<<1) / REFERENCE_DPI;
     result += result & 1; /* round up if needed */
     return result>>1;
 }

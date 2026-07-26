@@ -83,7 +83,10 @@ static bool enable_sw_poweroff = true;
 /* speed repeat finishes at, in centiseconds */
 #define REPEAT_INTERVAL_FINISH  (5*HZ/100)
 /* repeat interval for touch events */
-#define REPEAT_INTERVAL_TOUCH   (4*HZ/100)
+#ifndef TOUCHSCREEN_REPEAT_INTERVAL
+#define TOUCHSCREEN_REPEAT_INTERVAL (4*HZ/100)
+#endif
+#define REPEAT_INTERVAL_TOUCH TOUCHSCREEN_REPEAT_INTERVAL
 
 static int lastdata = 0;
 static int button_read(int *data);

@@ -165,7 +165,12 @@ Every touch screen must remain operable with the AP80's physical controls.
 ## Interaction feedback and timing
 
 - Touch-down or focus feedback should appear within one display update and no
-  later than 100 ms.
+  later than 50 ms.
+- List dragging and kinetic scrolling should update at 50 Hz while active.
+  Do not raise the idle input or display wake rate to achieve this.
+- A list drag should begin after about 8 dp of movement (12 logical pixels at
+  249 dpi). This is large enough to protect ordinary taps without making the
+  content feel detached from the finger.
 - A tap should not trigger the row crossed during an intentional vertical
   scroll.
 - Long-press feedback should begin before the long-press action fires.

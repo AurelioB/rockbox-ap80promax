@@ -542,7 +542,10 @@ static int swipe_scroll(struct gui_synclist *gui_list, int delta)
 #define SIGN(a) ((a) < 0 ? -1 : 1)
 /* these could possibly be configurable */
 /* the lower the smoother */
-#define RELOAD_INTERVAL (HZ/25)
+#ifndef KINETIC_SCROLL_INTERVAL
+#define KINETIC_SCROLL_INTERVAL (HZ/25)
+#endif
+#define RELOAD_INTERVAL KINETIC_SCROLL_INTERVAL
 /* the higher the earler the list stops */
 #define DECELERATION (1000*RELOAD_INTERVAL/HZ)
 
