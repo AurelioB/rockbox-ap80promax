@@ -632,6 +632,7 @@ static void alsadev_cleanup(void)
 static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
 {
     int err;
+    int open_mode = 0;
 
     logf("opendev %s (%p)", device, handle);
 
@@ -648,7 +649,17 @@ static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
     /* Close old handle */
     close_hwdev(false);
 
-    if ((err = snd_pcm_open(&handle, device, mode, 0)) < 0)
+#if defined(HAVE_DSD) && defined(HAVE_ALSA_POLLING)
+    /*
+     * snd_pcm_nonblock() does not propagate O_NONBLOCK through the AP80
+     * firmware's plughw wrapper to its kernel PCM descriptor.  Opening the
+     * endpoint in this mode does.  The normal PCM worker is availability
+     * polled, so it is already prepared to retry short/EAGAIN writes.
+     */
+    open_mode = SND_PCM_NONBLOCK;
+#endif
+
+    if ((err = snd_pcm_open(&handle, device, mode, open_mode)) < 0)
     {
         handle = NULL;
         logf("%s(): Cannot open device %s: %s", __func__, device,
@@ -1106,7 +1117,6 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
     if (err < 0)
     {
         logf("DSD open failed: %s", snd_strerror(err));
-        snd_pcm_nonblock(handle, 0);
         audiohw_set_dsd_mode(false);
         dsd_is_active = false;
         dsd_transport = DSD_TRANSPORT_ERROR;
@@ -1265,7 +1275,6 @@ void pcm_alsa_dsd_close(bool drain)
     else
         snd_pcm_drop(handle);
 
-    snd_pcm_nonblock(handle, 0);
     audiohw_set_dsd_mode(false);
     dsd_is_active = false;
     dsd_transport = DSD_TRANSPORT_ERROR;
