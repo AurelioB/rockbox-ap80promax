@@ -446,9 +446,9 @@ void audiohw_postinit(void);
 void audiohw_close(void);
 
 #ifdef HAVE_DSD
-/* Select whether the DAC should look for DoP markers. Native DSD keeps this
- * disabled and is selected by the serial data framing itself. */
-void audiohw_set_dsd_mode(bool dop);
+/* Select the DAC's DSD input mode. The AP80 Pro Max uses this for both
+ * DoP-framed and native DSD transports. */
+void audiohw_set_dsd_mode(bool enabled);
 #endif
 
 #ifdef AUDIOHW_HAVE_MONO_VOLUME

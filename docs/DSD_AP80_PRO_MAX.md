@@ -11,16 +11,17 @@ stock `hiby_player`:
 | --- | --- | --- | --- |
 | DSD64 (2.8224 MHz) | DoP | 176.4 kHz | Fits below the 384 kHz device limit |
 | DSD128 (5.6448 MHz) | DoP | 352.8 kHz | Fits below the 384 kHz device limit |
-| DSD256 (11.2896 MHz) | PCM fallback | 176.4 kHz | Native route is quarantined after hardware noise |
+| DSD256 (11.2896 MHz) | Native DSD | 352.8 kHz | Stock native `/32` route |
 | DSD512 | unsupported | 705.6 kHz native | Exceeds the stock ALSA limit |
 
 The stock player selects a native fallback for DSD256: its binary produces
-`DOP ERR_RATE rejected` followed by `DOP recover to native`. Rockbox does not
-select that route automatically. Hardware testing produced static even though
-the `/32` carrier calculation and byte transform match the stock machine code.
-This implies that an additional private hardware-state transition is still
-missing. DSD256 therefore uses the in-tree DSD-to-PCM path until the native
-route can be validated without risk.
+`DOP ERR_RATE rejected` followed by `DOP recover to native`. The missing
+hardware transition was recovered from the bundled `codec_es9219_v2.ko`:
+its `es9219_dai_prepare` selects the DAC's DSD branch whenever the `DOP_EN`
+mixer state is nonzero. Despite its name, this control is the ES9219 DSD/PCM
+mode switch for both DoP and native input. The earlier native test left it
+disabled, making the DAC interpret the correctly packed DSD stream as PCM and
+causing static.
 
 ## Architecture
 
@@ -38,10 +39,10 @@ The DSD codec therefore owns a small, synchronous output path:
    endpoint in the selected DSD transport.
 4. For validated direct modes, the AP80 transport packer emits:
    - DoP: two DSD bytes per channel plus alternating `0x05`/`0xfa` markers.
-   - Native (development only): the same nibble lookup/interleave transform
-     found in the stock player. Automatic selection is disabled.
-5. `DOP_EN` is enabled only for actual DoP marker framing. It remains disabled
-   for the DSD256 native fallback.
+   - Native: the same nibble lookup/interleave transform found in the stock
+     player, sent as stereo S16 at the `/32` carrier rate.
+5. `DOP_EN` is enabled before ALSA is prepared for either direct transport,
+   selecting the ES9219's DSD input path.
 6. On stop, seek, error, or end-of-file, the DSD endpoint is closed and normal
    PCM parameters are restored.
 
@@ -67,7 +68,7 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add the DSF/DSDIFF streaming codec with seeking.
 - [x] Add deterministic host tests for route selection and byte packing.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
-- [ ] Identify the stock native-route state transition missing from Rockbox.
+- [x] Identify the stock native-route state transition missing from Rockbox.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
@@ -80,8 +81,8 @@ Use known-good stereo test files whose rates are independently verified.
 2. Confirm the ALSA rate is 176400 and `DOP_EN` is 1.
 3. Confirm clean playback on both 3.5 mm and 4.4 mm outputs.
 4. Repeat with DSD128; ALSA must report 352800 and `DOP_EN` must remain 1.
-5. Play DSD256; it must report PCM fallback at 176400 and must never emit
-   static. `DOP_EN` must be 0.
+5. Play DSD256; ALSA must report native S16 at 352800 and `DOP_EN` must be 1.
+   Confirm clean audio at low volume before increasing it.
 6. Pause, resume, seek, skip to PCM, and skip from PCM back to each DSD rate.
 7. Confirm that voice prompts do not mix into DSD playback.
 8. Confirm that DSD512 and DST-compressed DSDIFF fail safely without noise.
@@ -90,6 +91,6 @@ Use known-good stereo test files whose rates are independently verified.
 10. Force a direct-endpoint failure and confirm the log reports the 176.4 kHz
     PCM fallback without a crash or burst of noise.
 
-The native packing and `/32` carrier rule mirror the stock binary. Native
-selection remains deliberately disabled because correct framing alone was not
-enough to produce safe output on the device.
+The native packing and `/32` carrier rule mirror the stock binary. Direct DSD
+still falls back to the in-tree 176.4 kHz PCM converter if endpoint setup
+fails.
