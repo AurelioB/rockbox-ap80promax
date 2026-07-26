@@ -11,14 +11,12 @@ enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate)
     if (dsd_rate == 0 || dsd_rate % 8 != 0)
         return DSD_TRANSPORT_ERROR;
 
-    /* The stock player uses DoP while the /16 carrier fits, then recovers to
-     * its native /32 transport. Both transports require the ES9219 DSD mode
-     * to be enabled before the PCM endpoint is prepared. */
+    /* Use only the validated DoP route automatically. DSD256 fits the stock
+     * player's native /32 carrier, but physical testing still produces
+     * static after enabling the ES9219 DSD mode, so the native transport is
+     * unsafe until the remaining framing/clock contract is recovered. */
     if (dsd_rate / 16 <= AP80PROMAX_DSD_MAX_ALSA_RATE)
         return DSD_TRANSPORT_DOP;
-
-    if (dsd_rate / 32 <= AP80PROMAX_DSD_MAX_ALSA_RATE)
-        return DSD_TRANSPORT_NATIVE;
 
     return DSD_TRANSPORT_ERROR;
 }

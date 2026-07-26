@@ -200,10 +200,10 @@ void audiohw_postinit(void)
 }
 
 #ifdef HAVE_DSD
-void audiohw_set_dsd_mode(bool enabled)
+void audiohw_set_dsd_mode(bool dop)
 {
     if (hw_init > 0)
-        alsa_controls_set_bool("DOP_EN", enabled);
+        alsa_controls_set_bool("DOP_EN", dop);
 }
 #endif
 

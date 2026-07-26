@@ -1140,9 +1140,7 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
     dsd_transport = transport;
     dsd_marker = 0x05;
     dsd_is_active = true; /* Keep the async callback away from the handle. */
-    /* DOP_EN is the ES9219's DSD/PCM mode switch, despite its name. It must
-     * be enabled for both marker-framed DoP and the native S16 transport. */
-    audiohw_set_dsd_mode(true);
+    audiohw_set_dsd_mode(transport == DSD_TRANSPORT_DOP);
 
     err = set_dsd_hwparams(carrier_rate, transport);
     if (err >= 0)
