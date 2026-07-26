@@ -154,4 +154,11 @@ do
     esac
 done
 
+if ! strings "$ap80_dist/rockbox.ap80promax" |
+     grep -Fq '/etc/init.d/T90adb'
+then
+    echo "Rockbox application is missing the AP80 vendor ADB path" >&2
+    exit 1
+fi
+
 echo "AP80 Pro Max release artifacts verified"

@@ -51,6 +51,9 @@ static int _usb_mode = -1;
 static bool _usb_init = false;
 static bool is_adb_running = false;
 static int _usb_audio = 0;   /* usb_audio setting: 0 never .. 3 while mass-storage */
+#ifdef HIDIZS_AP80_PRO_MAX
+static bool ap80_vendor_adb = false;
+#endif
 
 void enable_adb(void);
 void enable_mass_storage(void);
@@ -60,6 +63,7 @@ bool enable_usb_audio(void);
 void disable_adb(void);
 void disable_mass_storage(void);
 void disable_usb_audio(void);
+static void disable_adb_gadget(void);
 
 #ifdef HAVE_MULTIDRIVE
 void cleanup_rbhome(void);
@@ -102,14 +106,23 @@ static bool dac_should_run(void)
 
 /* Reconcile the DAC gadget with the setting + current mode.
  *
- * In adb mode the DAC rides alongside adb as a composite function, so we
- * rebuild the adb gadget (enable_adb() composes uac_sa when dac_should_run()).
- * In charge/mass-storage mode the DAC is a standalone self-bound gadget. */
+ * On R1/R3 Pro II, the DAC can ride alongside adb as a composite function.
+ * AP80 uses the proven vendor ADB service as an exclusive mode. In charge or
+ * mass-storage mode the DAC is a standalone self-bound gadget. */
 static void apply_usb_audio(void)
 {
     if (_usb_mode == USB_MODE_ADB) {
+#ifdef HIDIZS_AP80_PRO_MAX
+        /*
+         * AP80 ADB is owned by the vendor service. It is deliberately kept
+         * separate from USB audio because this exact path is also used by
+         * the bootloader and is known to enumerate on the AP80 kernel.
+         */
+        return;
+#else
         enable_adb();
         return;
+#endif
     }
 
     bool want = dac_should_run();
@@ -163,13 +176,22 @@ static bool adb_compose_dac(void)
 
 void hiby_set_usb_mode(int mode) {
     logf(">>>>>>>>>>>>>>>>> hiby_set_usb_mode(%d)\n", mode);
+    if (_usb_mode == mode)
+        return;
+
+#ifdef HIDIZS_AP80_PRO_MAX
+    /*
+     * T90adb owns configfs while AP80 ADB is active. Stop it before Rockbox
+     * recreates its gadget for mass storage, charging, or USB audio.
+     */
+    if (ap80_vendor_adb)
+        disable_adb();
+#endif
+
     if (!_usb_init) {
         logf("Need to init usb!\n");
         usb_init_device();
     }
-
-    if (_usb_mode == mode)
-        return;
 
     /* Drop any active DAC before reconfiguring the base gadget. */
     if (usb_audio_get_active())
@@ -268,8 +290,55 @@ void enable_charging(void) {
     disable_usb_audio();
 }
 
+#ifdef HIDIZS_AP80_PRO_MAX
+/*
+ * Tear down Rockbox's configfs gadget so the stock T90adb service can create
+ * the same clean ADB gadget used successfully by the AP80 bootloader.
+ */
+static bool ap80_start_vendor_adb(void)
+{
+    disable_mass_storage();
+    disable_adb_gadget();
+    disable_usb_audio();
+
+    if (access(USB_GADGET_PATH "/functions/ffs.adb", F_OK) == 0)
+        system("rmdir " USB_GADGET_PATH "/functions/ffs.adb");
+    if (access(USB_GADGET_PATH "/configs/c.1/strings/0x409", F_OK) == 0)
+        system("rmdir " USB_GADGET_PATH "/configs/c.1/strings/0x409");
+    if (access(USB_GADGET_PATH "/configs/c.1", F_OK) == 0)
+        system("rmdir " USB_GADGET_PATH "/configs/c.1");
+    if (access(USB_GADGET_PATH "/strings/0x409", F_OK) == 0)
+        system("rmdir " USB_GADGET_PATH "/strings/0x409");
+    if (access(USB_GADGET_PATH, F_OK) == 0)
+        system("rmdir " USB_GADGET_PATH);
+
+    if (!system("mountpoint -q /sys/kernel/config"))
+        system("umount /sys/kernel/config");
+    _usb_init = false;
+
+    if (system("/etc/init.d/T90adb start") != 0)
+        return false;
+
+    ap80_vendor_adb = true;
+    is_adb_running = true;
+    return true;
+}
+#endif
+
 void enable_adb(void) {
     logf(">>>>>>>>>>>>>>>>> set_adb()\n");
+
+#ifdef HIDIZS_AP80_PRO_MAX
+    /*
+     * The bootloader uses this vendor service and it is confirmed working on
+     * AP80 hardware. Prefer it to the generic HiBy configfs reconstruction.
+     */
+    if (ap80_start_vendor_adb())
+        return;
+
+    logf("T90adb failed; falling back to Rockbox ADB gadget\n");
+    usb_init_device();
+#endif
 
     // Stop the respawner FIRST so it can't rebind adbd under us.
     system("killall adbserver.sh adbd 2>/dev/null");
@@ -313,7 +382,7 @@ void enable_adb(void) {
 }
 
 
-void disable_adb(void) {
+static void disable_adb_gadget(void) {
     // Remove any lingering adb daemon and its respawner
     system("killall adbserver.sh adbd 2>/dev/null");
 
@@ -342,6 +411,20 @@ void disable_adb(void) {
     if (!system("mountpoint -q /dev/usb-ffs/adb")) {
         system("umount -l /dev/usb-ffs/adb");
     }
+}
+
+void disable_adb(void)
+{
+#ifdef HIDIZS_AP80_PRO_MAX
+    if (ap80_vendor_adb) {
+        system("/etc/init.d/T90adb stop");
+        ap80_vendor_adb = false;
+        is_adb_running = false;
+        _usb_init = false;
+        return;
+    }
+#endif
+    disable_adb_gadget();
 }
 
 void enable_mass_storage(void) {

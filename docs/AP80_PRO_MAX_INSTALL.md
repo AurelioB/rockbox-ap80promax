@@ -137,6 +137,23 @@ directory untouched. Do not use Mass Storage mode for this procedure; the
 ADB updater keeps filesystem ownership on the player and avoids concurrent
 host/device writes.
 
+## ADB while Rockbox is running
+
+For ordinary diagnostics, select **Settings → General Settings → System →
+USB → USB Mode → Android Debug Bridge**, then reconnect the USB cable.
+The AP80 target delegates this mode to the same Hidizs `T90adb` service used
+by the working bootloader path. Confirm enumeration with:
+
+```sh
+adb devices
+```
+
+This mode is not an alternative entry point for the Rockbox update helper.
+`update-device.sh` refuses to replace the active installation while
+`/tmp/rockbox.ap80promax` is running. Use **TOOLS → USB Rockbox update** for
+updates and use application ADB only for diagnostics. On the AP80, ADB is an
+exclusive USB mode and is not combined with the USB DAC function.
+
 ## Rockbox physical controls
 
 | Context | Control | Action |
