@@ -22,8 +22,10 @@ enum ap80_service
 struct ap80_service_status
 {
     bool wifi_interface;
+    bool wifi_enabled;
     bool wpa_supplicant;
     bool dhcp_client;
+    bool bluetooth_enabled;
     bool bluetoothd;
     bool bluealsa;
 };

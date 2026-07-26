@@ -25,9 +25,14 @@
 #include <unistd.h>
 
 #define WIFI_INTERFACE "/sys/class/net/wlan0"
+#define WIFI_FLAGS "/sys/class/net/wlan0/flags"
 #define WIFI_UP_SCRIPT "/usr/bin/wifi_up.sh"
 #define WIFI_DOWN_SCRIPT "/usr/bin/wifi_down.sh"
-#define BT_INIT_SCRIPT "/etc/init.d/S80_bt_init"
+#define BT_RFKILL_STATE "/sys/class/rfkill/rfkill0/state"
+#define BT_RESUME_SCRIPT "/usr/bin/bt_resume"
+#define BT_SUSPEND_SCRIPT "/usr/bin/bt_suspend"
+
+#define AP80_IFF_UP 0x1
 
 static unsigned int claimed_services;
 static unsigned int initially_enabled;
@@ -69,11 +74,39 @@ static bool process_running(const char *name)
     return found;
 }
 
+static bool read_number(const char *path, unsigned int *value)
+{
+    char buffer[32];
+    char *end;
+    int fd = open(path, O_RDONLY);
+    if (fd < 0)
+        return false;
+
+    ssize_t size = read(fd, buffer, sizeof(buffer) - 1);
+    close(fd);
+    if (size <= 0)
+        return false;
+
+    buffer[size] = '\0';
+    unsigned long parsed = strtoul(buffer, &end, 0);
+    if (end == buffer)
+        return false;
+
+    *value = (unsigned int)parsed;
+    return true;
+}
+
 void ap80_services_get_status(struct ap80_service_status *status)
 {
+    unsigned int value;
+
     status->wifi_interface = access(WIFI_INTERFACE, F_OK) == 0;
+    status->wifi_enabled = read_number(WIFI_FLAGS, &value) &&
+                           (value & AP80_IFF_UP) != 0;
     status->wpa_supplicant = process_running("wpa_supplicant");
     status->dhcp_client = process_running("udhcpc");
+    status->bluetooth_enabled = read_number(BT_RFKILL_STATE, &value) &&
+                                value != 0;
     status->bluetoothd = process_running("bluetoothd");
     status->bluealsa = process_running("bluealsa");
 }
@@ -84,9 +117,9 @@ static unsigned int enabled_services(void)
     ap80_services_get_status(&status);
 
     unsigned int enabled = 0;
-    if (status.wpa_supplicant || status.dhcp_client)
+    if (status.wifi_enabled)
         enabled |= AP80_SERVICE_WIFI;
-    if (status.bluetoothd || status.bluealsa)
+    if (status.bluetooth_enabled)
         enabled |= AP80_SERVICE_BLUETOOTH;
     return enabled;
 }
@@ -144,9 +177,18 @@ int ap80_services_set_enabled(enum ap80_service service, bool enabled)
     (void)enabled;
     return -EOPNOTSUPP;
 #else
+    struct ap80_service_status status;
+    ap80_services_get_status(&status);
     if (service == AP80_SERVICE_WIFI)
+    {
+        if (status.wifi_enabled == enabled)
+            return 0;
         return run_script(enabled ? WIFI_UP_SCRIPT : WIFI_DOWN_SCRIPT, NULL);
-    return run_script(BT_INIT_SCRIPT, enabled ? "start" : "stop");
+    }
+
+    if (status.bluetooth_enabled == enabled)
+        return 0;
+    return run_script(enabled ? BT_RESUME_SCRIPT : BT_SUSPEND_SCRIPT, NULL);
 #endif
 }
 

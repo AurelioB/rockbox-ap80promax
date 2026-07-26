@@ -91,6 +91,12 @@
 #define HAVE_HIBY_LINUX_CODEC
 #define HAVE_SW_TONE_CONTROLS
 /*
+ * Repeated hardware tests validate wifi_up/down and the paired
+ * bt_suspend/bt_resume lifecycle. Consumers must claim a service before
+ * changing it, and handoff restores the state inherited from HiByOS.
+ */
+#define AP80_ENABLE_WIRELESS_TRANSITIONS
+/*
  * soc_aic.ko advertises S16_LE and S24_LE (format mask 0x44), not S32_LE.
  * S24_LE uses a 32-bit storage slot and is also the format expected by the
  * stock player's DoP packing.

@@ -100,11 +100,15 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 
 - [x] Parse uncompressed stereo DSF and DSDIFF.
 - [x] Bypass the PCM DSP/mixer and provide direct DoP/native transport.
-- [x] Use DoP at DSD64/128 and the stock native fallback at DSD256.
+- [x] Use DoP at DSD64/128.
+- [x] Quarantine the DSD256 native route after real hardware produced static;
+      use the in-tree 176.4 kHz PCM fallback until every stock hardware-state
+      transition is reproduced.
 - [x] Reject DST-compressed DSDIFF and DSD512 without opening the endpoint.
 - [x] Add host fixtures for metadata, route choice, byte order, markers,
       seeking, and malformed input.
-- [ ] Validate DSD64/128/256 on both physical outputs.
+- [ ] Validate DSD64/128 direct DoP and DSD256 PCM fallback on both physical
+      outputs.
 - [ ] Add `Automatic / Prefer DoP / Prefer native` only after both transports
       are measured. Unsupported preferences must visibly fall back.
 - [x] Add explicit DSD-to-PCM fallback. Do not link the bundled
@@ -115,9 +119,13 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 
 - [x] Put ownership of `cywdhd`, `wpa_supplicant`, DHCP, routes,
       suspend/resume, and HiByOS handoff behind a small hosted platform API.
-      The transition calls remain compile-time disabled pending device tests.
-- [ ] Validate the stock service transitions and enable
-      `AP80_ENABLE_WIRELESS_TRANSITIONS`.
+- [x] Validate repeated `wifi_up`/`wifi_down` and
+      `bt_suspend`/`bt_resume` transitions and enable the guarded platform
+      calls. Track interface/rfkill state rather than long-lived daemons.
+- [ ] Replace or repair the higher-level AP80 Bluetooth control plane. The R1
+      proof of concept assumes a persistent `/var/run/sys_server`, but the
+      AP80 service became stale/one-shot during hardware tests; its
+      `bt_enable` recovery also terminated BlueZ.
 - [ ] Add scan/connect/status UI independently of consumers.
 - [ ] Add file transfer, HiByLink, internet radio, and AirPlay as separate
       consumers.
