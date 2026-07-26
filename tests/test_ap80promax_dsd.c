@@ -16,10 +16,10 @@ static void test_routes(void)
     assert(ap80promax_dsd_carrier_rate(DSD_RATE_128,
            DSD_TRANSPORT_DOP) == 352800);
 
+    /* Native DSD256 remains quarantined until the stock hardware-state
+       transition is reproduced. The codec must take the safe PCM fallback. */
     assert(ap80promax_dsd_select_transport(DSD_RATE_256) ==
-           DSD_TRANSPORT_NATIVE);
-    assert(ap80promax_dsd_carrier_rate(DSD_RATE_256,
-           DSD_TRANSPORT_NATIVE) == 352800);
+           DSD_TRANSPORT_ERROR);
 
     assert(ap80promax_dsd_select_transport(DSD_RATE_512) ==
            DSD_TRANSPORT_ERROR);
