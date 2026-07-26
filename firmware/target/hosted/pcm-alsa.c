@@ -1090,6 +1090,18 @@ static int set_dsd_hwparams(unsigned int rate, enum dsd_transport transport)
     snd_pcm_hw_params_set_period_size_near(handle, params, &dsd_period_size,
                                             NULL);
     err = snd_pcm_hw_params(handle, params);
+    if (err >= 0)
+    {
+        /*
+         * Reuse the normal hosted start policy with the values ALSA
+         * actually negotiated. Starting after one small DSF block causes
+         * an immediate AP80 underrun; half a buffer gives the DAC enough
+         * queued carrier frames to run continuously.
+         */
+        buffer_size = dsd_buffer_size;
+        period_size = dsd_period_size;
+        err = set_swparams(handle);
+    }
 
 out:
     if (err < 0)
@@ -1210,24 +1222,6 @@ ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
             logf("DSD write failed: %s", snd_strerror(written));
             pthread_mutex_unlock(&pcm_mtx);
             return written;
-        }
-
-        /*
-         * The AP80 kernel does not auto-start a prepared direct DSD stream.
-         * Without this transition, writes fill the ALSA buffer and then
-         * sleep forever in wait_for_avail, freezing Rockbox's cooperative
-         * scheduler. Start only after frames are queued so the DAC cannot
-         * underrun before it receives the first DSD block.
-         */
-        if (written > 0 && snd_pcm_state(handle) == SND_PCM_STATE_PREPARED)
-        {
-            int err = snd_pcm_start(handle);
-            if (err < 0)
-            {
-                logf("DSD start failed: %s", snd_strerror(err));
-                pthread_mutex_unlock(&pcm_mtx);
-                return err;
-            }
         }
 
         out += written * frame_bytes;
