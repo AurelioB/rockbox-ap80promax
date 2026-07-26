@@ -23,6 +23,11 @@ static void test_routes(void)
 
     assert(ap80promax_dsd_select_transport(DSD_RATE_512) ==
            DSD_TRANSPORT_ERROR);
+
+    assert(ap80promax_dsd_period_frames(11025) == 1024);
+    assert(ap80promax_dsd_period_frames(11026) == 2048);
+    assert(ap80promax_dsd_period_frames(176400) == 16384);
+    assert(ap80promax_dsd_period_frames(352800) == 32768);
 }
 
 static void test_dop(void)
@@ -49,7 +54,8 @@ static void test_dop(void)
 static void test_native(void)
 {
     const uint8_t src[] = { 0x01, 0x02, 0x80, 0x40 };
-    const uint8_t expected[] = { 0x06, 0x00, 0x00, 0x90 };
+    /* L0/L1 form the first S16 sample; R0/R1 form the second. */
+    const uint8_t expected[] = { 0x02, 0x40, 0x08, 0x10 };
     uint8_t dst[sizeof(src)];
 
     assert(ap80promax_dsd_pack_native(dst, sizeof(dst), src, sizeof(src)) ==

@@ -446,9 +446,9 @@ void audiohw_postinit(void);
 void audiohw_close(void);
 
 #ifdef HAVE_DSD
-/* Select whether the DAC should look for DoP markers. Native DSD remains
- * quarantined until its complete hardware contract is validated. */
-void audiohw_set_dsd_mode(bool dop);
+/* Select the DAC's DSD input mode. This is required by both DoP and native
+ * transports, although native DSD remains diagnostic-only. */
+void audiohw_set_dsd_mode(bool enabled);
 #endif
 
 #ifdef AUDIOHW_HAVE_MONO_VOLUME

@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 #include <alsa/asoundlib.h>
 
 //#define LOGF_ENABLE
@@ -126,6 +127,7 @@ static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
 #ifdef HAVE_DSD
 #define DSD_INPUT_BUFFER_SIZE 8192u
 #define DSD_OUTPUT_BUFFER_SIZE (DSD_INPUT_BUFFER_SIZE * 2)
+#define DSD_NATIVE_TEST_MARKER "/tmp/rockbox-native-dsd-test"
 
 static bool dsd_is_active;
 static enum dsd_transport dsd_transport;
@@ -1047,8 +1049,9 @@ static int set_dsd_hwparams(unsigned int rate, enum dsd_transport transport)
 {
     snd_pcm_hw_params_t *params;
     snd_pcm_format_t dsd_format;
-    snd_pcm_uframes_t dsd_buffer_size = 16384;
-    snd_pcm_uframes_t dsd_period_size = 4096;
+    snd_pcm_uframes_t dsd_period_size =
+        ap80promax_dsd_period_frames(rate);
+    snd_pcm_uframes_t dsd_buffer_size = dsd_period_size * 4;
     unsigned int exact_rate = rate;
     int err;
 
@@ -1121,6 +1124,13 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
         return DSD_TRANSPORT_ERROR;
 
     transport = ap80promax_dsd_select_transport(dsd_rate);
+    if (transport == DSD_TRANSPORT_ERROR &&
+        access(DSD_NATIVE_TEST_MARKER, F_OK) == 0 &&
+        dsd_rate / 32 <= AP80PROMAX_DSD_MAX_ALSA_RATE)
+    {
+        transport = DSD_TRANSPORT_NATIVE;
+        logf("WARNING: diagnostic native DSD transport enabled");
+    }
     carrier_rate = ap80promax_dsd_carrier_rate(dsd_rate, transport);
     if (transport == DSD_TRANSPORT_ERROR || carrier_rate == 0)
         return DSD_TRANSPORT_ERROR;
@@ -1140,7 +1150,7 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
     dsd_transport = transport;
     dsd_marker = 0x05;
     dsd_is_active = true; /* Keep the async callback away from the handle. */
-    audiohw_set_dsd_mode(transport == DSD_TRANSPORT_DOP);
+    audiohw_set_dsd_mode(true);
 
     err = set_dsd_hwparams(carrier_rate, transport);
     if (err >= 0)

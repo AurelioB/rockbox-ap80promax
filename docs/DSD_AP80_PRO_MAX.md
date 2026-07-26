@@ -25,6 +25,13 @@ into `es9219_dai_prepare dsd`, but output remained static. Native framing or
 clock state therefore still differs from the stock player and automatic
 DSD256 native routing remains unsafe.
 
+Subsequent disassembly identified a concrete framing error in Rockbox's
+diagnostic packer. The codec normalizes input as `L0 R0 L1 R1`, while the
+stock in-place transform consumes successive bytes from one channel. Native
+S16 stereo therefore has to combine `L0/L1` into the left sample and `R0/R1`
+into the right sample. The original Rockbox packer incorrectly combined
+`L0/R0` and `L1/R1`, mixing the channels at the bitstream level.
+
 ## Architecture
 
 DSD must not enter Rockbox's fixed-point PCM DSP or mixer. EQ, replay gain,
@@ -43,13 +50,18 @@ The DSD codec therefore owns a small, synchronous output path:
    - DoP: two DSD bytes per channel plus alternating `0x05`/`0xfa` markers.
    - Native (diagnostic only): the same nibble lookup/interleave transform
      found in the stock player. Automatic selection is disabled.
-5. `DOP_EN` is enabled only for the validated DoP route. Native DSD must not
-   be selected by a production build until its full contract is validated.
+5. `DOP_EN` selects the ES9219 DSD branch for DoP and diagnostic native
+   playback. Native DSD is not selected during ordinary production playback.
 6. On stop, seek, error, or end-of-file, the DSD endpoint is closed and normal
    PCM parameters are restored.
 
 The synchronous direct path deliberately gives up gapless DSD-to-PCM
 transitions and software DSP. Hardware DAC volume remains available.
+
+The ALSA period sizing also mirrors the stock player: 16,384 frames at a
+176.4 kHz carrier and 32,768 frames at 352.8 kHz, with four periods buffered.
+The previous fixed 4,096-frame period repeatedly underrran and re-prepared the
+DAC during direct DSD.
 
 If direct setup fails, the same codec converts DSD64/128/256 to interleaved
 29-bit PCM at 176.4 kHz. A third-order CIC stage reduces the stream to
@@ -96,4 +108,6 @@ Use known-good stereo test files whose rates are independently verified.
 The native packing and `/32` carrier rule mirror the stock binary, but those
 two properties plus ES9219 DSD-mode selection are not yet sufficient for
 correct physical output. Production builds keep DSD256 on the in-tree
-176.4 kHz PCM fallback.
+176.4 kHz PCM fallback. For controlled validation only, creating the volatile
+`/tmp/rockbox-native-dsd-test` marker enables native selection until the next
+reboot; ordinary users and persistent configuration cannot enable it.

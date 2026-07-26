@@ -31,6 +31,21 @@ unsigned int ap80promax_dsd_carrier_rate(unsigned int dsd_rate,
     return 0;
 }
 
+unsigned int ap80promax_dsd_period_frames(unsigned int carrier_rate)
+{
+    if (carrier_rate <= 11025)
+        return 1024;
+    if (carrier_rate <= 22050)
+        return 2048;
+    if (carrier_rate <= 48000)
+        return 4096;
+    if (carrier_rate <= 96000)
+        return 8192;
+    if (carrier_rate <= 192000)
+        return 16384;
+    return 32768;
+}
+
 size_t ap80promax_dsd_pack_dop(uint8_t *dst, size_t dst_size,
                                const uint8_t *src, size_t src_size,
                                uint8_t *marker)
@@ -78,18 +93,24 @@ static const uint8_t native_odd_nibble[16] =
 size_t ap80promax_dsd_pack_native(uint8_t *dst, size_t dst_size,
                                   const uint8_t *src, size_t src_size)
 {
-    if (!dst || !src || (src_size & 1) || dst_size < src_size)
+    if (!dst || !src || (src_size & 3) || dst_size < src_size)
         return 0;
 
-    for (size_t i = 0; i < src_size; i += 2)
+    for (size_t i = 0; i < src_size; i += 4)
     {
-        uint8_t even = src[i + 0];
-        uint8_t odd = src[i + 1];
+        uint8_t left0 = src[i + 0];
+        uint8_t right0 = src[i + 1];
+        uint8_t left1 = src[i + 2];
+        uint8_t right1 = src[i + 3];
 
-        dst[i + 0] = native_even_nibble[even & 0x0f] |
-                     native_odd_nibble[odd & 0x0f];
-        dst[i + 1] = native_even_nibble[even >> 4] |
-                     native_odd_nibble[odd >> 4];
+        dst[i + 0] = native_even_nibble[left0 & 0x0f] |
+                     native_odd_nibble[left1 & 0x0f];
+        dst[i + 1] = native_even_nibble[left0 >> 4] |
+                     native_odd_nibble[left1 >> 4];
+        dst[i + 2] = native_even_nibble[right0 & 0x0f] |
+                     native_odd_nibble[right1 & 0x0f];
+        dst[i + 3] = native_even_nibble[right0 >> 4] |
+                     native_odd_nibble[right1 >> 4];
     }
 
     return src_size;
