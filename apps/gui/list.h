@@ -186,6 +186,11 @@ struct gui_synclist
     int y_pos; /* absolute Y coordinate, used for smooth scrolling */
     int scroll_base_y; /* used for swipe scrolling */
     int scroll_mode; /* see apps/gui/bitmap/list.c */
+    /*
+     * Scrolling keeps selected_item near the visible rows for subsequent
+     * button navigation, but that internal focus must not resemble a tap.
+     */
+    bool hide_selection;
 #endif
 };
 

@@ -369,6 +369,7 @@ void list_draw(struct screen *display, struct gui_synclist *list)
 #ifdef HAVE_TOUCHSCREEN
             /* don't draw it during scrolling */
             list->scroll_mode == SCROLL_NONE &&
+            !list->hide_selection &&
 #endif
                 i >= list->selected_item
                 && i <  list->selected_item + list->selected_size)
@@ -804,9 +805,15 @@ unsigned gui_synclist_do_touchscreen(struct gui_synclist *list)
         {
             click_loc = get_click_location(list, gevent.ox, gevent.oy);
             if (click_loc & SCROLLBAR)
+            {
                 list->scroll_mode = SCROLL_BAR;
+                list->hide_selection = true;
+            }
             else if (click_loc & LIST)
+            {
                 list->scroll_mode = SCROLL_SWIPE;
+                list->hide_selection = true;
+            }
         }
 
         if (list->scroll_mode == SCROLL_BAR)

@@ -164,6 +164,7 @@ void gui_synclist_init(struct gui_synclist * gui_list,
     gui_list->y_pos = 0;
     gui_list->scroll_base_y = 0;
     gui_list->scroll_mode = 0;
+    gui_list->hide_selection = false;
 #endif
     FOR_NB_SCREENS(i)
     {
@@ -369,6 +370,10 @@ void gui_synclist_select_item(struct gui_synclist * gui_list, int item_number)
 {
     if (item_number >= gui_list->nb_items || item_number < 0)
         return;
+#ifdef HAVE_TOUCHSCREEN
+    /* A tap or button-navigation selection restores visible focus. */
+    gui_list->hide_selection = false;
+#endif
     if (item_number != gui_list->selected_item)
     {
         gui_list->selected_item = item_number;
