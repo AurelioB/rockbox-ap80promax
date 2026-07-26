@@ -40,6 +40,11 @@ static int fd = -1;
 static struct fb_var_screeninfo vinfo;
 static struct fb_fix_screeninfo finfo;
 fb_data *framebuffer = NULL; /* global variable, see lcd-target.h */
+unsigned int lcd_framebuffer_stride = LCD_WIDTH;
+
+#ifndef LCD_FRAMEBUFFER_STRIDE
+#define LCD_FRAMEBUFFER_STRIDE LCD_WIDTH
+#endif
 
 #ifdef FB_DOUBLEBUF
 static int fb_plane;
@@ -107,7 +112,21 @@ void lcd_init_device(void)
     }
 #endif
 #else
-    /* Make sure we match our desired bitdepth */
+#if defined(LCD_FBDEV_WIDTH) && defined(LCD_FBDEV_HEIGHT)
+    /*
+     * Some hosted targets expose a scanout wider than their logical panel.
+     * Do not attempt to reprogram that mode: the AP80 display driver can
+     * block inside FBIOPUT_VSCREENINFO when asked for its logical width.
+     */
+    if (vinfo.bits_per_pixel != LCD_DEPTH ||
+        vinfo.xres != LCD_FBDEV_WIDTH ||
+        vinfo.yres != LCD_FBDEV_HEIGHT)
+    {
+        panicf("Unexpected framebuffer mode: %dx%dx%d",
+               vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+    }
+#else
+    /* Make sure we match our desired geometry and bitdepth. */
     if (vinfo.bits_per_pixel != LCD_DEPTH || vinfo.xres != LCD_WIDTH || vinfo.yres != LCD_HEIGHT) {
         vinfo.bits_per_pixel = LCD_DEPTH;
         vinfo.xres = LCD_WIDTH;
@@ -118,6 +137,14 @@ void lcd_init_device(void)
         }
     }
 #endif
+#endif
+
+    if (finfo.line_length % sizeof(fb_data) != 0)
+        panicf("Framebuffer stride is not pixel aligned");
+
+    lcd_framebuffer_stride = finfo.line_length / sizeof(fb_data);
+    if (lcd_framebuffer_stride < LCD_WIDTH)
+        panicf("Framebuffer stride is too small: %u", lcd_framebuffer_stride);
 
     /* map framebuffer */
     framebuffer = mmap(NULL, finfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -136,7 +163,7 @@ void lcd_init_device(void)
 #ifdef HAVE_LCD_SHUTDOWN
 void lcd_shutdown(void)
 {
-    munmap(framebuffer, FRAMEBUFFER_SIZE);
+    munmap(framebuffer, finfo.smem_len);
     framebuffer = NULL;
     close(fd);
     fd = -1;
@@ -167,6 +194,23 @@ void lcd_enable(bool on)
 extern void lcd_copy_buffer_rect(fb_data *dst, const fb_data *src,
                                  int width, int height);
 
+static void copy_to_framebuffer(fb_data *dst, const fb_data *src,
+                                int width, int height)
+{
+    if (LCD_FRAMEBUFFER_STRIDE == LCD_WIDTH && width == LCD_WIDTH)
+    {
+        lcd_copy_buffer_rect(dst, src, width * height, 1);
+        return;
+    }
+
+    while (height-- > 0)
+    {
+        lcd_copy_buffer_rect(dst, src, width, 1);
+        dst += LCD_FRAMEBUFFER_STRIDE;
+        src += LCD_WIDTH;
+    }
+}
+
 void lcd_update(void)
 {
     if (fd < 0) return;
@@ -177,8 +221,7 @@ void lcd_update(void)
     {
         /* Copy the Rockbox framebuffer to the second framebuffer */
         fb_data *dst = LCD_FRAMEBUF_ADDR(0, 0) + (fb_plane * FRAMEBUFFER_SIZE);
-        lcd_copy_buffer_rect(dst, FBADDR(0,0),
-                             LCD_WIDTH*LCD_HEIGHT, 1);
+        copy_to_framebuffer(dst, FBADDR(0,0), LCD_WIDTH, LCD_HEIGHT);
         redraw();
     }
 }
@@ -194,17 +237,7 @@ void lcd_update_rect(int x, int y, int width, int height)
         fb_data *dst = LCD_FRAMEBUF_ADDR(x, y) + (fb_plane * FRAMEBUFFER_SIZE);
         fb_data *src = FBADDR(x,y);
 
-        /* Copy part of the Rockbox framebuffer to the second framebuffer */
-        if (width < LCD_WIDTH)
-        {
-            /* Not full width - do line-by-line */
-            lcd_copy_buffer_rect(dst, src, width, height);
-        }
-        else
-        {
-            /* Full width - copy as one line */
-            lcd_copy_buffer_rect(dst, src, LCD_WIDTH*height, 1);
-        }
+        copy_to_framebuffer(dst, src, width, height);
         redraw();
     }
 }

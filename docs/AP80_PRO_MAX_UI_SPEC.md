@@ -16,7 +16,10 @@ The Linux framebuffer driver reports a 480 x 640 scanout, but the panel,
 official product specification, stock LiteGUI layouts, and CST8xx touch
 controller all expose a 360 x 640 logical display. Rockbox theme and touch
 geometry must therefore be authored directly in 360 x 640 coordinates. No
-horizontal coordinate conversion is required.
+horizontal coordinate conversion is required. The hosted LCD driver preserves
+the kernel's 480 x 640 scanout mode and copies each logical row using the
+reported hardware stride; themes must never compensate for that transport
+detail.
 
 ## Baseline metrics
 

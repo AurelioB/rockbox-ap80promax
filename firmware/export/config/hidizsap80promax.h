@@ -18,6 +18,14 @@
 #define LCD_WIDTH 360
 #define LCD_HEIGHT 640
 #define LCD_DPI 249
+#ifndef SIMULATOR
+/*
+ * Keep the vendor framebuffer mode untouched.  Rockbox renders a 360-pixel
+ * logical canvas into the visible part of the 480-pixel scanout.
+ */
+#define LCD_FBDEV_WIDTH 480
+#define LCD_FBDEV_HEIGHT 640
+#endif
 /* Keep touch-row sizing representative in the SDL simulator. */
 #define SIMULATOR_LCD_DPI 249
 

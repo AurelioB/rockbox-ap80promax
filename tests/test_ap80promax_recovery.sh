@@ -86,8 +86,14 @@ grep -q 'app handoff timeout' "$ap80_test_dir/bootloader.log"
 
 grep -q '#define LCD_WIDTH 360' \
     "$ap80_repo/firmware/export/config/hidizsap80promax.h"
+grep -q '#define LCD_FBDEV_WIDTH 480' \
+    "$ap80_repo/firmware/export/config/hidizsap80promax.h"
 grep -q '#define TOUCHSCREEN_RAW_WIDTH 360' \
     "$ap80_repo/firmware/export/config/hidizsap80promax.h"
+grep -q 'vinfo.xres != LCD_FBDEV_WIDTH' \
+    "$ap80_repo/firmware/target/hosted/lcd-linuxfb.c"
+grep -q 'dst += LCD_FRAMEBUFFER_STRIDE' \
+    "$ap80_repo/firmware/target/hosted/lcd-linuxfb.c"
 grep -q 'system_notify_boot_complete' \
     "$ap80_repo/apps/main.c"
 grep -q 'rockbox-handoff-started' \

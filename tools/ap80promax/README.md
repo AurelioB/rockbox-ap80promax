@@ -46,6 +46,8 @@ writes a firmware partition or replaces the installed bootloader.
 the installed OneBit WPS/SBS files with a target-specific `checkwps`. The Linux
 framebuffer reports a 480 x 640 scanout, but the physical panel, stock UI, and
 CST8xx touchscreen expose a 360 x 640 logical display. The simulator therefore
-uses the visible logical geometry. It is useful for UI, theme, metadata, and
-touch testing, but it does not emulate the AP80 kernel, DAC, jack detection,
+uses the visible logical geometry. On hardware, Rockbox leaves the vendor
+scanout mode unchanged and copies 360-pixel logical rows using its 480-pixel
+stride. The simulator is useful for UI, theme, metadata, and touch testing,
+but it does not emulate the AP80 kernel, DAC, jack detection,
 USB, wireless hardware, or DSD transport.
