@@ -1,0 +1,53 @@
+#
+# SNARTYGREY by Simon Anden and E. Halpin
+# CC-BY-SA 4.0
+#
+# Based on SPAZZ, SNAZZ/SNAZZ2, SNAZZY, and Adwaitapod.
+# AP80 Pro Max 360x640 adaptation by the AP80 Rockbox port.
+#
+%wd
+%Fl(2,15-KodeMono-SemiBold.fnt)
+%Fl(3,22-KodeMono-SemiBold.fnt)
+%Fl(4,29-KodeMono-SemiBold.fnt)
+%Fl(5,72-KodeMono-Bold.fnt)
+%xl(PBI,Playback_Icons_ap80.bmp,5)
+%xl(PBB,pb_back_ap80.bmp,0,0)
+%xl(PB,pb_ap80.bmp,0,0)
+
+%?if(%cs, =, 21)<%VI(clear)%Vd(USB)|%?mp<%VI(menu_l)|%VI(menu)>%Vd(navtouch)%Vd(MainDisplay)%?mp<|%Vd(footer)%Vd(curInfo)>>
+
+%Vi(clear,0,0,1,1,-)
+
+# Header navigation targets.
+%Vl(navtouch,0,0,360,80,-)
+%T(0,0,120,80,cancel)
+%T(240,0,120,80,contextmenu)
+
+# Main title and rules retain the original inset geometry.
+%Vl(MainDisplay,12,10,336,42,4)
+%al%s%?cs<Main Menu|%?Lt<%Lt>>
+%Vl(MainDisplay,12,78,336,2,-)
+%dr(0,0,336,2)
+
+%Vi(menu,12,90,336,450,4)
+%Vi(menu_l,12,90,336,522,4)
+
+# Footer / current playback summary.
+%Vl(footer,12,558,336,2,-)
+%dr(0,0,336,2)
+%Vl(footer,12,579,32,17,-)
+%?mp<%xd(PBI,1)|%xd(PBI,2)|%xd(PBI,3)|%xd(PBI,4)|%xd(PBI,5)>
+%Vl(curInfo,52,574,296,30,3)
+%al%s%?ia<%ia - %it|%fn>
+
+# USB presentation mirrors the original large date/time warning.
+%Vi(USB,12,90,1,1,-)
+%Vl(USB,12,110,336,46,4)
+%acUSB CONNECTED%Vs(invert)
+%Vl(USB,12,180,336,60,4)
+%ac%s%?cu<Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday>
+%ac%?cm<January|February|March|April|May|June|July|August|September|October|November|December> %cd
+%Vl(USB,12,270,336,100,5)
+%ac%?cf<%cH:%cM:%cS|%cl:%cM%cP>
+%Vl(USB,12,470,336,60,3)
+%acEJECT BEFORE DISCONNECTING

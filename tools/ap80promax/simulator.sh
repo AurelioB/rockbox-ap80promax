@@ -40,7 +40,11 @@ unzip -oq "$ap80_sim_build/rockbox.zip" -d "$ap80_sim_root"
 (
     cd "$ap80_sim_root"
     for ap80_skin in .rockbox/wps/OneBit*.wps \
-                     .rockbox/wps/OneBit*.sbs
+                     .rockbox/wps/OneBit*.sbs \
+                     .rockbox/wps/Snappy.wps \
+                     .rockbox/wps/Snappy.sbs \
+                     .rockbox/wps/SNARTYGREY.wps \
+                     .rockbox/wps/SNARTYGREY.sbs
     do
         "$ap80_checkwps_build/checkwps.hidizsap80promax" "$ap80_skin"
     done

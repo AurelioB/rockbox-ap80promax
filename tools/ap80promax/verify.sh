@@ -194,6 +194,77 @@ do
     done
 done
 
+for ap80_theme in \
+    "Snappy" \
+    "Snappy Clear Skies" \
+    "Snappy Lemonade" \
+    "Snappy Neon Ivy" \
+    "Snappy Red-Eye Flight" \
+    "Snappy Wild Berry" \
+    "SNARTYGREY"
+do
+    if ! printf '%s\n' "$ap80_zip_entries" |
+         grep -qx ".rockbox/themes/$ap80_theme.cfg"
+    then
+        echo "Release ZIP is missing imported theme: $ap80_theme" >&2
+        exit 1
+    fi
+    if ! unzip -p "$ap80_zip" ".rockbox/themes/$ap80_theme.cfg" |
+         grep -Fqx "font: /.rockbox/fonts/29-KodeMono-SemiBold.fnt"
+    then
+        echo "Release theme is missing readable Kode Mono type: $ap80_theme" >&2
+        exit 1
+    fi
+    if ! unzip -p "$ap80_zip" ".rockbox/themes/$ap80_theme.cfg" |
+         grep -Fqx "list padding: auto"
+    then
+        echo "Release theme does not enable touch-sized rows: $ap80_theme" >&2
+        exit 1
+    fi
+done
+
+for ap80_skin in Snappy SNARTYGREY
+do
+    for ap80_skin_type in sbs wps
+    do
+        if ! printf '%s\n' "$ap80_zip_entries" |
+             grep -qx ".rockbox/wps/$ap80_skin.$ap80_skin_type"
+        then
+            echo "Release ZIP is missing imported skin: $ap80_skin.$ap80_skin_type" >&2
+            exit 1
+        fi
+    done
+
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.wps" |
+         grep -Fqx '%T(120,560,120,80,play)'
+    then
+        echo "Imported WPS lacks AP80 transport targets: $ap80_skin" >&2
+        exit 1
+    fi
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
+         grep -Fqx '%T(0,0,120,80,cancel)'
+    then
+        echo "Imported SBS lacks the AP80 back target: $ap80_skin" >&2
+        exit 1
+    fi
+done
+
+for ap80_asset in \
+    ".rockbox/icons/Snappy_ap80.bmp" \
+    ".rockbox/icons/Snappy_viewer_ap80.bmp" \
+    ".rockbox/icons/SNARTYGREY_ap80.bmp" \
+    ".rockbox/icons/SNARTYGREY_viewer_ap80.bmp" \
+    ".rockbox/wps/Snappy/pb_backdrop_ap80.bmp" \
+    ".rockbox/wps/SNARTYGREY/pb_back_ap80.bmp" \
+    ".rockbox/docs/KodeMono-OFL.txt"
+do
+    if ! printf '%s\n' "$ap80_zip_entries" | grep -qx "$ap80_asset"
+    then
+        echo "Release ZIP is missing imported theme asset: $ap80_asset" >&2
+        exit 1
+    fi
+done
+
 for ap80_elf in \
     "$ap80_dist/rockbox.ap80promax" \
     "$ap80_dist/bootloader.ap80promax"

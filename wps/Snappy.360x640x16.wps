@@ -1,0 +1,128 @@
+#
+# Snappy 1.3 by Christian Soffke
+# CC-BY-SA 4.0
+#
+# Remix of Simon Anden's SNARTY, based on SPAZZ, SNAZZ/SNAZZ2,
+# SNAZZY, and Adwaitapod.
+#
+# AP80 Pro Max 360x640 adaptation. Original artwork, Kode Mono type,
+# metadata order, peak-meter states, and configurable colors are retained.
+#
+%wd
+%Fl(2,15-KodeMono-SemiBold.fnt)
+%Fl(3,22-KodeMono-SemiBold.fnt)
+%Fl(4,29-KodeMono-SemiBold.fnt)
+%xl(B,batt_wps_ap80.bmp,1,0,2)
+%xl(O,off_on_ap80.bmp,24,0,2)
+%xl(pb,pb_ap80.bmp)
+%xl(vb,vb_ap80.bmp)
+%xl(bb,bb_ap80.bmp)
+%xl(pb_backdrop,pb_backdrop_ap80.bmp)
+%xl(vb_backdrop,vb_backdrop_ap80.bmp)
+%xl(vb_too_loud,vb_too_loud_ap80.bmp)
+%xl(bb_backdrop,bb_backdrop_ap80.bmp)
+
+# Explicit active root, matching the proven AP80 OneBit skin pattern.
+%V(0,0,360,640,-)
+%Cl(2,2,182,182,l,t)
+
+# A consistent AP80 touch map is layered behind the original visual design.
+%Vl(touch,0,0,360,640,-)
+%T(0,0,120,80,browse)
+%T(120,0,120,80,menu)
+%T(240,0,120,80,contextmenu)
+%T(0,80,360,350,playlist)
+%T(0,80,360,350,contextmenu,long_press)
+%T(0,430,360,130,progressbar)
+%T(0,560,120,80,rwd,repeat_press)
+%T(0,560,120,80,prev)
+%T(120,560,120,80,play)
+%T(120,560,120,80,stop,long_press)
+%T(240,560,120,80,ffwd,repeat_press)
+%T(240,560,120,80,next)
+%Vd(touch)
+
+# Restore an anonymous active viewport for state selectors and shared content.
+%V(0,0,360,640,-)
+%?C<%Vd(aa)>
+%?mp<|%?C<%Vd(pm_short)|%Vd(pm_long)>|%Vd(paused)|%Vd(ff)|%Vd(rew)|>
+%?mh<%Vd(locked)|%Vd(volbar)>
+%Vd(voldb)
+
+# Header
+%Vl(sleep,12,12,78,56,2)
+%Vs(invert)%ac%bs
+%aczzz...
+%Vl(voldb,12,12,78,48,4)
+%Vs(invert)%ac%pv
+
+%V(104,12,78,22,2)
+SHF%xd(O,%ps)
+%V(104,38,78,22,2)
+%?mm<RPT%xd(Ob)|RPT%xd(O)|RP1%xd(O)|RND%xd(O)|A-B%xd(O)>
+
+%V(234,12,114,14,-)
+%bl(0,0,104,14,bb,backdrop,bb_backdrop)
+%V(234,34,114,28,3)
+%Vs(invert)%ac%?bp<%xd(Bb)|%xd(Ba)> %bl%%
+
+%Vl(volbar,12,62,336,28,-)
+%pv(0,0,336,28,vb,backdrop,vb_backdrop)
+%?if(%pv, >, 0)<%pv(0,0,336,28,vb_too_loud,backdrop,vb_backdrop)>
+%Vl(locked,12,62,336,28,4)
+%acLOCKED%Vs(invert)
+%V(12,91,336,2,-)
+%dr(0,0,336,2)
+
+# Album art keeps the square framed treatment of the 240x320 original.
+%Vl(aa,12,108,186,186,-)
+%dr(0,0,186,2)
+%dr(0,184,186,2)
+%dr(0,2,2,182)
+%dr(184,2,2,182)
+%Cd
+
+# Codec, file detail, and playback-state area.
+%V(216,108,132,42,4)
+%Vs(invert)%ac%fc
+%V(216,160,132,70,3)
+%ar%fb kbps
+%ar%fk kHz
+%ar%?if(%St(party mode),!=,off)<party mode|%?if(%St(single mode),!=,off)<%St(single mode)>>
+
+%Vl(pm_short,216,242,132,52,4)
+%pm
+%Vl(pm_long,12,242,336,52,4)
+%pm
+%Vl(paused,216,242,132,52,4)
+%dr(30,0,20,52)
+%dr(80,0,20,52)
+%Vl(rew,216,242,132,52,4)
+%ar%<%< REW
+%Vl(ff,216,242,132,52,4)
+%ar%>%> FF
+
+# Metadata follows the original album, artist, title hierarchy.
+%V(12,320,336,30,3)
+%s%al%id
+%V(12,362,336,30,3)
+%s%al%?if(%ig,=,Classical)<%?ic<By %ic - >%ia|%ia>
+%V(12,408,336,42,4)
+%al%s%?it<%it|%fn>
+
+# Progress and footer.
+%V(12,500,336,9,-)
+%dr(0,0,336,1)
+%dr(0,8,336,1)
+%pb(0,0,336,9,pb_backdrop,slider,pb)
+%V(12,520,336,30,3)
+%al%pc/%pt%ar%pp/%pe
+
+# The original has no drawn transport bar. These full-width footer labels
+# expose the AP80 touch zones without changing Snappy's one-bit vocabulary.
+%V(12,582,96,30,3)
+%ac%<%<
+%V(132,574,96,42,4)
+%ac%?mp<STOP|PLAY|PAUSE|FF|REW>
+%V(252,582,96,30,3)
+%ac%>%>

@@ -261,6 +261,178 @@ ui viewport: -
 </theme>
 
 <theme>
+Name: Snappy
+Authors: Christian Soffke; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): Snappy.360x640x16.wps
+sbs.360x640x(16|24|32): Snappy.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: deb6b5
+background color: 08385a
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/Snappy_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/Snappy_viewer_ap80.bmp
+show icons: on
+statusbar: off
+scrollbar: right
+scrollbar width: 8
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
+Name: Snappy Clear Skies
+Base Theme: Snappy
+Authors: Christian Soffke; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): Snappy.360x640x16.wps
+sbs.360x640x(16|24|32): Snappy.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: 003c5a
+background color: 94e3ff
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/Snappy_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/Snappy_viewer_ap80.bmp
+show icons: on
+statusbar: off
+scrollbar: right
+scrollbar width: 8
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
+Name: Snappy Lemonade
+Base Theme: Snappy
+Authors: Christian Soffke; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): Snappy.360x640x16.wps
+sbs.360x640x(16|24|32): Snappy.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: ffdbb5
+background color: 31556b
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/Snappy_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/Snappy_viewer_ap80.bmp
+show icons: on
+statusbar: off
+scrollbar: right
+scrollbar width: 8
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
+Name: Snappy Neon Ivy
+Base Theme: Snappy
+Authors: Christian Soffke; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): Snappy.360x640x16.wps
+sbs.360x640x(16|24|32): Snappy.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: 9ccfb5
+background color: 211408
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/Snappy_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/Snappy_viewer_ap80.bmp
+show icons: on
+statusbar: off
+scrollbar: right
+scrollbar width: 8
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
+Name: Snappy Red-Eye Flight
+Base Theme: Snappy
+Authors: Christian Soffke; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): Snappy.360x640x16.wps
+sbs.360x640x(16|24|32): Snappy.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: e73000
+background color: 520000
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/Snappy_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/Snappy_viewer_ap80.bmp
+show icons: on
+statusbar: off
+scrollbar: right
+scrollbar width: 8
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
+Name: Snappy Wild Berry
+Base Theme: Snappy
+Authors: Christian Soffke; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): Snappy.360x640x16.wps
+sbs.360x640x(16|24|32): Snappy.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: f792b5
+background color: 211431
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/Snappy_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/Snappy_viewer_ap80.bmp
+show icons: on
+statusbar: off
+scrollbar: right
+scrollbar width: 8
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
+Name: SNARTYGREY
+Authors: Simon Anden and E. Halpin; AP80 Pro Max adaptation by the AP80 Rockbox port
+WPS: yes
+SBS: yes
+
+<main>
+wps.360x640x(16|24|32): SNARTYGREY.360x640x16.wps
+sbs.360x640x(16|24|32): SNARTYGREY.360x640x16.sbs
+Font.360x640x(16|24|32): 29-KodeMono-SemiBold.fnt
+foreground color: a3a3a3
+background color: 313131
+selector type: bar (inverse)
+iconset.360x640x(16|24|32): icons/SNARTYGREY_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/SNARTYGREY_viewer_ap80.bmp
+show icons: off
+statusbar: off
+scrollbar: off
+list padding: auto
+ui viewport: -
+</main>
+</theme>
+
+<theme>
 Name: rockbox_failsafe
 Author: Rockbox team
 

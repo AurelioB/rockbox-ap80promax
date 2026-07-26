@@ -1,0 +1,147 @@
+#
+# SNARTYGREY by Simon Anden and E. Halpin
+# CC-BY-SA 4.0
+#
+# Based on SPAZZ, SNAZZ/SNAZZ2, SNAZZY, and Adwaitapod.
+# AP80 Pro Max 360x640 adaptation by the AP80 Rockbox port.
+#
+%wd
+%Fl(2,15-KodeMono-SemiBold.fnt)
+%Fl(3,22-KodeMono-SemiBold.fnt)
+%Fl(4,29-KodeMono-SemiBold.fnt)
+%xl(H,BatteryStatus_ap80.bmp,12)
+%xl(O,OffOn_ap80.bmp,24,0,2)
+%xl(AlbumArt,AlbumArt_ap80.bmp,0,0)
+%xl(P,bb_rbd_123_ap80.bmp,2)
+%xl(PBB,pb_back_ap80.bmp,0,0)
+%xl(PB,pb_ap80.bmp,0,0)
+%xl(BBB,bb_back_ap80.bmp,0,0)
+%xl(BB,bb_ap80.bmp,0,0)
+%xl(VBB,vb_back_ap80.bmp,0,0)
+%xl(VB,vb_ap80.bmp,0,0)
+%xl(PBI,Playback_Icons_ap80.bmp,5)
+
+# Explicit active root, matching the proven AP80 OneBit skin pattern.
+%V(0,0,360,640,-)
+%Cl(2,2,158,158,l,t)
+
+# AP80 touch map.
+%Vl(touch,0,0,360,640,-)
+%T(0,0,120,80,browse)
+%T(120,0,120,80,menu)
+%T(240,0,120,80,contextmenu)
+%T(0,80,360,360,playlist)
+%T(0,80,360,360,contextmenu,long_press)
+%T(0,440,360,120,progressbar)
+%T(0,560,120,80,rwd,repeat_press)
+%T(0,560,120,80,prev)
+%T(120,560,120,80,play)
+%T(120,560,120,80,stop,long_press)
+%T(240,560,120,80,ffwd,repeat_press)
+%T(240,560,120,80,next)
+%Vd(touch)
+
+# Restore an anonymous active viewport for state selection.
+%V(0,0,360,640,-)
+%?mh<%Vd(LockScreen)%?C<%Vd(LockArt)|%Vd(LockNoArt)>|%Vd(MainDisplay)%?C<%Vd(Art)|%Vd(NoArt)>%?bc<%Vd(batCharge)|%Vd(bat)>>
+
+# Shared header.
+%Vl(MainDisplay,12,12,58,48,4)
+%ac%pv%Vs(invert)
+%Vl(MainDisplay,78,20,120,28,-)
+%pv(0,0,120,28,VB,backdrop,VBB)
+%Vl(MainDisplay,206,12,58,22,2)
+SHF%?ps<%xd(O,2)|%xd(O)>
+%Vl(MainDisplay,206,40,58,22,2)
+%?mm<RPT%xd(O)|RPT%xd(O,2)|RP1%xd(O,2)|RND%xd(O,2)|A-B%xd(O,2)>
+%Vl(MainDisplay,244,14,104,14,-)
+%bl(0,0,104,14,BB,backdrop,BBB)
+%Vl(bat,244,36,104,28,3)
+%ac%t(8)%xd(P) %bl%%%Vs(invert);%ac%?if(%bt, =, -1)<%t(0)|%t(8)%bt%Vs(invert)>;%t(8)%ac%xd(P) %?cf<%cH:%cM|%cl:%cM%cP>
+%Vl(batCharge,244,36,104,28,3)
+%ac%t(8)CHARGING%Vs(invert);%t(8)%ac%xd(P,2) %bl%%%Vs(invert)
+%Vl(MainDisplay,12,78,336,2,-)
+%dr(0,0,336,2)
+
+# The original two-column art/metadata composition is retained.
+%Vl(Art,12,100,162,162,-)
+%dr(0,0,162,2)
+%dr(0,160,162,2)
+%dr(0,2,2,158)
+%dr(160,2,2,158)
+%Cd
+%Vl(NoArt,12,100,162,162,-)
+%xd(AlbumArt)
+
+%Vl(MainDisplay,186,100,162,32,3)
+%al%s%?it<%it|%fn>
+%Vl(MainDisplay,186,140,162,30,3)
+%al%s%?ia<%ia|NO TAG>
+%Vl(MainDisplay,186,180,162,42,4)%Vf(cfcfcf)
+%al%s%?id<%id|NO ALBUM>
+%Vl(MainDisplay,186,230,162,28,3)
+%al%s%?iy<Year: %iy|Year: ---->
+
+# File information and the theme's characteristic Next Up treatment.
+%Vl(MainDisplay,12,282,336,30,3)
+%al%fc | %fb kbps | %fk kHz
+%Vl(MainDisplay,12,332,336,2,-)
+%dr(0,0,336,2)
+%Vl(MainDisplay,12,350,336,34,4)
+%Vs(invert)%acNEXT UP
+%Vl(MainDisplay,12,398,336,30,3)
+%al%s%?Ia<%Ia|NO ARTIST>
+%Vl(MainDisplay,12,438,336,34,4)
+%al%s%?It<%It|END OF PLAYLIST>
+
+# Progress and playback summary.
+%Vl(MainDisplay,12,510,336,9,-)
+%dr(0,0,336,1)
+%pb(0,1,336,7,PBB,slider,PB)
+%dr(0,8,336,1)
+%V(12,536,32,17,-)
+%?mp<%xd(PBI,1)|%xd(PBI,2)|%xd(PBI,3)|%xd(PBI,4)|%xd(PBI,5)>
+%V(50,530,298,30,3)
+%al%?mp<Stopped|Playing|Paused|Seeking|Seeking>: %pc | %px%% | -%pr%ar%pp/%pe
+
+# Visible affordances for the three 120x80 footer touch zones.
+%V(12,582,96,30,3)
+%ac%<%<
+%V(132,574,96,42,4)
+%ac%?mp<STOP|PLAY|PAUSE|FF|REW>
+%V(252,582,96,30,3)
+%ac%>%>
+
+# Lock screen keeps the same information and layout, replacing volume with
+# the prominent inverse LOCKED block from the original.
+%Vl(LockScreen,12,12,58,48,4)
+%ac%pv%Vs(invert)
+%Vl(LockScreen,78,12,120,48,4)
+%acLOCKED%Vs(invert)
+%Vl(LockScreen,206,12,58,22,2)
+SHF%?ps<%xd(O,2)|%xd(O)>
+%Vl(LockScreen,206,40,58,22,2)
+%?mm<RPT%xd(O)|RPT%xd(O,2)|RP1%xd(O,2)|RND%xd(O,2)|A-B%xd(O,2)>
+%Vl(LockScreen,244,14,104,14,-)
+%bl(0,0,104,14,BB,backdrop,BBB)
+%Vl(LockScreen,244,36,104,28,3)
+%ac%bl%%%Vs(invert)
+%Vl(LockScreen,12,78,336,2,-)
+%dr(0,0,336,2)
+%Vl(LockArt,12,100,162,162,-)
+%dr(0,0,162,2)%dr(0,160,162,2)%dr(0,2,2,158)%dr(160,2,2,158)
+%Cd
+%Vl(LockNoArt,12,100,162,162,-)
+%xd(AlbumArt)
+%Vl(LockScreen,186,100,162,32,3)
+%al%s%?it<%it|%fn>
+%Vl(LockScreen,186,140,162,30,3)
+%al%s%?ia<%ia|NO TAG>
+%Vl(LockScreen,186,180,162,42,4)%Vf(cfcfcf)
+%al%s%?id<%id|NO ALBUM>
+%Vl(LockScreen,186,230,162,28,3)
+%al%s%fc | %fk kHz
+%Vl(LockScreen,12,510,336,9,-)
+%dr(0,0,336,1)
+%pb(0,1,336,7,PBB,slider,PB)
+%dr(0,8,336,1)

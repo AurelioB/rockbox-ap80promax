@@ -1,0 +1,69 @@
+#
+# Snappy 1.3 by Christian Soffke
+# CC-BY-SA 4.0
+#
+# Remix of Simon Anden's SNARTY, based on SPAZZ, SNAZZ/SNAZZ2,
+# SNAZZY, and Adwaitapod.
+#
+# AP80 Pro Max 360x640 adaptation. The original type, bitmaps, status
+# language, menu/footer behavior, and freely adjustable palette are retained.
+#
+%wd
+%Fl(2,15-KodeMono-SemiBold.fnt)
+%Fl(3,22-KodeMono-SemiBold.fnt)
+%Fl(4,29-KodeMono-SemiBold.fnt)
+%xl(batt,batt_sbs_ap80.bmp,0,0,11)
+%xl(batt_chg,batt_sbs_chg_ap80.bmp,0,0)
+%xl(vb,vb_ap80.bmp)
+%xl(vb_backdrop,vb_backdrop_ap80.bmp)
+%xl(vb_too_loud,vb_too_loud_ap80.bmp)
+%xl(paused,paused_ap80.bmp)
+
+%?if(%cs, =, 21)<%VI(clear)%Vd(USB)|%?mp<%VI(main_l)|%VI(main)>%Vd(navtouch)%?mv(1.5)<%Vd(vol)|%Vd(status)%?Lt<%Vd(title)|%Vd(no_title)>>%?mp<|%Vd(footer)>>
+
+# Clear viewport used before the dedicated USB screen.
+%Vi(clear,0,0,1,1,-)
+
+# The entire header remains usable even when status values are drawn over it.
+%Vl(navtouch,0,0,360,80,-)
+%T(0,0,120,80,cancel)
+%T(240,0,120,80,contextmenu)
+
+# Time, lock state, sleep timer, and battery.
+%Vl(status,12,8,225,24,3)
+%?mh<%Vs(invert)%alLOCKED|%?bs<%al%bs zzz...|%al%?cf<%cH:%cM|%cl:%cM %cP>>>
+%Vl(status,255,8,93,26,3)
+%ar%bl%%%?bp< %xd(batt_chg)| %xd(batt,%bl)>
+
+# Screen title and rule.
+%Vl(title,12,36,336,42,4)
+%al%s%Lt
+%Vl(title,12,78,336,2,-)
+%dr(0,0,336,2)
+%Vl(no_title,12,36,336,42,4)
+
+# Volume overlay follows the original Snappy dB block and bar.
+%Vl(vol,12,8,78,42,4)
+%Vs(invert)%ac%pv
+%Vl(vol,12,50,336,28,-)
+%pv(0,0,336,28,vb,backdrop,vb_backdrop)
+%?if(%pv, >, 0)<%pv(0,0,336,28,vb_too_loud,backdrop,vb_backdrop)>
+
+# Six touch-sized list rows fit in the full-width content viewport.
+%Vi(main,12,90,336,450,-)
+%Vi(main_l,12,90,336,522,-)
+
+# Now-playing footer.
+%Vl(footer,12,558,336,2,-)
+%dr(0,0,336,2)
+%Vl(footer,12,574,308,30,3)
+%al%s%?it<%it|%fn>
+%Vl(footer,326,580,22,22,-)
+%?if(%mp,=,3)<%xd(paused)>
+
+# USB warning.
+%Vi(USB,12,90,1,1,-)
+%Vl(USB,12,150,336,230,4)
+%Vs(invert)%acEJECT
+%acBEFORE
+%acDISCONNECTING

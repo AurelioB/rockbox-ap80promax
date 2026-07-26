@@ -656,6 +656,11 @@ sub buildzip {
         print STDERR "No wps module present, can't do the WPS magic!\n";
     }
 
+    if (-e "$temp_dir/fonts/29-KodeMono-SemiBold.fnt") {
+        copy("$ROOT/licenses/fonts/KodeMono-OFL.txt",
+             "$temp_dir/docs/KodeMono-OFL.txt");
+    }
+
     # until buildwps.pl is fixed, manually copy the classic_statusbar theme across
     mkdir "$temp_dir/wps/classic_statusbar", 0777;
     glob_copy("$ROOT/wps/classic_statusbar/*.bmp", "$temp_dir/wps/classic_statusbar");
