@@ -1,0 +1,200 @@
+# Theme by:chronicallyoffline/Cicumpunct Δ
+# CC-BY-SA
+# Credits to: chronicallyoffline for the theme he created, Chuck Lardo and D0-0K for inspiration and assets reused under CC-BY-SA and GPL V3 respectively,
+# Cicumpunct Δ
+# Date: 05-24-2025
+
+# Disable Status Bar
+%wd
+
+# Clear Backdrop
+%X(d)
+
+# Preload Fonts
+%Fl(2,29-squaredot.fnt)
+%Fl(3,14-LanaPixel.fnt)
+%Fl(4,10-Sazanami-Mincho.fnt)
+%Fl(5,07-LanaPixel.fnt)
+%Fl(6,21-LanaPixel.fnt)
+%Fl(7,20-digital7mono.fnt)
+
+# Preload Images
+%xl(battery,battery.bmp,0,0,10)
+%xl(playmodes,playmodes.bmp,0,0,9)
+%xl(pbbd,progressbar_backdrop_ap80.bmp,0,0)
+%xl(pl,pl_ap80.bmp,0,0)
+%xl(plbg,plbg_ap80.bmp,0,0)
+%xl(pr,pr_ap80.bmp,0,0)
+%xl(prbg,prbg_ap80.bmp,0,0)
+%xl(volbg,volbg_ap80.bmp,0,0)
+%xl(vol,vol_ap80.bmp,0,0)
+%xl(load,LoadStatus.bmp,10)
+
+# Display Viewports
+%V(0,0,480,640,-)
+%?mh<%Vd(lockscreen)|%Vd(metadata)>
+
+##################################
+##### Locked (BW Monochrome) #####
+##################################
+
+# Clear Display
+%Vl(lockscreen,0,0,480,640,-)
+
+# Clock
+%Vl(lockscreen,20,430,320,100,6)
+%al%cl:%cM%cp
+
+# Day
+%Vl(lockscreen,20,395,320,25,5)
+%al%?cu<Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday>, %cb %cd
+
+# Battery Indicator
+%Vl(lockscreen,340,430,120,100,6)
+%ar%bl%%
+
+# Charging Indicator
+%Vl(lockscreen,340,395,120,25,5)
+%ar%?bc<Charging|Voltage>
+
+# Lock Indicator
+%Vl(lockscreen,340,100,120,25,7)
+%ac%?mh<LOCKED%Vs(invert)|>
+
+# Album Artist
+%Vl(lockscreen,20,100,320,30,3)
+%al%s%ia
+
+# Track Title or Filename
+%Vl(lockscreen,20,150,440,40,2)
+%al%s%it
+
+# Album Title and ID3 Year
+%Vl(lockscreen,20,230,280,20,5)
+%al%s%id %(%ss(0,4, %iy)%)
+
+# Shuffle Indicator
+%Vl(lockscreen,333,234,31,12,4)
+%al%?ps<SHUF>
+
+# Repeat Indicator
+%Vl(lockscreen,367,234,47,12,4)
+%ac%?mm<|REPEAT|REPEAT|REPEAT|REPEAT>
+
+# Repeat Mode Indicator
+%Vl(lockscreen,419,234,23,12,4)
+%ar%?mm<|ALL|ONE|SHUF|A-B>
+
+
+#######################
+##### Play Screen #####
+#######################
+
+# Clear Display
+%Vl(metadata,0,0,480,640,-)
+
+# Full-screen AP80 touch map, attached to the visible metadata viewport.
+%T(0,0,160,80,browse)
+%T(160,0,160,80,menu)
+%T(320,0,160,80,contextmenu)
+%T(0,80,480,340,playlist)
+%T(0,80,480,340,contextmenu,long_press)
+%T(0,420,480,80,volume)
+%T(0,500,480,60,progressbar)
+%T(0,560,160,80,rwd,repeat_press)
+%T(0,560,160,80,prev)
+%T(160,560,160,80,play)
+%T(160,560,160,80,stop,long_press)
+%T(320,560,160,80,ffwd,repeat_press)
+%T(320,560,160,80,next)
+
+# Playback Mode Icons
+%Vl(metadata,20,25,13,13,-)
+%xd(playmodes,%mp)
+
+# Track Number
+%Vl(metadata,45,21,180,20,3)
+%al%pp %Sx(of) %pe
+
+# Clock
+%Vl(metadata,300,21,72,20,3)
+%ar%cl:%cM%cp
+#
+%?lh<%Vd(loadstatus)|%Vd(loadstatic)>
+%Vl(loadstatic,272,23,16,16,-)
+%xd(load,1)
+%Vl(loadstatus,272,23,16,16,-)
+%t(0.2)%xd(load,2);%t(0.2)%xd(load,3);%t(0.2)%xd(load,4);%t(0.2)%xd(load,5);%t(0.2)%xd(load,6);%t(0.2)%xd(load,7);%t(0.2)%xd(load,8);%t(0.2)%xd(load,9);%t(0.3)%xd(load,10);%t(0.3)%xd(load,9)%t(0.3)%xd(load,8);%t(0.2)%xd(load,9);%t(0.2)%xd(load,10);%t(0.2)%xd(load,9);%t(0.2)%xd(load,8);%t(0.2)%xd(load,7);%t(0.2)%xd(load,6);%t(0.2)%xd(load,5);%t(0.2)%xd(load,4);%t(0.1)%xd(load,3);%t(0.1)%xd(load,2);%t(0.2)%xd(load,1)
+
+# Battery (numerical)
+%Vl(metadata,378,21,50,20,3)
+%ar%bl%%
+
+# Battery (graphical)
+%Vl(metadata,437,26,23,10,-)
+%?if(%bl,>,90)<%xd(battery,10)|%?if(%bl,>,80)<%xd(battery,9)|%?if(%bl,>,70)<%xd(battery,8)|%?if(%bl,>,60)<%xd(battery,7)|%?if(%bl,>,50)<%xd(battery,6)|%?if(%bl,>,40)<%xd(battery,5)|%?if(%bl,>,30)<%xd(battery,4)|%?if(%bl,>,20)<%xd(battery,3)|%?if(%bl,>,10)<%xd(battery,2)|%?if(%bl,>,-1)<%xd(battery,1)>>>>>>>>>>
+
+# Album Artist
+%Vl(metadata,20,105,310,30,3)
+#%Vf(b4b4b4)
+%al%s%ia
+
+# Codec
+%Vl(metadata,340,113,53,15,7)
+%ac%?fc<MP1|MP2|MP3|AIFF|WAV|VORBIS|FLAC|MPC|AC3|WAVPAC|ALAC|AAC|SHORTEN|SID|ADX|NSF|SPEEX|SPC|APE|WMA|WMAPRO|MOD|SAP|COOK|AAC|AC3|ATRAC3|CMC|CM3|CMR|CMS|DMC|DLT|MPT|MPD|RMT|TMC|TM8|TM2|ATRAC3|SMAF|AU|VOX|WAVE64|TRUEAUD|WMAVOX|MUSEPAK|AAC-HE|AY|VTX|GBS|HES|SGC|VGM|KSS|OPUS|AAC|UNKNOWN?>%Vs(invert)
+
+# Bitrate
+%Vl(metadata,407,113,53,15,7)
+%ac%fbk%Vs(invert)
+
+# Track Title or Filename
+%Vl(metadata,20,150,440,40,2)
+%al%s%it
+
+# Album Title and ID3 Year
+%Vl(metadata,20,240,280,20,5)
+%al%s%id %(%ss(0,4, %iy)%)
+
+# Shuffle Indicator
+%Vl(metadata,320,270,31,12,4)
+%al%?ps<SHUF>
+
+# Repeat Indicator
+%Vl(metadata,353,270,47,12,4)
+%ac%?mm<|REPEAT|REPEAT|REPEAT|REPEAT>
+
+# Repeat Mode Indicator
+%Vl(metadata,405,270,23,12,4)
+%ar%?mm<|ALL|ONE|SHUF|A-B>
+
+# Peak Meters
+# Left
+%Vl(metadata,20,360,220,30,-)
+%pL(0,0,220,30,image,pl,backdrop,plbg,invert)
+
+# Right
+%Vl(metadata,240,360,220,30,-)
+%pR(0,0,220,30,image,pr,backdrop,prbg)
+
+# Volume Level Text
+%Vl(metadata,407,450,53,10,4)
+%ac%?if(%pv, >, 0)<+|>%pvdB
+
+%Vl(metadata,20,450,47,10,4)
+%alVOL-
+
+# Volume Bar
+%Vl(metadata,80,454,320,2,-)
+%pv(0,0,320,1,vol,backdrop,volbg)
+
+# Time Elapsed
+%Vl(metadata,20,540,47,15,7)
+%al%pc
+
+# Progress Bar
+%Vl(metadata,80,543,320,11,-)
+%pb(0,0,320,9,progressbar_ap80.bmp,backdrop,pbbd)
+
+# Total Track Time
+%Vl(metadata,413,540,47,15,7)
+%ac%pt

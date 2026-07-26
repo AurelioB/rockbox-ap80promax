@@ -38,8 +38,10 @@ to eishiya in the original OneBit_OLED package.
 - Album art retains the source theme's fallback graphic. Its AP80 viewport is
   enlarged only where needed to balance the wider composition.
 - `OneBit_Orange` and `OneBit_Green` use the exact foreground/background
-  values from the original package and share the adapted `OneBitMono` skin,
-  SBS, fonts, icons, and bitmaps rather than duplicating or recoloring them.
+  values from the original package. Their skins, list icons, and WPS bitmap
+  palettes are deterministic color variants of the adapted `OneBitMono`
+  files: dimensions, bitmap data, frame counts, layout, and touch behavior
+  remain identical.
 - A visual-neutral, full-screen touch layer makes the themes practical on the
   small display without changing their appearance. The header and transport
   rows divide the full screen into three 120 x 80 targets. Volume and seek

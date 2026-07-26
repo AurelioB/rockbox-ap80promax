@@ -169,25 +169,24 @@ ui viewport: -
 
 <theme>
 Name: OneBit_Orange
-Base Theme: OneBitMono
 Authors: chronicallyoffline; AP80 Pro Max adaptation by the AP80 Rockbox port
 WPS: yes
 SBS: yes
 
 <main>
-wps.480x640x(16|24|32): OneBitMono.480x640x16.wps
-wps.360x640x(16|24|32): OneBitMono.360x640x16.wps
-sbs.480x640x(16|24|32): OneBitMono.480x640x16.sbs
-sbs.360x640x(16|24|32): OneBitMono.360x640x16.sbs
+wps.480x640x(16|24|32): OneBit_Orange.480x640x16.wps
+wps.360x640x(16|24|32): OneBit_Orange.360x640x16.wps
+sbs.480x640x(16|24|32): OneBit_Orange.480x640x16.sbs
+sbs.360x640x(16|24|32): OneBit_Orange.360x640x16.sbs
 Font.480x640x(16|24|32): 21-LanaPixel.fnt
 Font.360x640x(16|24|32): 21-LanaPixel.fnt
 foreground color: ff6500
 background color: 390c00
 selector type: bar (inverse)
-iconset.480x640x(16|24|32): icons/modone_ap80.bmp
-iconset.360x640x(16|24|32): icons/modone_ap80.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
-viewers iconset.360x640x(16|24|32): icons/modone_viewer_ap80.bmp
+iconset.480x640x(16|24|32): icons/modone_Orange_ap80.bmp
+iconset.360x640x(16|24|32): icons/modone_Orange_ap80.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_Orange_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/modone_viewer_Orange_ap80.bmp
 show icons: on
 statusbar: off
 scrollbar: off
@@ -201,25 +200,24 @@ ui viewport: -
 
 <theme>
 Name: OneBit_Green
-Base Theme: OneBitMono
 Authors: chronicallyoffline; AP80 Pro Max adaptation by the AP80 Rockbox port
 WPS: yes
 SBS: yes
 
 <main>
-wps.480x640x(16|24|32): OneBitMono.480x640x16.wps
-wps.360x640x(16|24|32): OneBitMono.360x640x16.wps
-sbs.480x640x(16|24|32): OneBitMono.480x640x16.sbs
-sbs.360x640x(16|24|32): OneBitMono.360x640x16.sbs
+wps.480x640x(16|24|32): OneBit_Green.480x640x16.wps
+wps.360x640x(16|24|32): OneBit_Green.360x640x16.wps
+sbs.480x640x(16|24|32): OneBit_Green.480x640x16.sbs
+sbs.360x640x(16|24|32): OneBit_Green.360x640x16.sbs
 Font.480x640x(16|24|32): 21-LanaPixel.fnt
 Font.360x640x(16|24|32): 21-LanaPixel.fnt
 foreground color: 4aff4a
 background color: 001400
 selector type: bar (inverse)
-iconset.480x640x(16|24|32): icons/modone_ap80.bmp
-iconset.360x640x(16|24|32): icons/modone_ap80.bmp
-viewers iconset.480x640x(16|24|32): icons/modone_viewer_ap80.bmp
-viewers iconset.360x640x(16|24|32): icons/modone_viewer_ap80.bmp
+iconset.480x640x(16|24|32): icons/modone_Green_ap80.bmp
+iconset.360x640x(16|24|32): icons/modone_Green_ap80.bmp
+viewers iconset.480x640x(16|24|32): icons/modone_viewer_Green_ap80.bmp
+viewers iconset.360x640x(16|24|32): icons/modone_viewer_Green_ap80.bmp
 show icons: on
 statusbar: off
 scrollbar: off

@@ -66,6 +66,21 @@ for ap80_theme in \
     OneBit_VFD2 \
     OneBit_VFD_ALT
 do
+    case "$ap80_theme" in
+        OneBit_Orange)
+            ap80_theme_icon=modone_Orange_ap80.bmp
+            ap80_theme_viewer_icon=modone_viewer_Orange_ap80.bmp
+            ;;
+        OneBit_Green)
+            ap80_theme_icon=modone_Green_ap80.bmp
+            ap80_theme_viewer_icon=modone_viewer_Green_ap80.bmp
+            ;;
+        *)
+            ap80_theme_icon=modone_ap80.bmp
+            ap80_theme_viewer_icon=modone_viewer_ap80.bmp
+            ;;
+    esac
+
     if ! printf '%s\n' "$ap80_zip_entries" |
          grep -qx ".rockbox/themes/$ap80_theme.cfg"
     then
@@ -80,8 +95,8 @@ do
     fi
     for ap80_theme_setting in \
         "font: /.rockbox/fonts/21-LanaPixel.fnt" \
-        "iconset: /.rockbox/icons/modone_ap80.bmp" \
-        "viewers iconset: /.rockbox/icons/modone_viewer_ap80.bmp"
+        "iconset: /.rockbox/icons/$ap80_theme_icon" \
+        "viewers iconset: /.rockbox/icons/$ap80_theme_viewer_icon"
     do
         if ! unzip -p "$ap80_zip" ".rockbox/themes/$ap80_theme.cfg" |
              grep -Fqx "$ap80_theme_setting"
@@ -92,7 +107,14 @@ do
     done
 done
 
-for ap80_skin in OneBitMono OneBitMono2 OneBit_OLED OneBit_VFD2 OneBit_VFD_ALT
+for ap80_skin in \
+    OneBitMono \
+    OneBit_Orange \
+    OneBit_Green \
+    OneBitMono2 \
+    OneBit_OLED \
+    OneBit_VFD2 \
+    OneBit_VFD_ALT
 do
     if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
          grep -Eq '^%Vl\([^,]+,12,10,(160|188),48,-\)'
@@ -127,7 +149,13 @@ do
     fi
 done
 
-for ap80_skin in OneBitMono OneBitMono2 OneBit_VFD2 OneBit_VFD_ALT
+for ap80_skin in \
+    OneBitMono \
+    OneBit_Orange \
+    OneBit_Green \
+    OneBitMono2 \
+    OneBit_VFD2 \
+    OneBit_VFD_ALT
 do
     if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.wps" |
          grep -Fqx '%Vl(metadata,40,360,140,30,-)'
@@ -137,7 +165,13 @@ do
     fi
 done
 
-for ap80_icon in modone_ap80.bmp modone_viewer_ap80.bmp
+for ap80_icon in \
+    modone_ap80.bmp \
+    modone_viewer_ap80.bmp \
+    modone_Orange_ap80.bmp \
+    modone_viewer_Orange_ap80.bmp \
+    modone_Green_ap80.bmp \
+    modone_viewer_Green_ap80.bmp
 do
     if ! printf '%s\n' "$ap80_zip_entries" |
          grep -qx ".rockbox/icons/$ap80_icon"
@@ -145,6 +179,19 @@ do
         echo "Release ZIP is missing AP80 list icons: $ap80_icon" >&2
         exit 1
     fi
+done
+
+for ap80_variant in Orange Green
+do
+    for ap80_asset in battery.bmp playmodes.bmp progressbar.bmp usb.bmp
+    do
+        if ! printf '%s\n' "$ap80_zip_entries" |
+             grep -qx ".rockbox/wps/OneBit_$ap80_variant/$ap80_asset"
+        then
+            echo "Release ZIP is missing OneBit palette art: OneBit_$ap80_variant/$ap80_asset" >&2
+            exit 1
+        fi
+    done
 done
 
 for ap80_elf in \
