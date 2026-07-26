@@ -109,25 +109,29 @@
 %T(240,560,120,80,next)
 
 # Playback Mode Icons
-%Vl(metadata,25,27,25,13,-)
+%Vl(metadata,20,25,25,13,-)
 %xd(playmodes,%mp)
 
 # Track Number
-%Vl(metadata,50,25,100,19,5)
+%Vl(metadata,45,21,135,20,3)
 %al%pp %Sx(of) %pe
 
 # Clock
-%Vl(metadata,240,25,60,15,5)
+%Vl(metadata,220,21,58,20,3)
 %ac%cl:%cM%cp
 #
 %?lh<%Vd(loadstatus)|%Vd(loadstatic)>
-%Vl(loadstatic,172,25,16,16,-)
+%Vl(loadstatic,200,25,16,16,-)
 %xd(load,1)
-%Vl(loadstatus,172,25,16,16,-)
+%Vl(loadstatus,200,25,16,16,-)
 %t(0.2)%xd(load,2);%t(0.2)%xd(load,3);%t(0.2)%xd(load,4);%t(0.2)%xd(load,5);%t(0.2)%xd(load,6);%t(0.2)%xd(load,7);%t(0.2)%xd(load,8);%t(0.2)%xd(load,9);%t(0.3)%xd(load,10);%t(0.3)%xd(load,9)%t(0.3)%xd(load,8);%t(0.2)%xd(load,9);%t(0.2)%xd(load,10);%t(0.2)%xd(load,9);%t(0.2)%xd(load,8);%t(0.2)%xd(load,7);%t(0.2)%xd(load,6);%t(0.2)%xd(load,5);%t(0.2)%xd(load,4);%t(0.1)%xd(load,3);%t(0.1)%xd(load,2);%t(0.2)%xd(load,1)
 
+# Battery (numerical)
+%Vl(metadata,280,21,46,20,3)
+%ar%bl%%
+
 # Battery (graphical)
-%Vl(metadata,307,28,23,10,-)
+%Vl(metadata,330,26,23,10,-)
 %?if(%bl,>,90)<%xd(battery,10)|%?if(%bl,>,80)<%xd(battery,9)|%?if(%bl,>,70)<%xd(battery,8)|%?if(%bl,>,60)<%xd(battery,7)|%?if(%bl,>,50)<%xd(battery,6)|%?if(%bl,>,40)<%xd(battery,5)|%?if(%bl,>,30)<%xd(battery,4)|%?if(%bl,>,20)<%xd(battery,3)|%?if(%bl,>,10)<%xd(battery,2)|%?if(%bl,>,-1)<%xd(battery,1)>>>>>>>>>>
 
 # Album Artist

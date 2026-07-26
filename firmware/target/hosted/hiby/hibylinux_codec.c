@@ -188,8 +188,8 @@ void audiohw_preinit(void)
 
     audiohw_mute(false);  /* No need ? */
     alsa_controls_set_bool("DOP_EN", 0); //isDSD
-#if defined(HAVE_ALSA_32BIT)
-    /* S16 samples are expanded into S32 ALSA slots; zero dB is unity. */
+#if defined(HAVE_ALSA_32BIT) || defined(HAVE_ALSA_24BIT)
+    /* S16 samples are expanded into 32-bit ALSA slots; zero dB is unity. */
     pcm_set_mixer_volume(0, 0);
 #endif
 }

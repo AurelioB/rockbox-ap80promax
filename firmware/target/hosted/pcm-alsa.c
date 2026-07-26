@@ -85,7 +85,10 @@
 #endif
 
 static const snd_pcm_access_t access_ = SND_PCM_ACCESS_RW_INTERLEAVED; /* access mode */
-#if defined(HAVE_ALSA_32BIT)
+#if defined(HAVE_ALSA_24BIT)
+static const snd_pcm_format_t format = SND_PCM_FORMAT_S24_LE;    /* 24 valid bits in a 32-bit slot */
+typedef int32_t sample_t;
+#elif defined(HAVE_ALSA_32BIT)
 static const snd_pcm_format_t format = SND_PCM_FORMAT_S32_LE;    /* sample format */
 typedef int32_t sample_t;
 #else
@@ -309,7 +312,7 @@ error:
     return err;
 }
 
-#if defined(HAVE_ALSA_32BIT)
+#if defined(HAVE_ALSA_32BIT) || defined(HAVE_ALSA_24BIT)
 /* Multiplicative factors applied to each sample */
 static int32_t dig_vol_mult_l = 0;
 static int32_t dig_vol_mult_r = 0;
@@ -318,6 +321,11 @@ void pcm_set_mixer_volume(int vol_db_l, int vol_db_r)
 {
     dig_vol_mult_l = fp_factor(fp_div(vol_db_l, 10, 16), 16);
     dig_vol_mult_r = fp_factor(fp_div(vol_db_r, 10, 16), 16);
+#if defined(HAVE_ALSA_24BIT)
+    /* S24_LE is stored in four bytes but has eight fewer valid bits. */
+    dig_vol_mult_l >>= 8;
+    dig_vol_mult_r >>= 8;
+#endif
 }
 #endif
 
@@ -367,8 +375,9 @@ static bool copy_frames(bool first)
         {
         case SND_PCM_STREAM_PLAYBACK:
 #endif
-#if defined(HAVE_ALSA_32BIT)
-            if (format == SND_PCM_FORMAT_S32_LE)
+#if defined(HAVE_ALSA_32BIT) || defined(HAVE_ALSA_24BIT)
+            if (format == SND_PCM_FORMAT_S32_LE ||
+                format == SND_PCM_FORMAT_S24_LE)
             {
                 /* We have to convert 16-bit to 32-bit, the need to multiply the
                  * sample by some value so the sound is not too low */
@@ -1011,7 +1020,12 @@ static int set_dsd_hwparams(unsigned int rate, enum dsd_transport transport)
     int err;
 
     dsd_format = transport == DSD_TRANSPORT_DOP ?
-                 SND_PCM_FORMAT_S32_LE : SND_PCM_FORMAT_S16_LE;
+#if defined(HAVE_ALSA_24BIT)
+                 SND_PCM_FORMAT_S24_LE :
+#else
+                 SND_PCM_FORMAT_S32_LE :
+#endif
+                 SND_PCM_FORMAT_S16_LE;
 
     snd_pcm_hw_params_malloc(&params);
     err = snd_pcm_hw_params_any(handle, params);
@@ -1129,7 +1143,7 @@ ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
     {
         packed_size = ap80promax_dsd_pack_dop(
                 dsd_output, sizeof(dsd_output), src, size, &dsd_marker);
-        frame_bytes = 8; /* S32_LE stereo */
+        frame_bytes = 8; /* S24_LE/S32_LE stereo, both use 32-bit slots */
     }
     else
     {

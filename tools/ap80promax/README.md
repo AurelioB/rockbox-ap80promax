@@ -42,10 +42,10 @@ and validates the release before switching directories, preserves user data,
 and retains the previous complete installation for `--rollback`. It never
 writes a firmware partition or replaces the installed bootloader.
 
-`simulator.sh` builds the 480 x 640 Rockbox application simulator and validates
-the installed OneBit WPS/SBS files with a target-specific `checkwps`. The
-physical framebuffer is 480 x 640; the stock CST8xx driver reports its
-touchscreen in a 360 x 640 logical coordinate space, which the hosted input
-driver scales. The simulator is useful for UI, theme, metadata, and touch
-testing, but it does not emulate the AP80 kernel, DAC, jack detection, USB,
-wireless hardware, or DSD transport.
+`simulator.sh` builds the 360 x 640 Rockbox application simulator and validates
+the installed OneBit WPS/SBS files with a target-specific `checkwps`. The Linux
+framebuffer reports a 480 x 640 scanout, but the physical panel, stock UI, and
+CST8xx touchscreen expose a 360 x 640 logical display. The simulator therefore
+uses the visible logical geometry. It is useful for UI, theme, metadata, and
+touch testing, but it does not emulate the AP80 kernel, DAC, jack detection,
+USB, wireless hardware, or DSD transport.

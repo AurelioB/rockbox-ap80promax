@@ -30,50 +30,51 @@
 
 # Display Viewports
 
-# Stock-sized, visual-neutral menu navigation targets.
+# Full-width AP80 menu navigation targets.
 %Vl(navtouch,0,0,360,80,-)
 %T(0,0,120,80,cancel)
 %T(240,0,120,80,contextmenu)
 
 # Menu
-%Vi(menuDark,40,90,280,450,-)%Vf(4c4c4c)
-%Vi(menuLight,40,90,280,450,-)%Vf(7f7f7f)
+%Vi(menuDark,12,90,336,450,-)%Vf(4c4c4c)
+%Vi(menuLight,12,90,336,450,-)%Vf(7f7f7f)
 
 # Menu Title
-%Vl(infoDark,25,28,120,15,2)%Vf(4c4c4c)
+%Vl(infoDark,12,10,160,48,-)%Vf(4c4c4c)
 %al%s%Lt
-%Vl(infoLight,25,28,120,15,2)%Vf(7f7f7f)
+%Vl(infoLight,12,10,160,48,-)%Vf(7f7f7f)
 %al%s%Lt
 
 # Clock
-%Vl(infoDark,204,28,80,15,2)%Vf(4c4c4c)
+%Vl(infoDark,176,21,68,20,3)%Vf(4c4c4c)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
-%Vl(infoLight,204,28,80,15,2)%Vf(7f7f7f)
+%Vl(infoLight,176,21,68,20,3)%Vf(7f7f7f)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
-
 
 # Battery (numerical)
-#%Vl(info,273,17,27,13,2)
-#%ar%bl%%
+%Vl(infoDark,278,21,48,20,3)%Vf(4c4c4c)
+%ar%bl%%
+%Vl(infoLight,278,21,48,20,3)%Vf(7f7f7f)
+%ar%bl%%
 
 #__Now Playing
-%Vl(infoDark,58,590,252,16,2)%Vf(000000)
+%Vl(infoDark,42,590,276,20,3)%Vf(000000)
 %?if(%mp, >, 1)<%al%s%?it<%it|%fn>%?ia< - %ia>%?id< - %id>%?iy< %(%ss(0,4, %iy)%)>|>
-%Vl(infoLight,58,590,252,16,2)%Vf(ffffff)
+%Vl(infoLight,42,590,276,20,3)%Vf(ffffff)
 %?if(%mp, >, 1)<%al%s%?it<%it|%fn>%?ia< - %ia>%?id< - %id>%?iy< %(%ss(0,4, %iy)%)>|>
 
 # Playback Icons
-%Vl(info,37,592,13,13,-)
+%Vl(info,20,592,13,13,-)
 %Vf(-)
 %?if(%mp, >, 1)<%xd(playmodes,%mp)|>
 
 # Storage Access
-%Vl(info,288,31,12,12,-)
+%Vl(info,248,25,12,12,-)
 %Vf(-)
 %xd(X,%lh)
 
 # Hold
-%Vl(info,304,31,9,12,-)
+%Vl(info,264,25,9,12,-)
 %Vf(-)
 %xd(L,%mh)
 
@@ -81,15 +82,15 @@
 %?bc<%Vd(battCharging)|%?if(%bl,>=,15)<%Vd(batt)|%Vd(lowBatt)>>
 
 # Battery (graphical)
-%Vl(batt,317,32,23,10,-)
+%Vl(batt,330,26,23,10,-)
 %Vf(-)
 %?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>
 
-%Vl(lowBatt,317,32,23,10,-)
+%Vl(lowBatt,330,26,23,10,-)
 %Vf(-)
 %t(1)%?if(%bl,>=,10)<%xd(battery,2)|%xd(battery,1)>;%t(1)%xd(battery,12)
 
-%Vl(battCharging,317,32,23,10,-)
+%Vl(battCharging,330,26,23,10,-)
 %Vf(-)
 %t(0.1)%?bl<%xd(battery,1)|%xd(battery,2)|%xd(battery,3)|%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,4)|%xd(battery,5)|%xd(battery,6)|%xd(battery,7)|%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(0.1)%?bl<%xd(battery,8)|%xd(battery,9)|%xd(battery,10)|%xd(battery,11)>;%t(1)%xd(battery,11)
 

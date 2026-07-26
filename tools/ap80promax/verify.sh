@@ -95,9 +95,16 @@ done
 for ap80_skin in OneBitMono OneBitMono2 OneBit_OLED OneBit_VFD2 OneBit_VFD_ALT
 do
     if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
-         grep -Eq '^%Vl\([^,]+,20,10,240,48,-\)'
+         grep -Eq '^%Vl\([^,]+,12,10,(160|188),48,-\)'
     then
         echo "Release theme has an undersized header title: $ap80_skin" >&2
+        exit 1
+    fi
+
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
+         grep -Eq '^%Vi\(menu[^,]*,12,90,336,450,-\)'
+    then
+        echo "Release theme does not use the visible menu width: $ap80_skin" >&2
         exit 1
     fi
 
@@ -105,7 +112,7 @@ do
     do
         if ! unzip -p "$ap80_zip" \
              ".rockbox/wps/$ap80_skin.$ap80_skin_type" |
-             grep -Eq '^%Vl\([^,]+,378,21,50,20,3\)'
+             grep -Eq '^%Vl\([^,]+,(278|280),21,(46|48),20,3\)'
         then
             echo "Release theme is missing readable battery status: $ap80_skin.$ap80_skin_type" >&2
             exit 1
@@ -113,7 +120,7 @@ do
     done
 
     if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.wps" |
-         grep -Fqx '%T(160,0,160,80,menu)'
+         grep -Fqx '%T(120,0,120,80,menu)'
     then
         echo "Release theme does not use the full-width touch grid: $ap80_skin" >&2
         exit 1
@@ -123,7 +130,7 @@ done
 for ap80_skin in OneBitMono OneBitMono2 OneBit_VFD2 OneBit_VFD_ALT
 do
     if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.wps" |
-         grep -Fqx '%Vl(metadata,20,360,220,30,-)'
+         grep -Fqx '%Vl(metadata,40,360,140,30,-)'
     then
         echo "Release WPS does not use the AP80 content width: $ap80_skin" >&2
         exit 1

@@ -64,7 +64,7 @@ successfully, that choice is remembered and starts after a five-second delay,
 leaving time to override a failed saved choice.
 
 This recovery build starts ADB before Rockbox initializes the display. It also
-requires the bootloader to report that its system, 480 x 640 framebuffer,
+requires the bootloader to report that its system, 360 x 640 display,
 font, buttons, and backlight initialized within 15 seconds. Otherwise it kills
 the bootloader and starts the untouched HiBy player automatically. Once
 Rockbox is selected, the screen displays **STARTING ROCKBOX...** and the

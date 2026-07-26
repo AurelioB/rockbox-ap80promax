@@ -1,10 +1,7 @@
 name: AP80 Pro Max
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
+  # Keep validation available on demand without starting CI for direct pushes.
   workflow_dispatch:
 
 concurrency:

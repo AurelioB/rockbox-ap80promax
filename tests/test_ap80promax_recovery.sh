@@ -84,7 +84,7 @@ test -f "$ap80_test_dir/bootloader-started"
 test -f "$ap80_test_dir/hiby-started"
 grep -q 'app handoff timeout' "$ap80_test_dir/bootloader.log"
 
-grep -q '#define LCD_WIDTH 480' \
+grep -q '#define LCD_WIDTH 360' \
     "$ap80_repo/firmware/export/config/hidizsap80promax.h"
 grep -q '#define TOUCHSCREEN_RAW_WIDTH 360' \
     "$ap80_repo/firmware/export/config/hidizsap80promax.h"

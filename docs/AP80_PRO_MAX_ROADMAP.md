@@ -87,9 +87,9 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 
 ### PCM precision and rates
 
-- [x] Use the hosted ALSA 32-bit sink so Rockbox's internal high-precision
-      samples reach the AP80 driver in `S32_LE` slots.
-- [x] Initialize the S16-to-S32 expansion multiplier at unity while retaining
+- [x] Use the AP80 driver's supported `S24_LE` format: 24 valid bits in
+      32-bit storage slots.
+- [x] Initialize the S16-to-S24 expansion multiplier at unity while retaining
       the ES9219 hardware volume controls.
 - [x] Retain the proven Rockbox rate range through 192 kHz.
 - [x] Extend Rockbox's global sample-rate enumeration for 352.8/384 kHz. This
@@ -126,8 +126,8 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 
 ## UI and upstream integration
 
-- [x] Provide physical 480 x 640 Cabbie and centered original-file OneBit
-      variants, with the stock 360-wide touch coordinates scaled in input.
+- [x] Provide physical 360 x 640 Cabbie and original-file OneBit variants
+      using the same logical coordinates as the panel and touch controller.
 - [x] Add touch regions while retaining physical-button behavior.
 - [x] Match stock-sized header and transport touch targets and use DPI-aware
       rows without altering OneBit artwork or visible layout.

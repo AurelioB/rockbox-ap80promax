@@ -6,30 +6,17 @@ specify colors, typeface families, illustration style, or visual branding.
 
 The requirements are based on measurements from the official firmware's
 LiteGUI layouts. They are intended to preserve the stock UI's successful
-finger usability while using Rockbox's 480 x 640 framebuffer efficiently.
+finger usability while using Rockbox's visible 360 x 640 display efficiently.
 
 The words **must**, **should**, and **may** indicate requirement strength.
 
 ## Coordinate systems
 
-The device exposes two relevant coordinate systems:
-
-- Rockbox draws to a 480 x 640 framebuffer at 271 dpi.
-- The stock UI and CST8xx touch controller use a 360 x 640 logical space.
-- Rockbox scales raw touch X coordinates from 360 to 480. Y is unchanged.
-
-Convert a stock horizontal measurement for a Rockbox layout with:
-
-```
-rockbox_x = round(stock_x * 4 / 3)
-rockbox_y = stock_y
-```
-
-Theme geometry must be authored in Rockbox's 480 x 640 coordinates. Do not
-place a 360-pixel-wide layout in the center of the framebuffer: that discards
-25 percent of the available width. When porting an existing composition,
-adapt its artwork to a 440-pixel content column and keep its touch layer on
-the full 480-pixel canvas.
+The Linux framebuffer driver reports a 480 x 640 scanout, but the panel,
+official product specification, stock LiteGUI layouts, and CST8xx touch
+controller all expose a 360 x 640 logical display. Rockbox theme and touch
+geometry must therefore be authored directly in 360 x 640 coordinates. No
+horizontal coordinate conversion is required.
 
 ## Baseline metrics
 
@@ -48,15 +35,14 @@ must not go below the stated minimums.
 | Standard list row | 80 px | 80 px minimum |
 | Compact list row | 68 px | Only for single-line, secondary lists |
 | Content side inset | 4-20 logical px | 20 px default; 12 px minimum |
-| Standard action target | 60 x 56 logical px | 80 x 56 px |
-| Edge/back target | 90 x 56 logical px | 120 x 56 px |
-| Primary transport target | 70 x 70 logical px | At least 93 x 70 px |
-| Two-way dialog action | 179 x 64 logical px | About 239 x 64 px |
+| Standard action target | 60 x 56 logical px | 60 x 56 px |
+| Edge/back target | 90 x 56 logical px | 90 x 56 px |
+| Primary transport target | 70 x 70 logical px | At least 70 x 70 px |
+| Two-way dialog action | 179 x 64 logical px | About 179 x 64 px |
 
-The smallest recurring stock header action is 49 x 56 logical pixels, or
-about 65 x 56 framebuffer pixels. Therefore no independent touch target may
-be smaller than 64 x 56 pixels. Use 80 x 56 or larger whenever the layout
-permits it.
+The smallest recurring stock header action is 49 x 56 pixels. Prefer 60 x 56
+or larger for independent touch targets and use the full 90 x 56 stock back
+target whenever the layout permits it.
 
 Font sizes refer to the rendered pixel height, not a font file's name or
 nominal point size. A theme author must inspect the compiled font rather than
@@ -82,9 +68,9 @@ A theme may visually combine the bands, but it must preserve their total
   cannot communicate the level reliably.
 - A title must receive the widest uninterrupted region. Status items must not
   reduce an ordinary title to less than half of the screen width.
-- The top-left back target must be at least 120 x 56 pixels. Extending it to
+- The top-left back target must be at least 90 x 56 pixels. Extending it to
   120 x 80 is recommended.
-- A top-right contextual target should be at least 80 x 56 pixels. Extending
+- A top-right contextual target should be at least 60 x 56 pixels. Extending
   it to 120 x 80 keeps the header symmetric and easier to learn.
 - Passive status indicators must never create dead gaps inside a declared
   back or context target; the target may sit invisibly behind them.
@@ -106,8 +92,8 @@ divides it into seven 80-pixel rows.
 - A two-line row should use 18-21 pixel primary text and at least 12-14 pixel
   secondary text, with no overlap between their line boxes.
 - Selection feedback must cover the full row, not just the text or icon.
-- The default content viewport should use 20-pixel side margins, leaving
-  440 pixels of usable width.
+- The default content viewport should use 12-pixel side margins, leaving
+  336 pixels of usable width.
 - Do not use more than 32 pixels of side inset for a standard list unless a
   persistent control occupies that space.
 - Reserve 12-16 pixels between an icon and its label. Use at least 8 pixels
@@ -128,7 +114,7 @@ glyph.
 - A visible icon may be 24-36 pixels high, but its target must satisfy the
   target sizes above. In lists, aim for an icon height comparable to the
   rendered capital height plus ascenders rather than the font's nominal size.
-- Primary playback controls must use targets at least 93 x 70 pixels.
+- Primary playback controls must use targets at least 70 x 70 pixels.
 - The first and last controls in a row should extend their hit areas to the
   screen edges; do not leave narrow untappable edge strips.
 - Adjacent targets may share a boundary, but may not overlap with different
@@ -145,7 +131,7 @@ inside that larger invisible target.
 
 ## Spacing and information density
 
-- Use 20-pixel outer side margins for text-heavy screens.
+- Use 12-pixel outer side margins for text-heavy screens.
 - Use 12 pixels as the minimum separation between a screen edge and readable
   text, except where a full-bleed selection background intentionally reaches
   the edge.
@@ -156,7 +142,7 @@ inside that larger invisible target.
 - Status information must not compete with the screen's primary task. Move
   optional detail into a context screen before shrinking primary text.
 - Modal choices should use the full width. A two-choice confirmation should
-  split the bottom into two targets of roughly 240 x 64 pixels each.
+  split the bottom into two targets of roughly 180 x 64 pixels each.
 
 ## Navigation and hardware controls
 
@@ -188,9 +174,9 @@ Every touch screen must remain operable with the AP80's physical controls.
 
 Before accepting a new theme or screen:
 
-1. Render it at exactly 480 x 640 with the simulator configured for 271 dpi.
+1. Render it at exactly 360 x 640 with the simulator configured for 249 dpi.
 2. Verify no required text is below the minimum rendered size.
-3. Overlay every touch rectangle and check the 64 x 56 absolute minimum.
+3. Overlay every touch rectangle and check the 49 x 56 absolute minimum.
 4. Verify normal rows are at least 80 pixels high and full-width selectable.
 5. Test the longest available translated labels, 12/24-hour clocks, and
    battery values from 0% through 100%.

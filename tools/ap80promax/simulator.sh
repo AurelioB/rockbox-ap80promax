@@ -37,11 +37,14 @@ unzip -oq "$ap80_sim_build/rockbox.zip" -d "$ap80_sim_root"
     make -j"$ap80_jobs"
 )
 
-for ap80_skin in "$ap80_sim_root"/.rockbox/wps/OneBit*.wps \
-                 "$ap80_sim_root"/.rockbox/wps/OneBit*.sbs
-do
-    "$ap80_checkwps_build/checkwps.hidizsap80promax" "$ap80_skin"
-done
+(
+    cd "$ap80_sim_root"
+    for ap80_skin in .rockbox/wps/OneBit*.wps \
+                     .rockbox/wps/OneBit*.sbs
+    do
+        "$ap80_checkwps_build/checkwps.hidizsap80promax" "$ap80_skin"
+    done
+)
 
 if [ "${AP80_SIM_BUILD_ONLY:-0}" = "1" ]; then
     echo "Simulator built at $ap80_sim_build/rockboxui"
@@ -57,7 +60,7 @@ fi
 
 echo "Simulator storage: $ap80_sim_root"
 echo "Keys: Up/Down or Left/Right, Enter/Space, Escape/Backspace, +/-"
-echo "F5 writes a 480x640 screen dump into the simulator storage."
+echo "F5 writes a 360x640 screen dump into the simulator storage."
 
 exec "$ap80_sim_build/rockboxui" \
     --root "$ap80_sim_root" \

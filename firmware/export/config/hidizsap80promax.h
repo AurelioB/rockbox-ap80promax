@@ -11,14 +11,15 @@
 #define MULTIDRIVE_DIR "/data/mnt/usb"
 
 /*
- * The ST7701 panel timing is 480x640. The vendor UI and CST8xx driver use a
- * 360x640 logical coordinate space, so hosted input scales touch X below.
+ * The framebuffer scanout reports 480 columns, but the panel, stock UI, and
+ * touchscreen all expose a 360x640 logical display.  Drawing a 480-pixel UI
+ * makes the rightmost 120 columns invisible on the physical device.
  */
-#define LCD_WIDTH 480
+#define LCD_WIDTH 360
 #define LCD_HEIGHT 640
-#define LCD_DPI 271
+#define LCD_DPI 249
 /* Keep touch-row sizing representative in the SDL simulator. */
-#define SIMULATOR_LCD_DPI 271
+#define SIMULATOR_LCD_DPI 249
 
 #define TOUCHSCREEN_RAW_WIDTH 360
 #define TOUCHSCREEN_RAW_HEIGHT 640
@@ -74,7 +75,12 @@
 /* The vendor ES9219C driver exposes the standard HiBy ALSA controls. */
 #define HAVE_HIBY_LINUX_CODEC
 #define HAVE_SW_TONE_CONTROLS
-#define HAVE_ALSA_32BIT
+/*
+ * soc_aic.ko advertises S16_LE and S24_LE (format mask 0x44), not S32_LE.
+ * S24_LE uses a 32-bit storage slot and is also the format expected by the
+ * stock player's DoP packing.
+ */
+#define HAVE_ALSA_24BIT
 #define HAVE_ALSA_POLLING
 #define HW_SAMPR_CAPS SAMPR_CAP_ALL_384
 

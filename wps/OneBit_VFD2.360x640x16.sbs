@@ -29,25 +29,25 @@
 
 # Display Viewports
 
-# Stock-sized, visual-neutral menu navigation targets.
+# Full-width AP80 menu navigation targets.
 %Vl(navtouch,0,0,360,80,-)
 %T(0,0,120,80,cancel)
 %T(240,0,120,80,contextmenu)
 
 # Menu
-%Vi(menu,40,90,280,450,-)%Vf(-)%Vb(-)
+%Vi(menu,12,90,336,450,-)%Vf(-)%Vb(-)
 
 # Menu Title
-%Vl(info,25,25,123,15,2)
+%Vl(info,12,10,188,48,-)
 %Vf(ffffff)
 %al%Lt%s
 
 # Load Indicator
 %?lh<%Vd(loadstatus)|%Vd(loadstatic)>
-%Vl(loadstatic,172,24,16,16,-)
+%Vl(loadstatic,202,24,16,16,-)
 %Vf(676767)%Vb(000000)
 %xd(load,1)
-%Vl(loadstatus,172,24,16,16,-)
+%Vl(loadstatus,202,24,16,16,-)
 %Vf(ffffff)%Vb(000000)
 %t(0.2)%xd(load,2);%t(0.2)%xd(load,3);%t(0.2)%xd(load,4);%t(0.2)%xd(load,5);%t(0.2)%xd(load,6);%t(0.2)%xd(load,7);%t(0.2)%xd(load,8);%t(0.2)%xd(load,9);%t(0.3)%xd(load,10);%t(0.3)%xd(load,9)%t(0.3)%xd(load,8);%t(0.2)%xd(load,9);%t(0.2)%xd(load,10);%t(0.2)%xd(load,9);%t(0.2)%xd(load,8);%t(0.2)%xd(load,7);%t(0.2)%xd(load,6);%t(0.2)%xd(load,5);%t(0.2)%xd(load,4);%t(0.1)%xd(load,3);%t(0.1)%xd(load,2);%t(0.2)%xd(load,1)
 
@@ -57,22 +57,27 @@
 %?mh<LOCKED|>
 
 # Clock
-%Vl(info,250,25,50,15,2)
+%Vl(info,220,21,58,20,3)
 %Vf(ffffff)
 %ar%?cf<%cH|%cl>:%cM%?cf<| %cp>
 
+# Battery (numerical)
+%Vl(info,280,21,46,20,3)
+%Vf(ffffff)
+%ar%bl%%
+
 #__Now Playing
-%Vl(info,58,590,252,16,2)
+%Vl(info,42,590,276,20,3)
 %?if(%mp, >, 1)<%al%s%it - %ia - %id %(%ss(0,4, %iy)%)|>
 %Vf(ffffff)
 
 # Playback Icons
-%Vl(info,37,592,13,13,-)
+%Vl(info,20,592,13,13,-)
 %?if(%mp, >, 1)<%xd(playmodes,%mp)|>
 %Vf(B5FF00)
 
 # Battery (graphical)
-%Vl(info,307,28,23,10,-)
+%Vl(info,330,26,23,10,-)
 %?if(%bl,>,90)<%xd(battery,10)|%?if(%bl,>,80)<%xd(battery,9)|%?if(%bl,>,70)<%xd(battery,8)|%?if(%bl,>,60)<%xd(battery,7)|%?if(%bl,>,50)<%xd(battery,6)|%?if(%bl,>,40)<%xd(battery,5)|%?if(%bl,>,30)<%xd(battery,4)|%?if(%bl,>,20)<%xd(battery,3)|%?if(%bl,>,10)<%xd(battery,2)|%?if(%bl,>,-1)<%xd(battery,1)>>>>>>>>>>
 %Vf(B5FF00)
 
