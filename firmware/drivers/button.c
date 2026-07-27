@@ -166,6 +166,20 @@ static void check_audio_peripheral_state(void)
 /* disabled function is shared between Main & Remote LCDs */
 static bool filter_first_keypress_disabled(int button, int data)
 {
+#ifdef BACKLIGHT_FILTER_FIRST_KEYPRESS_BUTTONS
+    /*
+     * Some targets use a button both as a wake key and as an immediate
+     * navigation key.  Always consume that button's initial press while the
+     * display is dark, independently of the user setting.  button_tick()
+     * still turns the backlight on below and repeat events remain available,
+     * so holding a power button can still trigger software power-off.
+     */
+    if ((button & BACKLIGHT_FILTER_FIRST_KEYPRESS_BUTTONS) &&
+        !is_backlight_on(false))
+    {
+        return true;
+    }
+#endif
     button_queue_try_post(button, data);
     return false;
 }

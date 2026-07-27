@@ -49,6 +49,13 @@
 #define POWEROFF_BUTTON BUTTON_POWER
 #define POWEROFF_COUNT 25
 
+/*
+ * A short volume-knob press wakes the display without also activating the
+ * context-dependent BUTTON_POWER action (usually Back).  A held press still
+ * reaches the repeat path used by software power-off.
+ */
+#define BACKLIGHT_FILTER_FIRST_KEYPRESS_BUTTONS BUTTON_POWER
+
 #ifndef BOOTLOADER
 #define BUTTON_LEFT  BUTTON_NEXT
 #define BUTTON_RIGHT BUTTON_PREV
