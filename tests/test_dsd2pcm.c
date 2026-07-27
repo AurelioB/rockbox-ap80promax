@@ -12,6 +12,19 @@ static uint8_t input[INPUT_BYTES];
 static int32_t output_a[MAX_FRAMES * 2];
 static int32_t output_b[MAX_FRAMES * 2];
 
+static uint64_t hash_samples(const int32_t *samples, size_t count)
+{
+    uint64_t hash = UINT64_C(1469598103934665603);
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        hash ^= (uint32_t)samples[i];
+        hash *= UINT64_C(1099511628211);
+    }
+
+    return hash;
+}
+
 static size_t expected_frames(unsigned int rate, size_t bytes)
 {
     return bytes * 2 / (rate / (DSD2PCM_OUTPUT_RATE * 2));
@@ -55,6 +68,12 @@ static void test_rate(unsigned int rate)
     assert(frames == wanted);
     assert(convert_chunks(&chunked, rate) == wanted);
     assert(memcmp(output_a, output_b, wanted * 2 * sizeof(output_a[0])) == 0);
+
+    uint64_t expected_hash =
+        rate == 2822400 ? UINT64_C(0xe206979b9382f078) :
+        rate == 5644800 ? UINT64_C(0xbba0d7ff59240e10) :
+                          UINT64_C(0x6940162b32adb9e6);
+    assert(hash_samples(output_a, wanted * 2) == expected_hash);
 }
 
 static void test_levels(void)
