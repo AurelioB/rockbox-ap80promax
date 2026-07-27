@@ -54,8 +54,8 @@ static void test_dop(void)
 static void test_native(void)
 {
     const uint8_t src[] = { 0x01, 0x02, 0x80, 0x40 };
-    /* L0/L1 form the first S16 sample; R0/R1 form the second. */
-    const uint8_t expected[] = { 0x02, 0x40, 0x08, 0x10 };
+    /* Each adjacent L/R pair is bit-interleaved into one S16 word. */
+    const uint8_t expected[] = { 0x06, 0x00, 0x00, 0x90 };
     uint8_t dst[sizeof(src)];
 
     assert(ap80promax_dsd_pack_native(dst, sizeof(dst), src, sizeof(src)) ==

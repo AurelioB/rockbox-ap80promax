@@ -101,9 +101,11 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [x] Parse uncompressed stereo DSF and DSDIFF.
 - [x] Bypass the PCM DSP/mixer and provide direct DoP/native transport.
 - [x] Use DoP at DSD64/128.
-- [x] Quarantine the DSD256 native route after real hardware produced static;
-      use the in-tree 176.4 kHz PCM fallback until every stock hardware-state
-      transition is reproduced.
+- [x] Quarantine the DSD256 native experiment after real hardware produced
+      static. The product-specific stock configuration maps all three analog
+      DSD policies to its DoP backend and live DSD256 playback uses
+      `libdsd2pcm.so`; use the in-tree 176.4 kHz PCM fallback until an
+      AP80-specific native clock/framing contract is independently recovered.
 - [x] Reject DST-compressed DSDIFF and DSD512 without opening the endpoint.
 - [x] Add host fixtures for metadata, route choice, byte order, markers,
       seeking, and malformed input.

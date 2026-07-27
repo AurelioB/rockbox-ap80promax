@@ -4,8 +4,8 @@
 
 Prefer bit-perfect playback of uncompressed stereo DSF and DSDIFF files, with
 a deterministic PCM fallback if the direct endpoint cannot be configured.
-The direct implementation follows the transport choices observed in the
-stock `hiby_player`:
+Rockbox conservatively selects transports that fit the product's advertised
+ALSA carrier-rate table:
 
 | Source | Preferred transport | ALSA carrier | Reason |
 | --- | --- | --- | --- |
@@ -14,23 +14,26 @@ stock `hiby_player`:
 | DSD256 (11.2896 MHz) | PCM fallback | 176.4 kHz | Native route is quarantined after hardware static |
 | DSD512 | unsupported | 705.6 kHz native | Exceeds the stock ALSA limit |
 
-The stock player selects a native fallback for DSD256: its binary produces
-`DOP ERR_RATE rejected` followed by `DOP recover to native`. The missing
-hardware transition suspected after the first test was recovered from the
-bundled `codec_es9219_v2.ko`:
-its `es9219_dai_prepare` selects the DAC's DSD branch whenever the `DOP_EN`
-mixer state is nonzero. Despite its name, this control is the ES9219 DSD/PCM
-mode switch. A second physical test enabled it and the kernel confirmed entry
-into `es9219_dai_prepare dsd`, but output remained static. Native framing or
-clock state therefore still differs from the stock player and automatic
-DSD256 native routing remains unsafe.
+The product-specific stock route table does not expose three distinct analog
+transports. In `usr/resource/ot_devices.json`, `AnalogDsdD2p`,
+`AnalogDsdDop`, and `AnalogDsdNative` all map to the same `"dop"` backend,
+whose rate list ends at 384 kHz. A DSD256 DoP carrier would be 705.6 kHz.
+Live tracing of the bundled player with the DSD256 test file confirmed the
+result: `libdsd2pcm.so` is loaded, ALSA receives signed 32-bit PCM,
+`DOP_EN` remains off, and the kernel reports `es9219_dai_prepare pcm`.
 
-Subsequent disassembly identified a concrete framing error in Rockbox's
-diagnostic packer. The codec normalizes input as `L0 R0 L1 R1`, while the
-stock in-place transform consumes successive bytes from one channel. Native
-S16 stereo therefore has to combine `L0/L1` into the left sample and `R0/R1`
-into the right sample. The original Rockbox packer incorrectly combined
-`L0/R0` and `L1/R1`, mixing the channels at the bitstream level.
+The generic `hiby_player` binary still contains `DOP ERR_RATE rejected`,
+`DOP recover to native`, a `/32` carrier calculation, and an in-place native
+bit-interleave transform. Those generic code paths are not evidence that this
+AP80 firmware configures or exercises them. Disassembly shows that the
+transform consumes each adjacent interleaved `L/R` byte pair, not successive
+bytes from one channel. Both physical native experiments produced static,
+so the AP80-specific native clock and framing contract remains unknown.
+
+The bundled `codec_es9219_v2.ko` does establish one useful fact:
+`es9219_dai_prepare` selects the DAC's DSD branch whenever the `DOP_EN` mixer
+state is nonzero. That switch alone is insufficient to bring up a valid
+native stream.
 
 ## Architecture
 
@@ -48,8 +51,9 @@ The DSD codec therefore owns a small, synchronous output path:
    endpoint in the selected DSD transport.
 4. For validated direct modes, the AP80 transport packer emits:
    - DoP: two DSD bytes per channel plus alternating `0x05`/`0xfa` markers.
-   - Native (diagnostic only): the same nibble lookup/interleave transform
-     found in the stock player. Automatic selection is disabled.
+   - Native (diagnostic only): the dormant generic HiBy nibble
+     lookup/interleave transform. Automatic selection is disabled, and this
+     transform has not been validated as an AP80 native transport.
 5. `DOP_EN` selects the ES9219 DSD branch for DoP and diagnostic native
    playback. Native DSD is not selected during ordinary production playback.
 6. On stop, seek, error, or end-of-file, the DSD endpoint is closed and normal
@@ -73,8 +77,9 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 
 ## Implementation phases
 
-- [x] Reverse-engineer stock route selection, DoP layout, native transform,
-      and `DOP_EN` behavior.
+- [x] Reverse-engineer the product route table, DoP layout, dormant generic
+      native transform, and `DOP_EN` behavior.
+- [x] Trace stock DSD256 playback and confirm its signed 32-bit PCM fallback.
 - [x] Define a target-independent codec-to-output DSD contract.
 - [x] Add AP80 route selection and bitstream packers.
 - [x] Add direct ALSA DSD open/write/pause/close support.
@@ -82,7 +87,8 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add the DSF/DSDIFF streaming codec with seeking.
 - [x] Add deterministic host tests for route selection and byte packing.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
-- [ ] Identify the remaining stock native framing or clock transition.
+- [ ] Recover an AP80-specific native framing and clock contract independently;
+      the product firmware does not provide a working reference route.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
@@ -105,9 +111,10 @@ Use known-good stereo test files whose rates are independently verified.
 10. Force a direct-endpoint failure and confirm the log reports the 176.4 kHz
     PCM fallback without a crash or burst of noise.
 
-The native packing and `/32` carrier rule mirror the stock binary, but those
-two properties plus ES9219 DSD-mode selection are not yet sufficient for
-correct physical output. Production builds keep DSD256 on the in-tree
-176.4 kHz PCM fallback. For controlled validation only, creating the volatile
+The diagnostic native packing and `/32` carrier rule mirror dormant code in
+the generic HiBy binary, not a route used by the AP80 product configuration.
+Those properties plus ES9219 DSD-mode selection are insufficient for correct
+physical output. Production builds keep DSD256 on the in-tree 176.4 kHz PCM
+fallback. For controlled validation only, creating the volatile
 `/tmp/rockbox-native-dsd-test` marker enables native selection until the next
 reboot; ordinary users and persistent configuration cannot enable it.
