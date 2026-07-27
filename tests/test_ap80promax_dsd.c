@@ -16,9 +16,10 @@ static void test_routes(void)
     assert(ap80promax_dsd_carrier_rate(DSD_RATE_128,
            DSD_TRANSPORT_DOP) == 352800);
 
-    /* DSD256 uses the generic HiBy native /32 transport on the AP80. */
+    /* Tested native framings produce static; use the PCM fallback. */
     assert(ap80promax_dsd_select_transport(DSD_RATE_256) ==
-           DSD_TRANSPORT_NATIVE);
+           DSD_TRANSPORT_ERROR);
+    /* Retain the carrier calculation for the explicit diagnostic marker. */
     assert(ap80promax_dsd_carrier_rate(DSD_RATE_256,
            DSD_TRANSPORT_NATIVE) == 352800);
 

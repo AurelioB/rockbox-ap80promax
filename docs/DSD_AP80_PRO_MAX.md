@@ -11,7 +11,7 @@ ALSA carrier-rate table:
 | --- | --- | --- | --- |
 | DSD64 (2.8224 MHz) | DoP | 176.4 kHz | Fits below the 384 kHz device limit |
 | DSD128 (5.6448 MHz) | DoP | 352.8 kHz | Fits below the 384 kHz device limit |
-| DSD256 (11.2896 MHz) | Native DSD | 352.8 kHz | 32 raw DSD bits per channel slot |
+| DSD256 (11.2896 MHz) | PCM fallback | 176.4 kHz | Tested direct framings produce static |
 | DSD512 | unsupported | 1.4112 MHz DoP | Exceeds the patched ALSA limit |
 
 The product-specific stock route table does not expose three distinct analog
@@ -65,10 +65,10 @@ vendor-module patches: advertise 705.6/768 kHz in the ES9219 DAI and request
 
 Physical testing of the donor-derived 705.6 kHz DoP route on the AP80 produced
 background static and periodic stalls even after the transmit clock was
-measured at the correct 45.1584 MHz. The current single-tester build therefore
-uses the lower-bandwidth generic native route for DSD256. If ALSA rejects that
-endpoint, the codec closes it and falls back to the in-tree 176.4 kHz PCM
-converter.
+measured at the correct 45.1584 MHz. The bandwidth-correct S32 native route
+also produced static. Production playback therefore sends DSD256 to the
+in-tree 176.4 kHz PCM converter. Developers can create
+`/tmp/rockbox-native-dsd-test` to retry the native endpoint for one boot.
 
 ## Architecture
 
@@ -84,7 +84,7 @@ The DSD codec therefore owns a small, synchronous output path:
    MSB-first bytes: `L0 R0 L1 R1`.
 3. A codec API callback stops PCM/voice playback and opens the AP80's ALSA
    endpoint in the selected DSD transport.
-4. For direct modes, the AP80 transport packer emits:
+4. For supported direct modes, the AP80 transport packer emits:
    - DoP: two DSD bytes per channel plus alternating `0x05`/`0xfa` markers.
    - Native: four successive DSD bytes in each `S32_LE` channel slot.
 5. `DOP_EN` selects the ES9219 DSD branch for DoP and diagnostic native
@@ -123,13 +123,18 @@ while `v0` still contains the ALSA rate, and replaces the later stock zeroing
 instruction with a no-op. This requests 45.1584 MHz for 705.6 kHz and
 49.152 MHz for 768 kHz without changing the existing 352.8/384 kHz branches.
 
-If direct setup fails, the same codec converts DSD64/128/256 to interleaved
-29-bit PCM at 176.4 kHz. A third-order CIC stage reduces the stream to
-352.8 kHz and a 31-tap half-band FIR filters and decimates it to the output
-rate. The converter is streaming, keeps independent channel state, and uses
-only GPL-compatible in-tree code. It does not load the stock
-`libdsd2pcm.so`, whose private ABI and redistribution terms remain unknown.
-DSD512 and DST-compressed DSDIFF remain unsupported.
+DSD256 always selects the PCM path; DSD64/128 also use it if direct setup
+fails. The codec converts them to interleaved 29-bit PCM at 176.4 kHz. A
+third-order CIC stage reduces the stream to 352.8 kHz and a 31-tap half-band
+FIR filters and decimates it to the output rate. The converter folds each
+eight-bit DSD byte into one algebraically equivalent CIC state transition,
+uses a mirrored history ring, and combines the FIR's symmetric nonzero taps.
+This removes per-bit 64-bit arithmetic, runtime 64-bit division, and zero-tap
+work while retaining bit-identical PCM output.
+
+The converter is streaming, keeps independent channel state, and uses only
+GPL-compatible in-tree code. It does not load the proprietary stock
+`libdsd2pcm.so`. DSD512 and DST-compressed DSDIFF remain unsupported.
 
 ## Implementation phases
 
@@ -150,7 +155,8 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
 - [x] Recover and reject the generic HiBy `S16_LE` native framing after
       static on hardware and a stereo-bandwidth audit.
-- [ ] Validate the bandwidth-correct `S32_LE` native DSD256 route on the AP80.
+- [x] Reject the bandwidth-correct `S32_LE` native DSD256 route after it
+      produced static on the AP80.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
@@ -163,9 +169,8 @@ Use known-good stereo test files whose rates are independently verified.
 2. Confirm the ALSA rate is 176400 and `DOP_EN` is 1.
 3. Confirm clean playback on both 3.5 mm and 4.4 mm outputs.
 4. Repeat with DSD128; ALSA must report 352800 and `DOP_EN` must remain 1.
-5. Play DSD256; ALSA must report 352800, `DOP_EN` must be 1, playback must
-   remain continuous, and output must contain no static. If the endpoint
-   cannot be configured, it must fall back cleanly to PCM at 176400.
+5. Play DSD256; ALSA must report PCM at 176400, playback must remain
+   continuous, and output must contain no static.
 6. Pause, resume, seek, skip to PCM, and skip from PCM back to each DSD rate.
 7. Confirm that voice prompts do not mix into DSD playback.
 8. Confirm that DSD512 and DST-compressed DSDIFF fail safely without noise.
@@ -175,6 +180,7 @@ Use known-good stereo test files whose rates are independently verified.
     PCM fallback without a crash or burst of noise.
 
 The `/32` carrier rule matches the dormant generic HiBy path, but its `S16_LE`
-packing is not usable on this target. The single-tester build instead uses
-the AP80's existing 64-bit `S32_LE` stereo frame at 352.8 kHz so every
-DSD256 source bit has a corresponding wire bit.
+packing is not usable on this target. The diagnostic native route uses the
+AP80's existing 64-bit `S32_LE` stereo frame at 352.8 kHz so every DSD256
+source bit has a corresponding wire bit; it remains disabled by default
+because physical playback produced static.

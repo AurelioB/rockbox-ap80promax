@@ -102,15 +102,14 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 - [x] Bypass the PCM DSP/mixer and provide direct DoP/native transport.
 - [x] Use DoP at DSD64/128.
 - [x] Quarantine the DSD256 native experiment after real hardware produced
-      static. The R3 II 2025 donor routes DSD256 as 705.6 kHz DoP; extend the
-      AP80 vendor modules to that rate and enable the same route in the
-      single-tester build, retaining the in-tree 176.4 kHz PCM fallback if
-      direct endpoint setup fails.
+      static. The R3 II 2025 donor routes DSD256 as 705.6 kHz DoP, but that
+      route and the bandwidth-correct S32 native route both produced static
+      on the AP80. Default DSD256 to the optimized in-tree PCM converter and
+      retain native only behind the one-boot diagnostic marker.
 - [x] Reject DST-compressed DSDIFF and DSD512 without opening the endpoint.
 - [x] Add host fixtures for metadata, route choice, byte order, markers,
       seeking, and malformed input.
-- [ ] Validate DSD64/128 and DSD256 direct DoP on both physical outputs,
-      including DSD256 fallback when endpoint setup is forced to fail.
+- [ ] Validate DSD64/128 direct DoP and DSD256 PCM on both physical outputs.
 - [ ] Add `Automatic / Prefer DoP / Prefer native` only after both transports
       are measured. Unsupported preferences must visibly fall back.
 - [x] Add explicit DSD-to-PCM fallback. Do not link the bundled

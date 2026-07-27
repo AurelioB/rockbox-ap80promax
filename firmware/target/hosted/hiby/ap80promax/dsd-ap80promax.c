@@ -11,14 +11,15 @@ enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate)
     if (dsd_rate == 0 || dsd_rate % 8 != 0)
         return DSD_TRANSPORT_ERROR;
 
-    /* Keep DSD64/128 on the physically validated DoP route. DSD256 exceeds
-     * the AP80 product route's 384 kHz PCM carrier ceiling, so carry 32 raw
-     * DSD bits in each channel's S32 slot at the /32 carrier rate. */
+    /*
+     * Keep DSD64/128 on the physically validated DoP route. DSD256 exceeds
+     * the AP80 product route's 384 kHz DoP carrier ceiling, and every tested
+     * native framing has produced static on real hardware. Returning error
+     * selects the codec's optimized PCM fallback. The explicit diagnostic
+     * marker in pcm-alsa.c can still opt a development build into native.
+     */
     if (dsd_rate / 16 <= AP80PROMAX_DSD_DOP_MAX_ALSA_RATE)
         return DSD_TRANSPORT_DOP;
-
-    if (dsd_rate / 32 <= AP80PROMAX_DSD_NATIVE_MAX_ALSA_RATE)
-        return DSD_TRANSPORT_NATIVE;
 
     return DSD_TRANSPORT_ERROR;
 }
