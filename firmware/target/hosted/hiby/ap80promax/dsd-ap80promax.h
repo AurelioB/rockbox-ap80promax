@@ -22,8 +22,8 @@ size_t ap80promax_dsd_pack_dop(uint8_t *dst, size_t dst_size,
                                const uint8_t *src, size_t src_size,
                                uint8_t *marker);
 
-/* Input is L0 R0 L1 R1. Each adjacent L/R pair is bit-interleaved into one
- * S16_LE word by the dormant native transform in the generic HiBy binary. */
+/* Input is interleaved MSB-first DSD. Output is S32_LE stereo with four
+ * successive DSD bytes in each 32-bit channel slot. */
 size_t ap80promax_dsd_pack_native(uint8_t *dst, size_t dst_size,
                                   const uint8_t *src, size_t src_size);
 

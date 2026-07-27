@@ -54,15 +54,18 @@ static void test_dop(void)
 
 static void test_native(void)
 {
-    const uint8_t src[] = { 0x01, 0x02, 0x80, 0x40 };
-    /* Each adjacent L/R pair is bit-interleaved into one S16 word. */
-    /* hiby_player: first byte on even, second on odd serial positions. */
-    const uint8_t expected[] = { 0x06, 0x00, 0x00, 0x90 };
+    const uint8_t src[] =
+        { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+    /* S32_LE words transmit L0..L3 and R0..R3 most-significant byte first. */
+    const uint8_t expected[] =
+        { 0x07, 0x05, 0x03, 0x01, 0x08, 0x06, 0x04, 0x02 };
     uint8_t dst[sizeof(src)];
 
     assert(ap80promax_dsd_pack_native(dst, sizeof(dst), src, sizeof(src)) ==
            sizeof(dst));
     assert(memcmp(dst, expected, sizeof(dst)) == 0);
+    assert(ap80promax_dsd_pack_native(dst, sizeof(dst), src,
+                                      sizeof(src) - 2) == 0);
 }
 
 int main(void)

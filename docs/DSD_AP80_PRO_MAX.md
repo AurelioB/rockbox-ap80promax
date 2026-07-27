@@ -11,7 +11,7 @@ ALSA carrier-rate table:
 | --- | --- | --- | --- |
 | DSD64 (2.8224 MHz) | DoP | 176.4 kHz | Fits below the 384 kHz device limit |
 | DSD128 (5.6448 MHz) | DoP | 352.8 kHz | Fits below the 384 kHz device limit |
-| DSD256 (11.2896 MHz) | Native DSD | 352.8 kHz | HiBy `/32` native framing |
+| DSD256 (11.2896 MHz) | Native DSD | 352.8 kHz | 32 raw DSD bits per channel slot |
 | DSD512 | unsupported | 1.4112 MHz DoP | Exceeds the patched ALSA limit |
 
 The product-specific stock route table does not expose three distinct analog
@@ -23,13 +23,18 @@ result: `libdsd2pcm.so` is loaded, ALSA receives signed 32-bit PCM,
 `DOP_EN` remains off, and the kernel reports `es9219_dai_prepare pcm`.
 
 The generic `hiby_player` binary still contains `DOP ERR_RATE rejected`,
-`DOP recover to native`, a `/32` carrier calculation, and an in-place native
-bit-interleave transform. The AP80 product route does not exercise that path,
-but disassembly at AP80 `0x740180` and R3 II `0x73f9a0` provides its byte-exact
-contract: each adjacent interleaved `L/R` byte pair becomes one `S16_LE` word,
-with the first byte in the even serial bit positions and the second in the odd
-positions. A later Rockbox revision mislabeled the two tables and reversed
-those positions, producing full-scale static on hardware.
+`DOP recover to native`, a `/32` carrier calculation, and an in-place `S16_LE`
+bit-interleave transform. The AP80 product route does not exercise that path.
+Disassembly at AP80 `0x740180` and R3 II `0x73f9a0` recovered it byte for byte,
+but physical tests with both lookup-table orders produced static. The transport
+also has a fundamental bandwidth mismatch on this target: `S16_LE` stereo at
+352.8 kHz carries 32 total wire bits per frame, while stereo DSD256 requires
+64. It cannot carry a bit-perfect stereo DSD256 stream on the AP80 AIC.
+
+The AP80's normal 352.8 kHz `S32_LE` stereo configuration does provide exactly
+64 wire bits per frame and a 22.5792 MHz bit clock. The native experiment now
+places four successive DSD bytes in each 32-bit channel slot, removing DoP
+markers and padding without discarding any source bits.
 
 The bundled `codec_es9219_v2.ko` does establish one useful fact:
 `es9219_dai_prepare` selects the DAC's DSD branch whenever the `DOP_EN` mixer
@@ -79,11 +84,9 @@ The DSD codec therefore owns a small, synchronous output path:
    MSB-first bytes: `L0 R0 L1 R1`.
 3. A codec API callback stops PCM/voice playback and opens the AP80's ALSA
    endpoint in the selected DSD transport.
-4. For validated direct modes, the AP80 transport packer emits:
+4. For direct modes, the AP80 transport packer emits:
    - DoP: two DSD bytes per channel plus alternating `0x05`/`0xfa` markers.
-   - Native (diagnostic only): the dormant generic HiBy nibble
-     lookup/interleave transform. Automatic selection is disabled, and this
-     transform has not been validated as an AP80 native transport.
+   - Native: four successive DSD bytes in each `S32_LE` channel slot.
 5. `DOP_EN` selects the ES9219 DSD branch for DoP and diagnostic native
    playback. Native DSD is not selected during ordinary production playback.
 6. On stop, seek, error, or end-of-file, the DSD endpoint is closed and normal
@@ -97,8 +100,8 @@ The ALSA period sizing also mirrors the stock player: 16,384 frames at a
 The previous fixed 4,096-frame period repeatedly underrran and re-prepared the
 DAC during direct DSD.
 
-Direct writes are staged to one negotiated ALSA period. In particular,
-In the attempted DSD256 DoP route, each 8,192-byte DSF chunk contained only
+Direct writes are staged to one negotiated ALSA period. In particular, in
+the attempted DSD256 DoP route, each 8,192-byte DSF chunk contained only
 2,048 carrier frames; submitting each chunk separately required sixteen ALSA
 writes per 32,768-frame period and created about 474 `WRITEI` ioctls per
 second. Period-aligned writes preserved the same DoP bytes while reducing
@@ -145,9 +148,9 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add the DSF/DSDIFF streaming codec with seeking.
 - [x] Add deterministic host tests for route selection and byte packing.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
-- [x] Recover the generic HiBy native framing and clock contract from both
-      the bundled AP80 player and the R3 II donor player.
-- [ ] Validate the byte-exact automatic native DSD256 route on the AP80.
+- [x] Recover and reject the generic HiBy `S16_LE` native framing after
+      static on hardware and a stereo-bandwidth audit.
+- [ ] Validate the bandwidth-correct `S32_LE` native DSD256 route on the AP80.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
@@ -171,7 +174,7 @@ Use known-good stereo test files whose rates are independently verified.
 10. Force a direct-endpoint failure and confirm the log reports the 176.4 kHz
     PCM fallback without a crash or burst of noise.
 
-The native packing and `/32` carrier rule mirror dormant code in the generic
-HiBy binaries, not a route used by the AP80 product configuration. The
-bit-lane assignment matches both recovered routines byte for byte and is
-selected for DSD256 in the single-tester build.
+The `/32` carrier rule matches the dormant generic HiBy path, but its `S16_LE`
+packing is not usable on this target. The single-tester build instead uses
+the AP80's existing 64-bit `S32_LE` stereo frame at 352.8 kHz so every
+DSD256 source bit has a corresponding wire bit.

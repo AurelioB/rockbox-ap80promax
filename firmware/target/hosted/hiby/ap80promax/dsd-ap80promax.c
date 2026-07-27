@@ -12,8 +12,8 @@ enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate)
         return DSD_TRANSPORT_ERROR;
 
     /* Keep DSD64/128 on the physically validated DoP route. DSD256 exceeds
-     * the AP80 product route's 384 kHz PCM carrier ceiling, so use the
-     * generic HiBy native transform at the /32 carrier rate instead. */
+     * the AP80 product route's 384 kHz PCM carrier ceiling, so carry 32 raw
+     * DSD bits in each channel's S32 slot at the /32 carrier rate. */
     if (dsd_rate / 16 <= AP80PROMAX_DSD_DOP_MAX_ALSA_RATE)
         return DSD_TRANSPORT_DOP;
 
@@ -80,39 +80,31 @@ size_t ap80promax_dsd_pack_dop(uint8_t *dst, size_t dst_size,
     return src_size * 2;
 }
 
-static const uint8_t native_even_nibble[16] =
-{
-    0x00, 0x02, 0x08, 0x0a, 0x20, 0x22, 0x28, 0x2a,
-    0x80, 0x82, 0x88, 0x8a, 0xa0, 0xa2, 0xa8, 0xaa,
-};
-
-static const uint8_t native_odd_nibble[16] =
-{
-    0x00, 0x01, 0x04, 0x05, 0x10, 0x11, 0x14, 0x15,
-    0x40, 0x41, 0x44, 0x45, 0x50, 0x51, 0x54, 0x55,
-};
-
 size_t ap80promax_dsd_pack_native(uint8_t *dst, size_t dst_size,
                                   const uint8_t *src, size_t src_size)
 {
-    if (!dst || !src || (src_size & 1) || dst_size < src_size)
+    if (!dst || !src || (src_size & 7) || dst_size < src_size)
         return 0;
 
-    for (size_t i = 0; i < src_size; i += 2)
+    /*
+     * One 352.8 kHz S32_LE stereo frame carries 32 native DSD bits for
+     * each channel: exactly 11.2896 MHz DSD256. ALSA words are little
+     * endian in memory but the AIC shifts each slot most-significant bit
+     * first, so reverse the four byte positions within each channel word.
+     *
+     * Input:  L0 R0 L1 R1 L2 R2 L3 R3
+     * Output: L3 L2 L1 L0 R3 R2 R1 R0
+     */
+    for (size_t i = 0; i < src_size; i += 8)
     {
-        uint8_t left = src[i + 0];
-        uint8_t right = src[i + 1];
-
-        /*
-         * Byte-exact equivalent of AP80 hiby_player 0x740180 and R3 II
-         * hiby_player 0x73f9a0. The first source byte indexes the 0x00,
-         * 0x02, ... table (even serial positions); the second indexes the
-         * 0x00, 0x01, ... table (odd serial positions).
-         */
-        dst[i + 0] = native_even_nibble[left & 0x0f] |
-                     native_odd_nibble[right & 0x0f];
-        dst[i + 1] = native_even_nibble[left >> 4] |
-                     native_odd_nibble[right >> 4];
+        dst[i + 0] = src[i + 6];
+        dst[i + 1] = src[i + 4];
+        dst[i + 2] = src[i + 2];
+        dst[i + 3] = src[i + 0];
+        dst[i + 4] = src[i + 7];
+        dst[i + 5] = src[i + 5];
+        dst[i + 6] = src[i + 3];
+        dst[i + 7] = src[i + 1];
     }
 
     return src_size;

@@ -1065,7 +1065,7 @@ static int set_dsd_hwparams(unsigned int rate, enum dsd_transport transport)
 #else
                  SND_PCM_FORMAT_S32_LE :
 #endif
-                 SND_PCM_FORMAT_S16_LE;
+                 SND_PCM_FORMAT_S32_LE;
 
     snd_pcm_hw_params_malloc(&params);
     err = snd_pcm_hw_params_any(handle, params);
@@ -1194,10 +1194,8 @@ static int dsd_flush_locked(void)
     size_t frames_left;
     uint8_t *out;
 
-    if (dsd_transport == DSD_TRANSPORT_DOP)
-        frame_bytes = 8; /* S24_LE/S32_LE stereo, both use 32-bit slots */
-    else
-        frame_bytes = 4; /* S16_LE stereo; stock native framing */
+    /* DoP and native both use two 32-bit ALSA slots per frame. */
+    frame_bytes = 8;
 
     if (dsd_output_used == 0)
         return 0;
@@ -1262,7 +1260,7 @@ ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
     else
     {
         required = size;
-        frame_bytes = 4;
+        frame_bytes = 8;
     }
 
     if (required > sizeof(dsd_output))

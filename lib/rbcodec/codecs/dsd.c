@@ -299,7 +299,8 @@ static bool write_audio(uint8_t *data, size_t size, enum dsd_output output,
     if (output == DSD_OUTPUT_DIRECT)
     {
         size_t padded_size = size;
-        while (padded_size & 3)
+        /* Native S32 stereo consumes four DSD bytes per channel. */
+        while (padded_size & 7)
             data[padded_size++] = DSD_SILENCE;
         return ci->dsd_write(data, padded_size) == (ssize_t)padded_size;
     }
