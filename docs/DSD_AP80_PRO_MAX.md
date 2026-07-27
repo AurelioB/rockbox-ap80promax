@@ -25,11 +25,11 @@ result: `libdsd2pcm.so` is loaded, ALSA receives signed 32-bit PCM,
 The generic `hiby_player` binary still contains `DOP ERR_RATE rejected`,
 `DOP recover to native`, a `/32` carrier calculation, and an in-place native
 bit-interleave transform. The AP80 product route does not exercise that path,
-but disassembly at `0x740180` provides its byte-exact contract: each adjacent
-interleaved `L/R` byte pair becomes one `S16_LE` word, with the first byte in
-the odd serial bit positions and the second in the even positions. The first
-Rockbox implementation accidentally reversed those positions, explaining the
-static from both earlier physical experiments.
+but disassembly at AP80 `0x740180` and R3 II `0x73f9a0` provides its byte-exact
+contract: each adjacent interleaved `L/R` byte pair becomes one `S16_LE` word,
+with the first byte in the even serial bit positions and the second in the odd
+positions. A later Rockbox revision mislabeled the two tables and reversed
+those positions, producing full-scale static on hardware.
 
 The bundled `codec_es9219_v2.ko` does establish one useful fact:
 `es9219_dai_prepare` selects the DAC's DSD branch whenever the `DOP_EN` mixer
@@ -145,9 +145,9 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add the DSF/DSDIFF streaming codec with seeking.
 - [x] Add deterministic host tests for route selection and byte packing.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
-- [x] Recover the generic HiBy native framing and clock contract from the
-      bundled player.
-- [ ] Validate the corrected automatic native DSD256 route on the AP80.
+- [x] Recover the generic HiBy native framing and clock contract from both
+      the bundled AP80 player and the R3 II donor player.
+- [ ] Validate the byte-exact automatic native DSD256 route on the AP80.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
@@ -172,6 +172,6 @@ Use known-good stereo test files whose rates are independently verified.
     PCM fallback without a crash or burst of noise.
 
 The native packing and `/32` carrier rule mirror dormant code in the generic
-HiBy binary, not a route used by the AP80 product configuration. The corrected
-bit-lane assignment now matches that routine byte for byte and is selected for
-DSD256 in the single-tester build.
+HiBy binaries, not a route used by the AP80 product configuration. The
+bit-lane assignment matches both recovered routines byte for byte and is
+selected for DSD256 in the single-tester build.

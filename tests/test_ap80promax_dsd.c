@@ -56,8 +56,8 @@ static void test_native(void)
 {
     const uint8_t src[] = { 0x01, 0x02, 0x80, 0x40 };
     /* Each adjacent L/R pair is bit-interleaved into one S16 word. */
-    /* hiby_player 0x740180: first byte on odd, second on even bits. */
-    const uint8_t expected[] = { 0x09, 0x00, 0x00, 0x60 };
+    /* hiby_player: first byte on even, second on odd serial positions. */
+    const uint8_t expected[] = { 0x06, 0x00, 0x00, 0x90 };
     uint8_t dst[sizeof(src)];
 
     assert(ap80promax_dsd_pack_native(dst, sizeof(dst), src, sizeof(src)) ==

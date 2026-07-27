@@ -104,15 +104,15 @@ size_t ap80promax_dsd_pack_native(uint8_t *dst, size_t dst_size,
         uint8_t right = src[i + 1];
 
         /*
-         * Byte-exact equivalent of hiby_player 0x740180. The first byte
-         * occupies the odd serial bit positions and the second byte the
-         * even positions. Reversing these tables swaps every left/right
-         * DSD bit on the wire and produces full-scale static.
+         * Byte-exact equivalent of AP80 hiby_player 0x740180 and R3 II
+         * hiby_player 0x73f9a0. The first source byte indexes the 0x00,
+         * 0x02, ... table (even serial positions); the second indexes the
+         * 0x00, 0x01, ... table (odd serial positions).
          */
-        dst[i + 0] = native_odd_nibble[left & 0x0f] |
-                     native_even_nibble[right & 0x0f];
-        dst[i + 1] = native_odd_nibble[left >> 4] |
-                     native_even_nibble[right >> 4];
+        dst[i + 0] = native_even_nibble[left & 0x0f] |
+                     native_odd_nibble[right & 0x0f];
+        dst[i + 1] = native_even_nibble[left >> 4] |
+                     native_odd_nibble[right >> 4];
     }
 
     return src_size;
