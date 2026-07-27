@@ -23,6 +23,18 @@ enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate)
     return DSD_TRANSPORT_ERROR;
 }
 
+enum dsd_transport
+ap80promax_dsd_select_diagnostic_dop(unsigned int dsd_rate)
+{
+    if (dsd_rate == 0 || dsd_rate % 8 != 0)
+        return DSD_TRANSPORT_ERROR;
+
+    if (dsd_rate / 16 <= AP80PROMAX_DSD_PATCHED_MAX_ALSA_RATE)
+        return DSD_TRANSPORT_DOP;
+
+    return DSD_TRANSPORT_ERROR;
+}
+
 unsigned int ap80promax_dsd_carrier_rate(unsigned int dsd_rate,
                                          enum dsd_transport transport)
 {

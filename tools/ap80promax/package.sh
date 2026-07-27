@@ -8,6 +8,7 @@ ap80_input_update=${AP80_STOCK_UPDATE:-"$ap80_workspace_root/ap80max.upt"}
 ap80_bootloader="$ap80_dist/bootloader.ap80promax"
 ap80_patcher="$ap80_rockbox_root/tools/r1_patcher/r1_patcher.sh"
 ap80_launcher="$ap80_rockbox_root/tools/r1_patcher/hiby_player-rockbox.sh"
+ap80_audio_patcher="$ap80_rockbox_root/tools/ap80promax/patch-dop256-modules.py"
 ap80_package_work="$ap80_dist/patcher"
 ap80_output="$ap80_dist/ap80max_rb.upt"
 
@@ -15,7 +16,8 @@ for ap80_required in \
     "$ap80_input_update" \
     "$ap80_bootloader" \
     "$ap80_patcher" \
-    "$ap80_launcher"
+    "$ap80_launcher" \
+    "$ap80_audio_patcher"
 do
     if [ ! -f "$ap80_required" ]; then
         echo "Missing required file: $ap80_required" >&2
@@ -29,7 +31,8 @@ cp "$ap80_bootloader" "$ap80_package_work/bootloader.ap80promax"
 
 (
     cd "$ap80_package_work"
-    "$ap80_patcher" ap80max.upt bootloader.ap80promax
+    HIBY_ROOTFS_PATCHER="$ap80_audio_patcher" \
+        "$ap80_patcher" ap80max.upt bootloader.ap80promax
 )
 
 cp "$ap80_package_work/ap80max_rb.upt" "$ap80_output"
@@ -64,6 +67,7 @@ grep -q 'readiness timeout' \
     "$ap80_inspect/rootfs/usr/bin/hiby_player.sh"
 grep -q 'app handoff timeout' \
     "$ap80_inspect/rootfs/usr/bin/hiby_player.sh"
+"$ap80_audio_patcher" "$ap80_inspect/rootfs"
 
 (
     cd "$ap80_dist"

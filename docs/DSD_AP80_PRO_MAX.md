@@ -35,6 +35,31 @@ The bundled `codec_es9219_v2.ko` does establish one useful fact:
 state is nonzero. That switch alone is insufficient to bring up a valid
 native stream.
 
+### HiBy R3 II 2025 donor firmware
+
+The HiBy R3 II 2025 is an unusually close reference: X1600E, dual ES9219C,
+HiByOS, and advertised native DSD256. Its firmware clarifies what that claim
+means in the product audio path:
+
+- its `soc_aic.ko` is byte-identical to the AP80 Pro Max module;
+- its active `ot_devices_2025.json` maps `AnalogDsdD2p`, `AnalogDsdDop`, and
+  `AnalogDsdNative` to `"dop"`;
+- unlike the AP80 table, it advertises 705.6 and 768 kHz;
+- its ES9219 DAI rate mask includes the corresponding ALSA rate bits; and
+- its machine driver uses an HBC3000 FPGA to provide the audio clocks.
+
+The useful donor behavior is therefore bit-perfect DSD256 carried as
+705.6 kHz DoP, not the dormant generic native packer. The AP80 has no
+HBC3000 module, but its direct-clock machine driver already derives the
+22.5792/24.576 MHz clocks for lower rate families. The engineering updater
+applies two hash-locked vendor-module patches: advertise 705.6/768 kHz in the
+ES9219 DAI and extend the existing clock rule to those rates.
+
+Production Rockbox continues to use PCM fallback for DSD256. Creating the
+volatile `/tmp/rockbox-dop256-test` marker enables the donor-derived
+705.6 kHz DoP route for controlled testing until reboot. The existing native
+marker remains quarantined and is not part of this route.
+
 ## Architecture
 
 DSD must not enter Rockbox's fixed-point PCM DSP or mixer. EQ, replay gain,
@@ -80,6 +105,9 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Reverse-engineer the product route table, DoP layout, dormant generic
       native transform, and `DOP_EN` behavior.
 - [x] Trace stock DSD256 playback and confirm its signed 32-bit PCM fallback.
+- [x] Compare the R3 II 2025 donor firmware and recover its 705.6 kHz
+      DSD256-over-DoP route.
+- [x] Add hash-locked AP80 module patches and a volatile diagnostic gate.
 - [x] Define a target-independent codec-to-output DSD contract.
 - [x] Add AP80 route selection and bitstream packers.
 - [x] Add direct ALSA DSD open/write/pause/close support.
@@ -89,6 +117,8 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
 - [ ] Recover an AP80-specific native framing and clock contract independently;
       the product firmware does not provide a working reference route.
+- [ ] Validate the donor-derived 705.6 kHz DoP route on the AP80 before making
+      it automatic.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.

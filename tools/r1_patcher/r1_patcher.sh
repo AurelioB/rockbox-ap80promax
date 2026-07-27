@@ -70,6 +70,14 @@ cp "$scriptdir/hiby_player-rockbox.sh" \
    "$workingdir_in/rootfs/extracted/usr/bin/hiby_player.sh"
 chmod 0755 "$workingdir_in/rootfs/extracted/usr/bin/hiby_player.sh"
 
+if [[ -n "${HIBY_ROOTFS_PATCHER:-}" ]]; then
+    if [[ ! -x "$HIBY_ROOTFS_PATCHER" ]]; then
+        echo "rootfs patcher is not executable: $HIBY_ROOTFS_PATCHER" >&2
+        exit 1
+    fi
+    "$HIBY_ROOTFS_PATCHER" "$workingdir_in/rootfs/extracted"
+fi
+
 ################################################################################
 ### Rockbox Hotplug Logic
 ################################################################################
