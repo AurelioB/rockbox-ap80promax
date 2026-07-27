@@ -1130,7 +1130,7 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
     transport = ap80promax_dsd_select_transport(dsd_rate);
     if (transport == DSD_TRANSPORT_ERROR &&
         access(DSD_NATIVE_TEST_MARKER, F_OK) == 0 &&
-        dsd_rate / 32 <= AP80PROMAX_DSD_MAX_ALSA_RATE)
+        dsd_rate / 32 <= AP80PROMAX_DSD_NATIVE_MAX_ALSA_RATE)
     {
         transport = DSD_TRANSPORT_NATIVE;
         logf("WARNING: diagnostic native DSD transport enabled");

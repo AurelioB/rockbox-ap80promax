@@ -11,13 +11,14 @@ enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate)
     if (dsd_rate == 0 || dsd_rate % 8 != 0)
         return DSD_TRANSPORT_ERROR;
 
-    /* Use the DoP route selected by both product-specific HiBy firmwares.
-     * The AP80 vendor modules are extended to the R3 II 2025 rate ceiling,
-     * allowing DSD256 to use its 705.6 kHz DoP carrier. The generic HiBy
-     * binary also contains a dormant /32 native path, but physical tests of
-     * that path produce static, so it remains quarantined. */
-    if (dsd_rate / 16 <= AP80PROMAX_DSD_MAX_ALSA_RATE)
+    /* Keep DSD64/128 on the physically validated DoP route. DSD256 exceeds
+     * the AP80 product route's 384 kHz PCM carrier ceiling, so use the
+     * generic HiBy native transform at the /32 carrier rate instead. */
+    if (dsd_rate / 16 <= AP80PROMAX_DSD_DOP_MAX_ALSA_RATE)
         return DSD_TRANSPORT_DOP;
+
+    if (dsd_rate / 32 <= AP80PROMAX_DSD_NATIVE_MAX_ALSA_RATE)
+        return DSD_TRANSPORT_NATIVE;
 
     return DSD_TRANSPORT_ERROR;
 }
@@ -102,10 +103,16 @@ size_t ap80promax_dsd_pack_native(uint8_t *dst, size_t dst_size,
         uint8_t left = src[i + 0];
         uint8_t right = src[i + 1];
 
-        dst[i + 0] = native_even_nibble[left & 0x0f] |
-                     native_odd_nibble[right & 0x0f];
-        dst[i + 1] = native_even_nibble[left >> 4] |
-                     native_odd_nibble[right >> 4];
+        /*
+         * Byte-exact equivalent of hiby_player 0x740180. The first byte
+         * occupies the odd serial bit positions and the second byte the
+         * even positions. Reversing these tables swaps every left/right
+         * DSD bit on the wire and produces full-scale static.
+         */
+        dst[i + 0] = native_odd_nibble[left & 0x0f] |
+                     native_even_nibble[right & 0x0f];
+        dst[i + 1] = native_odd_nibble[left >> 4] |
+                     native_even_nibble[right >> 4];
     }
 
     return src_size;
