@@ -125,8 +125,11 @@ static long signal_stack[SIGSTKSZ/sizeof(long)];
 static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
 
 #ifdef HAVE_DSD
-#define DSD_INPUT_BUFFER_SIZE 8192u
-#define DSD_OUTPUT_BUFFER_SIZE (DSD_INPUT_BUFFER_SIZE * 2)
+#define DSD_INPUT_CHUNK_MAX 8192u
+#define DSD_MAX_PERIOD_FRAMES 32768u
+#define DSD_MAX_FRAME_BYTES 8u
+#define DSD_OUTPUT_BUFFER_SIZE \
+    (DSD_MAX_PERIOD_FRAMES * DSD_MAX_FRAME_BYTES)
 #define DSD_NATIVE_TEST_MARKER "/tmp/rockbox-native-dsd-test"
 
 static bool dsd_is_active;
@@ -134,6 +137,7 @@ static enum dsd_transport dsd_transport;
 static uint8_t dsd_marker = 0x05;
 static unsigned int dsd_restore_rate;
 static uint8_t dsd_output[DSD_OUTPUT_BUFFER_SIZE] MEM_ALIGN_ATTR;
+static size_t dsd_output_used;
 #endif
 
 #ifdef HAVE_RECORDING
@@ -1149,6 +1153,7 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
 
     dsd_transport = transport;
     dsd_marker = 0x05;
+    dsd_output_used = 0;
     dsd_is_active = true; /* Keep the async callback away from the handle. */
     audiohw_set_dsd_mode(true);
 
@@ -1162,6 +1167,7 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
         audiohw_set_dsd_mode(false);
         dsd_is_active = false;
         dsd_transport = DSD_TRANSPORT_ERROR;
+        dsd_output_used = 0;
         set_hwparams(handle, dsd_restore_rate);
         set_swparams(handle);
         pthread_mutex_unlock(&pcm_mtx);
@@ -1175,46 +1181,31 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
     return transport;
 }
 
-ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
+/*
+ * The DSF codec naturally hands us 2,048 carrier frames at a time, but the
+ * AP80 negotiates periods of up to 32,768 frames. Submitting sixteen tiny
+ * writes per period causes enough scheduler and ioctl churn for DSD256 to
+ * underrun every few seconds. Stage one negotiated ALSA period and submit it
+ * in a single write instead.
+ */
+static int dsd_flush_locked(void)
 {
-    const uint8_t *src = data;
-    size_t packed_size;
     size_t frame_bytes;
     size_t frames_left;
     uint8_t *out;
 
-    if (!data || size == 0 || (size & 3) ||
-        size > DSD_INPUT_BUFFER_SIZE)
-        return -EINVAL;
-
-    pthread_mutex_lock(&pcm_mtx);
-    if (!dsd_is_active)
-    {
-        pthread_mutex_unlock(&pcm_mtx);
-        return -ENODEV;
-    }
-
     if (dsd_transport == DSD_TRANSPORT_DOP)
-    {
-        packed_size = ap80promax_dsd_pack_dop(
-                dsd_output, sizeof(dsd_output), src, size, &dsd_marker);
         frame_bytes = 8; /* S24_LE/S32_LE stereo, both use 32-bit slots */
-    }
     else
-    {
-        packed_size = ap80promax_dsd_pack_native(
-                dsd_output, sizeof(dsd_output), src, size);
         frame_bytes = 4; /* S16_LE stereo; stock native framing */
-    }
 
-    if (packed_size == 0)
-    {
-        pthread_mutex_unlock(&pcm_mtx);
+    if (dsd_output_used == 0)
+        return 0;
+    if (dsd_output_used % frame_bytes)
         return -EINVAL;
-    }
 
     out = dsd_output;
-    frames_left = packed_size / frame_bytes;
+    frames_left = dsd_output_used / frame_bytes;
 
     while (frames_left > 0)
     {
@@ -1230,12 +1221,101 @@ ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
         if (written < 0)
         {
             logf("DSD write failed: %s", snd_strerror(written));
-            pthread_mutex_unlock(&pcm_mtx);
             return written;
         }
+        if (written == 0)
+            return -EIO;
 
         out += written * frame_bytes;
         frames_left -= written;
+    }
+
+    dsd_output_used = 0;
+    return 0;
+}
+
+ssize_t pcm_alsa_dsd_write(const void *data, size_t size)
+{
+    const uint8_t *src = data;
+    size_t packed_size;
+    size_t required;
+    size_t frame_bytes;
+    size_t target_bytes;
+    int err;
+
+    if (!data || size == 0 || (size & 3) ||
+        size > DSD_INPUT_CHUNK_MAX)
+        return -EINVAL;
+
+    pthread_mutex_lock(&pcm_mtx);
+    if (!dsd_is_active)
+    {
+        pthread_mutex_unlock(&pcm_mtx);
+        return -ENODEV;
+    }
+
+    if (dsd_transport == DSD_TRANSPORT_DOP)
+    {
+        required = size * 2;
+        frame_bytes = 8;
+    }
+    else
+    {
+        required = size;
+        frame_bytes = 4;
+    }
+
+    if (required > sizeof(dsd_output))
+    {
+        pthread_mutex_unlock(&pcm_mtx);
+        return -EINVAL;
+    }
+
+    if (dsd_output_used + required > sizeof(dsd_output))
+    {
+        err = dsd_flush_locked();
+        if (err < 0)
+        {
+            pthread_mutex_unlock(&pcm_mtx);
+            return err;
+        }
+    }
+
+    if (dsd_transport == DSD_TRANSPORT_DOP)
+    {
+        packed_size = ap80promax_dsd_pack_dop(
+                dsd_output + dsd_output_used,
+                sizeof(dsd_output) - dsd_output_used,
+                src, size, &dsd_marker);
+    }
+    else
+    {
+        packed_size = ap80promax_dsd_pack_native(
+                dsd_output + dsd_output_used,
+                sizeof(dsd_output) - dsd_output_used, src, size);
+    }
+
+    if (packed_size != required)
+    {
+        pthread_mutex_unlock(&pcm_mtx);
+        return -EINVAL;
+    }
+
+    dsd_output_used += packed_size;
+    target_bytes = period_size > 0 ?
+                   (size_t)period_size * frame_bytes :
+                   sizeof(dsd_output);
+    if (target_bytes > sizeof(dsd_output))
+        target_bytes = sizeof(dsd_output);
+
+    if (dsd_output_used >= target_bytes)
+    {
+        err = dsd_flush_locked();
+        if (err < 0)
+        {
+            pthread_mutex_unlock(&pcm_mtx);
+            return err;
+        }
     }
 
     pthread_mutex_unlock(&pcm_mtx);
@@ -1247,6 +1327,9 @@ void pcm_alsa_dsd_pause(bool pause)
     pthread_mutex_lock(&pcm_mtx);
     if (dsd_is_active)
     {
+        if (pause)
+            dsd_flush_locked();
+
         int err = snd_pcm_pause(handle, pause ? 1 : 0);
         if (err < 0)
         {
@@ -1271,6 +1354,9 @@ void pcm_alsa_dsd_close(bool drain)
         return;
     }
 
+    if (drain && dsd_flush_locked() < 0)
+        drain = false;
+
     if (drain)
         snd_pcm_drain(handle);
     else
@@ -1279,6 +1365,7 @@ void pcm_alsa_dsd_close(bool drain)
     audiohw_set_dsd_mode(false);
     dsd_is_active = false;
     dsd_transport = DSD_TRANSPORT_ERROR;
+    dsd_output_used = 0;
 
     if (set_hwparams(handle, dsd_restore_rate) >= 0)
     {

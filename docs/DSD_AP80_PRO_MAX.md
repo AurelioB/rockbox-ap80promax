@@ -92,6 +92,12 @@ The ALSA period sizing also mirrors the stock player: 16,384 frames at a
 The previous fixed 4,096-frame period repeatedly underrran and re-prepared the
 DAC during direct DSD.
 
+Direct writes are staged to one negotiated ALSA period. In particular,
+DSD256's 8,192-byte DSF chunks contain only 2,048 carrier frames; submitting
+each chunk separately required sixteen ALSA writes per 32,768-frame period
+and produced a repeatable underrun about every three seconds. Period-aligned
+writes preserve the same DoP bytes while removing that scheduling overhead.
+
 If direct setup fails, the same codec converts DSD64/128/256 to interleaved
 29-bit PCM at 176.4 kHz. A third-order CIC stage reduces the stream to
 352.8 kHz and a 31-tap half-band FIR filters and decimates it to the output
