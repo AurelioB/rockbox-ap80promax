@@ -9,6 +9,15 @@ ap80_boot_build=${AP80_BOOT_BUILD:-"$ap80_rockbox_root/build-ap80-boot"}
 ap80_dist=${AP80_DIST_DIR:-"$ap80_workspace_root/dist"}
 ap80_jobs=${AP80_JOBS:-$(getconf _NPROCESSORS_ONLN)}
 
+mkdir -p "$ap80_dist"
+
+# The engineering updater embeds the bootloader and launcher from a particular
+# source state. Invalidate any previous package before doing work so a failed
+# or interrupted rebuild cannot leave a stale updater looking current.
+rm -f "$ap80_dist/ap80max_rb.upt" \
+      "$ap80_dist/SHA256SUMS-updater" \
+      "$ap80_dist/patcher/ap80max_rb.upt"
+
 if [ ! -x "$ap80_toolchain_bin/mipsel-rockbox-linux-gnu-gcc" ]; then
     echo "Missing Rockbox MIPS toolchain at $ap80_toolchain_bin" >&2
     echo "Build target y with tools/rockboxdev.sh first." >&2
@@ -18,7 +27,7 @@ fi
 PATH="$ap80_toolchain_bin:$PATH"
 export PATH
 
-mkdir -p "$ap80_normal_build" "$ap80_boot_build" "$ap80_dist"
+mkdir -p "$ap80_normal_build" "$ap80_boot_build"
 
 (
     cd "$ap80_normal_build"

@@ -5,6 +5,91 @@ ap80_rockbox_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 ap80_workspace_root=${AP80_WORKSPACE_ROOT:-$(dirname "$ap80_rockbox_root")}
 ap80_dist=${AP80_DIST_DIR:-"$ap80_workspace_root/dist"}
 ap80_zip="$ap80_dist/rockbox-ap80promax.zip"
+ap80_updater="$ap80_dist/ap80max_rb.upt"
+ap80_updater_checksum="$ap80_dist/SHA256SUMS-updater"
+ap80_launcher=${AP80_LAUNCHER:-"$ap80_rockbox_root/tools/r1_patcher/hiby_player-rockbox.sh"}
+ap80_updater_inspect=
+ap80_zip_application=
+
+ap80_cleanup()
+{
+    [ -z "$ap80_updater_inspect" ] ||
+        rm -rf "$ap80_updater_inspect"
+    [ -z "$ap80_zip_application" ] ||
+        rm -f "$ap80_zip_application"
+}
+
+trap 'ap80_status=$?; ap80_cleanup; exit "$ap80_status"' 0
+trap 'exit 1' HUP INT TERM
+
+ap80_verify_updater()
+{
+    for ap80_tool in 7z unsquashfs
+    do
+        command -v "$ap80_tool" >/dev/null 2>&1 || {
+            echo "Cannot inspect updater without $ap80_tool" >&2
+            exit 1
+        }
+    done
+
+    [ -f "$ap80_launcher" ] || {
+        echo "Missing current recovery launcher: $ap80_launcher" >&2
+        exit 1
+    }
+
+    ap80_updater_inspect=$(mktemp -d \
+        "${TMPDIR:-/tmp}/ap80-updater-verify.XXXXXX")
+    mkdir -p "$ap80_updater_inspect/iso" \
+             "$ap80_updater_inspect/rootfs"
+    7z -o"$ap80_updater_inspect/iso" x "$ap80_updater" >/dev/null
+
+    set -- "$ap80_updater_inspect/iso/ota_v0"/rootfs.squashfs.*
+    if [ ! -f "$1" ]; then
+        echo "Updater contains no rootfs payload" >&2
+        exit 1
+    fi
+    cat "$@" > "$ap80_updater_inspect/rootfs.squashfs"
+    unsquashfs -f -d "$ap80_updater_inspect/rootfs" \
+        "$ap80_updater_inspect/rootfs.squashfs" >/dev/null
+
+    ap80_embedded_bootloader="$ap80_updater_inspect/rootfs/usr/bin/bootloader.rb"
+    ap80_embedded_launcher="$ap80_updater_inspect/rootfs/usr/bin/hiby_player.sh"
+    ap80_stock_launcher="$ap80_updater_inspect/rootfs/usr/bin/hiby_player.stock.sh"
+
+    if ! cmp "$ap80_dist/bootloader.ap80promax" \
+             "$ap80_embedded_bootloader" >/dev/null 2>&1
+    then
+        echo "Updater embeds a bootloader different from the dist artifact" >&2
+        exit 1
+    fi
+    if ! cmp "$ap80_launcher" "$ap80_embedded_launcher" >/dev/null 2>&1
+    then
+        echo "Updater embeds a launcher different from the current source" >&2
+        exit 1
+    fi
+    if [ ! -x "$ap80_stock_launcher" ]; then
+        echo "Updater does not preserve an executable stock launcher" >&2
+        exit 1
+    fi
+
+    if ! strings "$ap80_embedded_bootloader" |
+         grep -Fq '/.rockbox/rb_bl_success'
+    then
+        echo "Embedded bootloader is missing successful-boot gating" >&2
+        exit 1
+    fi
+    if ! strings "$ap80_embedded_bootloader" |
+         grep -Fq '/.rockbox/rb_bl_attempt'
+    then
+        echo "Embedded bootloader is missing failed-attempt gating" >&2
+        exit 1
+    fi
+    if ! grep -Fq 'rb_bl_success' "$ap80_embedded_launcher" ||
+       ! grep -Fq 'rb_bl_attempt' "$ap80_embedded_launcher"; then
+        echo "Embedded launcher is missing successful-boot gating" >&2
+        exit 1
+    fi
+}
 
 for ap80_required in \
     "$ap80_dist/rockbox.ap80promax" \
@@ -37,11 +122,11 @@ do
 done
 
 if [ "${AP80_REQUIRE_UPDATER:-0}" = "1" ] ||
-   [ -f "$ap80_dist/ap80max_rb.upt" ] ||
-   [ -f "$ap80_dist/SHA256SUMS-updater" ]; then
+   [ -f "$ap80_updater" ] ||
+   [ -f "$ap80_updater_checksum" ]; then
     for ap80_required in \
-        "$ap80_dist/ap80max_rb.upt" \
-        "$ap80_dist/SHA256SUMS-updater"
+        "$ap80_updater" \
+        "$ap80_updater_checksum"
     do
         if [ ! -f "$ap80_required" ]; then
             echo "Incomplete updater artifacts: $ap80_required" >&2
@@ -52,9 +137,34 @@ if [ "${AP80_REQUIRE_UPDATER:-0}" = "1" ] ||
         cd "$ap80_dist"
         sha256sum -c SHA256SUMS-updater
     )
+    ap80_verify_updater
 fi
 
 unzip -tqq "$ap80_zip"
+
+ap80_zip_application=$(mktemp \
+    "${TMPDIR:-/tmp}/ap80-zip-application.XXXXXX")
+unzip -p "$ap80_zip" .rockbox/rockbox.ap80promax \
+    > "$ap80_zip_application"
+if ! cmp "$ap80_dist/rockbox.ap80promax" \
+         "$ap80_zip_application" >/dev/null 2>&1
+then
+    echo "Release ZIP application differs from the dist executable" >&2
+    exit 1
+fi
+
+if ! strings "$ap80_dist/bootloader.ap80promax" |
+     grep -Fq '/.rockbox/rb_bl_success'
+then
+    echo "AP80 bootloader is missing successful-boot gating" >&2
+    exit 1
+fi
+if ! strings "$ap80_dist/bootloader.ap80promax" |
+     grep -Fq '/.rockbox/rb_bl_attempt'
+then
+    echo "AP80 bootloader is missing failed-attempt gating" >&2
+    exit 1
+fi
 
 ap80_zip_entries=$(unzip -Z1 "$ap80_zip")
 for ap80_theme in \
