@@ -11,25 +11,12 @@ enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate)
     if (dsd_rate == 0 || dsd_rate % 8 != 0)
         return DSD_TRANSPORT_ERROR;
 
-    /* Use only the validated DoP route automatically. The product-specific
-     * stock configuration maps every analog DSD policy to its DoP backend;
-     * live DSD256 playback falls back to PCM. The generic HiBy binary also
-     * contains a dormant /32 native path, but physical tests of that path
-     * produce static, so it remains unsafe until the AP80-specific
-     * framing/clock contract is recovered. */
+    /* Use the DoP route selected by both product-specific HiBy firmwares.
+     * The AP80 vendor modules are extended to the R3 II 2025 rate ceiling,
+     * allowing DSD256 to use its 705.6 kHz DoP carrier. The generic HiBy
+     * binary also contains a dormant /32 native path, but physical tests of
+     * that path produce static, so it remains quarantined. */
     if (dsd_rate / 16 <= AP80PROMAX_DSD_MAX_ALSA_RATE)
-        return DSD_TRANSPORT_DOP;
-
-    return DSD_TRANSPORT_ERROR;
-}
-
-enum dsd_transport
-ap80promax_dsd_select_diagnostic_dop(unsigned int dsd_rate)
-{
-    if (dsd_rate == 0 || dsd_rate % 8 != 0)
-        return DSD_TRANSPORT_ERROR;
-
-    if (dsd_rate / 16 <= AP80PROMAX_DSD_PATCHED_MAX_ALSA_RATE)
         return DSD_TRANSPORT_DOP;
 
     return DSD_TRANSPORT_ERROR;

@@ -9,12 +9,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define AP80PROMAX_DSD_MAX_ALSA_RATE 384000u
-#define AP80PROMAX_DSD_PATCHED_MAX_ALSA_RATE 768000u
+#define AP80PROMAX_DSD_MAX_ALSA_RATE 768000u
 
 enum dsd_transport ap80promax_dsd_select_transport(unsigned int dsd_rate);
-enum dsd_transport
-ap80promax_dsd_select_diagnostic_dop(unsigned int dsd_rate);
 unsigned int ap80promax_dsd_carrier_rate(unsigned int dsd_rate,
                                          enum dsd_transport transport);
 unsigned int ap80promax_dsd_period_frames(unsigned int carrier_rate);

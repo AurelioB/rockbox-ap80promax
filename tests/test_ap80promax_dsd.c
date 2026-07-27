@@ -16,18 +16,13 @@ static void test_routes(void)
     assert(ap80promax_dsd_carrier_rate(DSD_RATE_128,
            DSD_TRANSPORT_DOP) == 352800);
 
-    /* Native DSD256 remains quarantined after physical output produced
-       static even with the ES9219 DSD mode enabled. */
+    /* The R3 II 2025 donor carries DSD256 as 705.6 kHz DoP. */
     assert(ap80promax_dsd_select_transport(DSD_RATE_256) ==
-           DSD_TRANSPORT_ERROR);
-    assert(ap80promax_dsd_select_diagnostic_dop(DSD_RATE_256) ==
            DSD_TRANSPORT_DOP);
     assert(ap80promax_dsd_carrier_rate(DSD_RATE_256,
            DSD_TRANSPORT_DOP) == 705600);
 
     assert(ap80promax_dsd_select_transport(DSD_RATE_512) ==
-           DSD_TRANSPORT_ERROR);
-    assert(ap80promax_dsd_select_diagnostic_dop(DSD_RATE_512) ==
            DSD_TRANSPORT_ERROR);
 
     assert(ap80promax_dsd_period_frames(11025) == 1024);

@@ -127,7 +127,6 @@ static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
 #ifdef HAVE_DSD
 #define DSD_INPUT_BUFFER_SIZE 8192u
 #define DSD_OUTPUT_BUFFER_SIZE (DSD_INPUT_BUFFER_SIZE * 2)
-#define DSD_DOP256_TEST_MARKER "/tmp/rockbox-dop256-test"
 #define DSD_NATIVE_TEST_MARKER "/tmp/rockbox-native-dsd-test"
 
 static bool dsd_is_active;
@@ -1125,13 +1124,6 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
         return DSD_TRANSPORT_ERROR;
 
     transport = ap80promax_dsd_select_transport(dsd_rate);
-    if (transport == DSD_TRANSPORT_ERROR &&
-        access(DSD_DOP256_TEST_MARKER, F_OK) == 0)
-    {
-        transport = ap80promax_dsd_select_diagnostic_dop(dsd_rate);
-        if (transport == DSD_TRANSPORT_DOP)
-            logf("WARNING: diagnostic high-rate DoP transport enabled");
-    }
     if (transport == DSD_TRANSPORT_ERROR &&
         access(DSD_NATIVE_TEST_MARKER, F_OK) == 0 &&
         dsd_rate / 32 <= AP80PROMAX_DSD_MAX_ALSA_RATE)

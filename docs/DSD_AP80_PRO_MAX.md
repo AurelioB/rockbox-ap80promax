@@ -11,8 +11,8 @@ ALSA carrier-rate table:
 | --- | --- | --- | --- |
 | DSD64 (2.8224 MHz) | DoP | 176.4 kHz | Fits below the 384 kHz device limit |
 | DSD128 (5.6448 MHz) | DoP | 352.8 kHz | Fits below the 384 kHz device limit |
-| DSD256 (11.2896 MHz) | PCM fallback | 176.4 kHz | Native route is quarantined after hardware static |
-| DSD512 | unsupported | 705.6 kHz native | Exceeds the stock ALSA limit |
+| DSD256 (11.2896 MHz) | DoP test route | 705.6 kHz | Matches the R3 II 2025 donor route |
+| DSD512 | unsupported | 1.4112 MHz DoP | Exceeds the patched ALSA limit |
 
 The product-specific stock route table does not expose three distinct analog
 transports. In `usr/resource/ot_devices.json`, `AnalogDsdD2p`,
@@ -55,10 +55,10 @@ HBC3000 module, but its direct-clock machine driver already derives the
 applies two hash-locked vendor-module patches: advertise 705.6/768 kHz in the
 ES9219 DAI and extend the existing clock rule to those rates.
 
-Production Rockbox continues to use PCM fallback for DSD256. Creating the
-volatile `/tmp/rockbox-dop256-test` marker enables the donor-derived
-705.6 kHz DoP route for controlled testing until reboot. The existing native
-marker remains quarantined and is not part of this route.
+The current single-tester build selects the donor-derived 705.6 kHz DoP route
+for DSD256 automatically. If ALSA rejects the direct endpoint, the codec still
+closes it and falls back to the in-tree 176.4 kHz PCM converter. The existing
+native marker remains quarantined and is not part of this route.
 
 ## Architecture
 
@@ -107,7 +107,8 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Trace stock DSD256 playback and confirm its signed 32-bit PCM fallback.
 - [x] Compare the R3 II 2025 donor firmware and recover its 705.6 kHz
       DSD256-over-DoP route.
-- [x] Add hash-locked AP80 module patches and a volatile diagnostic gate.
+- [x] Add hash-locked AP80 module patches.
+- [x] Enable the 705.6 kHz DSD256 DoP route by default in the test build.
 - [x] Define a target-independent codec-to-output DSD contract.
 - [x] Add AP80 route selection and bitstream packers.
 - [x] Add direct ALSA DSD open/write/pause/close support.
@@ -117,8 +118,7 @@ DSD512 and DST-compressed DSDIFF remain unsupported.
 - [x] Add and test an in-tree DSD64/128/256-to-PCM fallback.
 - [ ] Recover an AP80-specific native framing and clock contract independently;
       the product firmware does not provide a working reference route.
-- [ ] Validate the donor-derived 705.6 kHz DoP route on the AP80 before making
-      it automatic.
+- [ ] Validate the automatic donor-derived 705.6 kHz DoP route on the AP80.
 - [ ] Validate ALSA parameters and both physical outputs on an AP80 Pro Max.
 - [ ] Add a user-facing transport preference after the automatic route has
       been validated on hardware.
@@ -131,8 +131,9 @@ Use known-good stereo test files whose rates are independently verified.
 2. Confirm the ALSA rate is 176400 and `DOP_EN` is 1.
 3. Confirm clean playback on both 3.5 mm and 4.4 mm outputs.
 4. Repeat with DSD128; ALSA must report 352800 and `DOP_EN` must remain 1.
-5. Play DSD256; it must report PCM fallback at 176400 and must never emit
-   static. `DOP_EN` must be 0.
+5. Play DSD256; ALSA must report 705600, `DOP_EN` must be 1, playback must
+   remain continuous, and output must contain no static. If the endpoint
+   cannot be configured, it must fall back cleanly to PCM at 176400.
 6. Pause, resume, seek, skip to PCM, and skip from PCM back to each DSD rate.
 7. Confirm that voice prompts do not mix into DSD playback.
 8. Confirm that DSD512 and DST-compressed DSDIFF fail safely without noise.
@@ -142,9 +143,9 @@ Use known-good stereo test files whose rates are independently verified.
     PCM fallback without a crash or burst of noise.
 
 The diagnostic native packing and `/32` carrier rule mirror dormant code in
-the generic HiBy binary, not a route used by the AP80 product configuration.
+the generic HiBy binary, not a route used by either product configuration.
 Those properties plus ES9219 DSD-mode selection are insufficient for correct
-physical output. Production builds keep DSD256 on the in-tree 176.4 kHz PCM
-fallback. For controlled validation only, creating the volatile
-`/tmp/rockbox-native-dsd-test` marker enables native selection until the next
-reboot; ordinary users and persistent configuration cannot enable it.
+physical output. This test build instead uses the donor-confirmed DSD256 DoP
+route. Creating the volatile `/tmp/rockbox-native-dsd-test` marker still
+enables the unsafe native experiment until reboot, but ordinary playback
+never selects it.
