@@ -51,9 +51,11 @@ means in the product audio path:
 The useful donor behavior is therefore bit-perfect DSD256 carried as
 705.6 kHz DoP, not the dormant generic native packer. The AP80 has no
 HBC3000 module, but its direct-clock machine driver already derives the
-22.5792/24.576 MHz clocks for lower rate families. The engineering updater
-applies two hash-locked vendor-module patches: advertise 705.6/768 kHz in the
-ES9219 DAI and extend the existing clock rule to those rates.
+22.5792/24.576 MHz clocks for lower rate families. At 705.6/768 kHz the
+X1600 AIC requires at least 64 clock cycles per stereo frame, matching its
+two 32-bit I2S slots. The engineering updater applies two hash-locked
+vendor-module patches: advertise 705.6/768 kHz in the ES9219 DAI and request
+45.1584/49.152 MHz from the existing clock rule for those rates.
 
 The current single-tester build selects the donor-derived 705.6 kHz DoP route
 for DSD256 automatically. If ALSA rejects the direct endpoint, the codec still
@@ -97,6 +99,15 @@ DSD256's 8,192-byte DSF chunks contain only 2,048 carrier frames; submitting
 each chunk separately required sixteen ALSA writes per 32,768-frame period
 and produced a repeatable underrun about every three seconds. Period-aligned
 writes preserve the same DoP bytes while removing that scheduling overhead.
+
+The first high-rate machine-driver experiment requested only 32 clocks per
+carrier frame. The AIC's divider calculation shifts the clock-to-rate ratio
+by six, so that request produced an invalid zero divider. The X1600 clock
+framework consequently ran `div_i2s0t` at 132.120451 MHz instead of the
+requested 22.5792 MHz, consuming frames faster than Rockbox could supply and
+re-preparing the DAC every three seconds. The corrected patch requests
+64 clocks per carrier frame: 45.1584 MHz for 705.6 kHz and 49.152 MHz for
+768 kHz.
 
 If direct setup fails, the same codec converts DSD64/128/256 to interleaved
 29-bit PCM at 176.4 kHz. A third-order CIC stage reduces the stream to

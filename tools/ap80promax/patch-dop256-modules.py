@@ -35,13 +35,13 @@ PATCHES = (
             "a9937f11603aabcfb61642654cdad0fb"
         ),
         patched_sha256=(
-            "9352812737d4449cd0dac8175738c7e4"
-            "a3f539b92b451a89fd720edabbbc3d4b"
+            "79763d10633ae66be32489e0481733764"
+            "19de09fdc56d5dd78abd8fb311b4d95"
         ),
         offset=0x3D4,
         original=bytes.fromhex("25 30 00 00"),  # move a2, zero
-        replacement=bytes.fromhex("40 31 02 00"),  # sll a2, v0, 5
-        description="derive 22.5792/24.576 MHz MCLK for 705.6/768 kHz",
+        replacement=bytes.fromhex("80 31 02 00"),  # sll a2, v0, 6
+        description="derive 45.1584/49.152 MHz I2S clock for 705.6/768 kHz",
     ),
     ModulePatch(
         relative_path="module_driver/codec_es9219_v2.ko",
