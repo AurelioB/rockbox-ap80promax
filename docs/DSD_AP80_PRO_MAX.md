@@ -97,17 +97,23 @@ DAC during direct DSD.
 Direct writes are staged to one negotiated ALSA period. In particular,
 DSD256's 8,192-byte DSF chunks contain only 2,048 carrier frames; submitting
 each chunk separately required sixteen ALSA writes per 32,768-frame period
-and produced a repeatable underrun about every three seconds. Period-aligned
-writes preserve the same DoP bytes while removing that scheduling overhead.
+created about 474 `WRITEI` ioctls per second. Period-aligned writes preserve
+the same DoP bytes while reducing that load to about 30 writes per second.
+This optimization alone did not remove the repeatable transport recoveries.
 
-The first high-rate machine-driver experiment requested only 32 clocks per
-carrier frame. The AIC's divider calculation shifts the clock-to-rate ratio
-by six, so that request produced an invalid zero divider. The X1600 clock
-framework consequently ran `div_i2s0t` at 132.120451 MHz instead of the
-requested 22.5792 MHz, consuming frames faster than Rockbox could supply and
-re-preparing the DAC every three seconds. The corrected patch requests
-64 clocks per carrier frame: 45.1584 MHz for 705.6 kHz and 49.152 MHz for
-768 kHz.
+The first high-rate machine-driver patch reused the stock instruction that
+zeroed an unsupported clock, replacing it with a shift intended to calculate
+`rate * 64`. Disassembly and live clock tracing found that the preceding MIPS
+branch-delay instruction had already replaced the rate in `v0` with the high
+half of the `snd_soc_dai_set_sysclk` address. Shifting that address by five
+requested approximately 132.120451 MHz; shifting it by six requested
+approximately 264.238410 MHz. Neither value was derived from the 705.6 kHz
+carrier.
+
+The corrected hash-locked patch performs `rate * 64` one instruction earlier,
+while `v0` still contains the ALSA rate, and replaces the later stock zeroing
+instruction with a no-op. This requests 45.1584 MHz for 705.6 kHz and
+49.152 MHz for 768 kHz without changing the existing 352.8/384 kHz branches.
 
 If direct setup fails, the same codec converts DSD64/128/256 to interleaved
 29-bit PCM at 176.4 kHz. A third-order CIC stage reduces the stream to

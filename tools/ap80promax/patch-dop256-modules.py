@@ -35,12 +35,22 @@ PATCHES = (
             "a9937f11603aabcfb61642654cdad0fb"
         ),
         patched_sha256=(
-            "79763d10633ae66be32489e0481733764"
-            "19de09fdc56d5dd78abd8fb311b4d95"
+            "8491ec3393d4fbe97b73077d7dc04c85"
+            "ad4a03f79d90c78203b58ec59448f9ad"
         ),
-        offset=0x3D4,
-        original=bytes.fromhex("25 30 00 00"),  # move a2, zero
-        replacement=bytes.fromhex("80 31 02 00"),  # sll a2, v0, 6
+        offset=0x3C8,
+        original=bytes.fromhex(
+            "77 01 06 3c"  # lui a2, 0x177
+            " 03 00 43 10"  # beq v0, v1, +3
+            " 00 00 02 3c"  # lui v0, %hi(snd_soc_dai_set_sysclk)
+            " 25 30 00 00"  # move a2, zero
+        ),
+        replacement=bytes.fromhex(
+            "80 31 02 00"  # sll a2, v0, 6, before v0 is clobbered
+            " 03 00 43 10"
+            " 00 00 02 3c"
+            " 00 00 00 00"  # preserve the computed clock
+        ),
         description="derive 45.1584/49.152 MHz I2S clock for 705.6/768 kHz",
     ),
     ModulePatch(
