@@ -49,6 +49,9 @@
 #include "language.h"
 #include "statusbar-skinned.h"
 #include "panic.h"
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+#include "system.h"
+#endif
 
 #if CONFIG_CHARGING
 #include "power.h"
@@ -1016,6 +1019,14 @@ int plugin_load(const char* plugin, const void* parameter)
 
     plugin_check_open_close__enter();
 
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+    /*
+     * A configured plugin start screen may use button_get() directly and
+     * never enter the core action loop. Reaching a validated plugin entry
+     * point is its equivalent usable-UI boundary.
+     */
+    system_notify_boot_complete();
+#endif
     int rc = p_hdr->entry_point(parameter); /* run the loaded plugin */
 
     /* unlock the tree and restore the dirfilter pointer */

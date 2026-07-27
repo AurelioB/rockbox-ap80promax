@@ -12,6 +12,10 @@ require a physical player.
 - [x] Add a no-reflash USB update and rollback workflow using the boot
       menu's ADB gadget, staged same-filesystem directory swaps, target
       validation, and transfer checksums.
+- [x] Gate countdown-free startup on a two-phase successful-boot/clean-exit
+      latch, retain held-button recovery and automatic slow recovery after a
+      failed session, eliminate redundant application branding, and remove
+      avoidable boot-time shell processes.
 - [x] Read USB cable presence from the vendor `usb/online` power-supply node
       without changing the indicator LED from a polling function.
 - [ ] Validate USB update, interrupted transfer, rollback, and repeated

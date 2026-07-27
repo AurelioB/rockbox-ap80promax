@@ -178,7 +178,9 @@ int main(void)
     FOR_NB_SCREENS(i)
     {
         screens[i].clear_display();
+#if !defined(HIDIZS_AP80_PRO_MAX) || defined(SIMULATOR)
         screens[i].update();
+#endif
     }
     list_init();
     tree_init();
@@ -241,6 +243,15 @@ int main(void)
 
     global_status.last_volume_change = 0;
     validate_start_directory_init();
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+    /*
+     * Arm the launcher handoff boundary after USB, tree, keymap, audio, and
+     * skin initialization. The first subsequent UI action loop creates the
+     * ready marker, so a hang before a real screen reaches input handling
+     * cannot authorize a future fast boot.
+     */
+    system_arm_boot_complete_notification();
+#endif
     /* no calls INIT_ATTR functions after this point anymore!
      * see definition of INIT_ATTR in config.h */
     CHART(">root_menu");
@@ -251,6 +262,14 @@ int main(void)
 int show_logo_boot( void ) INIT_ATTR;
 int show_logo_boot( void )
 {
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+    /*
+     * The bootloader leaves one startup image in the hardware framebuffer.
+     * Keep it there while the application initializes instead of replacing
+     * it with a second, redundant Rockbox logo.
+     */
+    return 0;
+#else
     unsigned char version[32];
     int font_h, ver_w;
     snprintf(version, sizeof(version), "Ver. %s", rbversion);
@@ -289,6 +308,7 @@ int show_logo_boot( void )
     sleep(HZ); /* sim is too fast to see logo */
 #endif
     return 0;
+#endif
 }
 
 #ifdef HAVE_DIRCACHE
@@ -383,7 +403,12 @@ static void init_tagcache(void)
             }
             clear = true;
         }
-        sleep(HZ/4);
+        /*
+         * Wake as soon as the tagcache thread reaches initialized state.
+         * The old fixed poll added up to 250 ms to every normal startup.
+         * Retain the timeout so long commits still refresh their progress.
+         */
+        tagcache_wait_initialized(HZ/4);
     }
     tagtree_init();
 
@@ -464,14 +489,6 @@ static void init(void)
     audio_init();
     talk_announce_voice_invalid(); /* notify user w/ voice prompt if voice file invalid */
     settings_apply_skins();
-
-#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
-    /*
-     * The stock launcher supervises the bootloader-to-app handoff. Signal
-     * only after the hosted application and audio path are fully initialized.
-     */
-    system_notify_boot_complete();
-#endif
 
 /* do USB last so prompt (if enabled) can work correctly if USB was inserted with device off,
  * also doesn't hurt that it will display the nice pretty backdrop this way too. */

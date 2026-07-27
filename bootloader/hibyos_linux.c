@@ -45,6 +45,7 @@
 #include <dirent.h>
 #include <sys/wait.h>
 #include <stdarg.h>
+#include <errno.h>
 #include "version.h"
 
 /* Keep recovery builds diagnosable without depending on the LCD path. */
@@ -215,6 +216,130 @@ static void display_text_centerf(int y, const char *format, ...)
     display_text_center(y, buf);
 }
 
+#ifdef HIDIZS_AP80_PRO_MAX
+/*
+ * A normal boot gets a short, non-interactive splash only after the previous
+ * Rockbox application reached its ready marker. Holding any navigation
+ * control opens the full chooser instead. The success marker is one-shot, so
+ * a failed handoff automatically restores the long recovery window.
+ */
+#define AP80_FAST_BOOT_TICKS (HZ / 2)
+#define AP80_FAST_BOOT_BUTTONS \
+    (BUTTON_UP | BUTTON_DOWN | BUTTON_LEFT | BUTTON_RIGHT | \
+     BUTTON_SCROLL_BACK | BUTTON_SCROLL_FWD)
+
+static bool ap80_fast_handoff;
+
+static bool ap80_mark_handoff_started(void)
+{
+    int fd = open("/tmp/rockbox-handoff-started",
+                  O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    if (fd < 0)
+        return false;
+
+    bool complete =
+        write(fd, rbversion, strlen(rbversion)) ==
+            (ssize_t)strlen(rbversion) &&
+        write(fd, "\n", 1) == 1;
+    if (close(fd) < 0)
+        complete = false;
+    if (!complete)
+        unlink("/tmp/rockbox-handoff-started");
+    return complete;
+}
+
+static bool ap80_sync_boot_attempt(void)
+{
+    int marker_fd = open(AP80_BOOT_ATTEMPT_FILE, O_RDONLY | O_CLOEXEC);
+    if (marker_fd < 0)
+        return false;
+
+    bool durable = fsync(marker_fd) == 0;
+    int saved_errno = errno;
+    close(marker_fd);
+
+    int directory_fd = open(PIVOT_ROOT "/.rockbox",
+                            O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (directory_fd < 0)
+    {
+        durable = false;
+        saved_errno = errno;
+    }
+    else
+    {
+        if (fsync(directory_fd) < 0)
+        {
+            durable = false;
+            saved_errno = errno;
+        }
+        close(directory_fd);
+    }
+
+    if (!durable)
+        errno = saved_errno;
+    return durable;
+}
+
+static bool ap80_arm_boot_attempt(void)
+{
+    if (access(AP80_BOOT_SUCCESS_FILE, F_OK) == 0)
+    {
+        if (rename(AP80_BOOT_SUCCESS_FILE, AP80_BOOT_ATTEMPT_FILE) < 0)
+            goto error;
+    }
+    else
+    {
+        if (errno != ENOENT)
+            goto error;
+
+        int fd = open(AP80_BOOT_ATTEMPT_FILE,
+                      O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+        if (fd < 0)
+            goto error;
+        if (close(fd) < 0)
+            goto error;
+    }
+
+    if (ap80_sync_boot_attempt())
+        return true;
+
+error:
+    printf("AP80 fast boot: cannot arm boot attempt: %s\n",
+           strerror(errno));
+    fflush(stdout);
+    return false;
+}
+
+static void ap80_draw_fast_boot(void)
+{
+    int text_height;
+
+    lcd_clear_display();
+    lcd_set_foreground(LCD_RGBPACK(255, 201, 0));
+    lcd_bmp(&bm_rockboxicon, (LCD_WIDTH - ICON_WIDTH) / 2,
+            (LCD_HEIGHT - ICON_HEIGHT) / 2);
+    lcd_getstringsize("ROCKBOX", NULL, &text_height);
+    display_text_center(LCD_HEIGHT - 3 * text_height, "ROCKBOX");
+    lcd_set_foreground(LCD_RGBPACK(0, 255, 0));
+    display_text_center(LCD_HEIGHT - 3 * text_height / 2, "STARTING...");
+    lcd_update();
+}
+
+static bool ap80_fast_boot_interrupted(void)
+{
+    int deadline = current_tick + AP80_FAST_BOOT_TICKS;
+
+    while (TIME_BEFORE(current_tick, deadline))
+    {
+        int btn = button_get_w_tmo(HZ / 20);
+        if ((btn | button_status()) & AP80_FAST_BOOT_BUTTONS)
+            return true;
+    }
+
+    return false;
+}
+#endif
+
 /* get timeout before taking action if the user doesn't touch the device */
 static int get_inactivity_tmo(int same_as_last)
 {
@@ -254,6 +379,17 @@ static int mounted = 0;
 static void mount_storage(int enable)
 {
     if (enable && !mounted) {
+#ifdef HIDIZS_AP80_PRO_MAX
+        /*
+         * HiByOS normally mounts the card before launching the selector.
+         * Avoid two shell processes and two guaranteed-failing mount calls
+         * when the executable proves that the existing mount is usable.
+         */
+        if (access(BASE_DIR "/.rockbox/" BOOTFILE, R_OK) == 0) {
+            mounted = 1;
+            return;
+        }
+#endif
         system("/bin/mkdir -p " BASE_DIR);
         if (system("/bin/mount /dev/mmcblk0 " BASE_DIR))
             system("/bin/mount /dev/mmcblk0p1 " BASE_DIR);
@@ -265,6 +401,79 @@ static void mount_storage(int enable)
     mounted = enable;
 }
 
+#ifdef HIDIZS_AP80_PRO_MAX
+static int ap80_copy_bootfile(void)
+{
+    const char *source = BASE_DIR "/.rockbox/" BOOTFILE;
+    const char *destination = "/tmp/" BOOTFILE;
+    unsigned char buffer[64 * 1024];
+    int input = -1;
+    int output = -1;
+    int result = -1;
+    int saved_errno;
+
+    input = open(source, O_RDONLY | O_CLOEXEC);
+    if (input < 0)
+        goto done;
+
+    output = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,
+                  0755);
+    if (output < 0)
+        goto done;
+
+    while (true)
+    {
+        ssize_t count = read(input, buffer, sizeof(buffer));
+        if (count == 0)
+            break;
+        if (count < 0)
+        {
+            if (errno == EINTR)
+                continue;
+            goto done;
+        }
+
+        ssize_t offset = 0;
+        while (offset < count)
+        {
+            ssize_t written = write(output, buffer + offset, count - offset);
+            if (written < 0)
+            {
+                if (errno == EINTR)
+                    continue;
+                goto done;
+            }
+            if (written == 0)
+            {
+                errno = EIO;
+                goto done;
+            }
+            offset += written;
+        }
+    }
+
+    if (fchmod(output, 0755) < 0)
+        goto done;
+
+    result = 0;
+
+done:
+    if (output >= 0)
+    {
+        if (close(output) < 0 && result == 0)
+            result = -1;
+        output = -1;
+    }
+    saved_errno = errno;
+    if (input >= 0)
+        close(input);
+    if (result < 0)
+        unlink(destination);
+    errno = saved_errno;
+    return result;
+}
+#endif
+
 /* we store the boot mode in a file so we can reload it between 'boots' */
 static enum boot_mode load_boot_mode(enum boot_mode mode)
 {
@@ -272,7 +481,11 @@ static enum boot_mode load_boot_mode(enum boot_mode mode)
     int fd = open(BASE_DIR "/.rockbox/rb_bl_mode.txt", O_RDONLY);
     if(fd >= 0)
     {
-        read(fd, &mode, sizeof(mode));
+        enum boot_mode saved_mode;
+        if (read(fd, &saved_mode, sizeof(saved_mode)) ==
+                (ssize_t)sizeof(saved_mode) &&
+            saved_mode >= BOOT_ROCKBOX && saved_mode < BOOT_COUNT)
+            mode = saved_mode;
         close(fd);
     }
     return mode;
@@ -296,6 +509,51 @@ static enum boot_mode get_boot_mode(void)
     /* wait for user action */
     enum boot_mode mode = (init_mode == BOOT_CANARY) ? BOOT_ROCKBOX : init_mode;
     int last_activity = current_tick;
+#ifdef HIDIZS_AP80_PRO_MAX
+    bool suppress_fast_boot_buttons = false;
+    ap80_fast_handoff = false;
+
+    if (init_mode == BOOT_ROCKBOX &&
+        access(AP80_BOOT_SUCCESS_FILE, F_OK) == 0 &&
+        access(AP80_BOOT_ATTEMPT_FILE, F_OK) != 0 &&
+        errno == ENOENT)
+    {
+        ap80_draw_fast_boot();
+        if (!ap80_fast_boot_interrupted())
+        {
+            /*
+             * Move the launcher into its bounded handoff state before the
+             * durability flush. A failing SD must not be able to strand the
+             * bootloader outside every watchdog.
+             */
+            if (ap80_mark_handoff_started() &&
+                ap80_arm_boot_attempt())
+            {
+                ap80_fast_handoff = true;
+                return mode;
+            }
+            unlink("/tmp/rockbox-handoff-started");
+
+            /*
+             * A read-only or damaged card cannot provide one-shot safety.
+             * Show the normal five-second chooser instead of repeatedly
+             * taking an unconsumable fast path.
+             */
+            last_activity = current_tick;
+        }
+        else
+        {
+            /*
+             * The held recovery key requested the chooser; wait for its
+             * release before allowing it to move the selection.
+             */
+            suppress_fast_boot_buttons = true;
+            init_mode = BOOT_CANARY;
+            last_activity = current_tick;
+            button_clear_queue();
+        }
+    }
+#endif
 #if defined(HAS_BUTTON_HOLD)
     bool hold_status = button_hold();
 #endif
@@ -362,6 +620,18 @@ static enum boot_mode get_boot_mode(void)
         /* wait for a key  */
         int btn = button_get_w_tmo(HZ / 10);
 
+#ifdef HIDIZS_AP80_PRO_MAX
+        if (suppress_fast_boot_buttons)
+        {
+            if (button_status() & AP80_FAST_BOOT_BUTTONS)
+                continue;
+
+            suppress_fast_boot_buttons = false;
+            button_clear_queue();
+            continue;
+        }
+#endif
+
         /* ignore release, allow repeat */
         if(btn & BUTTON_REL)
             continue;
@@ -380,12 +650,20 @@ static enum boot_mode get_boot_mode(void)
         }
 
         /* left/right/up/down: change mode */
-        if(btn & (BUTTON_LEFT | BUTTON_DOWN)) {
+        if(btn & (BUTTON_LEFT | BUTTON_DOWN
+#ifdef HIDIZS_AP80_PRO_MAX
+                  | BUTTON_SCROLL_BACK
+#endif
+                  )) {
             mode = (mode + BOOT_COUNT - 1) % BOOT_COUNT;
             init_mode = BOOT_CANARY;
             last_activity = current_tick;
         }
-        else if(btn & (BUTTON_RIGHT | BUTTON_UP)) {
+        else if(btn & (BUTTON_RIGHT | BUTTON_UP
+#ifdef HIDIZS_AP80_PRO_MAX
+                       | BUTTON_SCROLL_FWD
+#endif
+                       )) {
             mode = (mode + 1) % BOOT_COUNT;
             init_mode = BOOT_CANARY;
             last_activity = current_tick;
@@ -822,23 +1100,27 @@ int main(int argc, char **argv)
         {
 #ifdef HIDIZS_AP80_PRO_MAX
             /*
+             * Every Rockbox launch durably arms an attempt marker. Only a
+             * graceful application shutdown removes it, so a crash or hard
+             * power cut restores the chooser on the next boot.
+             */
+            if (!ap80_fast_handoff)
+                ap80_arm_boot_attempt();
+
+            /*
              * Tell the launcher to supervise this bounded handoff. Leave
              * Bluetooth ownership unchanged: the stock bt_suspend helper can
              * block, and Rockbox's AP80 services handle their own state.
              */
-            int handoff_fd = open("/tmp/rockbox-handoff-started",
-                                  O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (handoff_fd >= 0)
-            {
-                write(handoff_fd, rbversion, strlen(rbversion));
-                write(handoff_fd, "\n", 1);
-                close(handoff_fd);
-            }
+            ap80_mark_handoff_started();
 
-            lcd_clear_display();
-            lcd_set_foreground(LCD_RGBPACK(255, 201, 0));
-            display_text_center(LCD_HEIGHT / 2, "STARTING ROCKBOX...");
-            lcd_update();
+            if (!ap80_fast_handoff)
+            {
+                lcd_clear_display();
+                lcd_set_foreground(LCD_RGBPACK(255, 201, 0));
+                display_text_center(LCD_HEIGHT / 2, "STARTING ROCKBOX...");
+                lcd_update();
+            }
 
             printf("AP80 handoff: copying Rockbox\n");
             fflush(stdout);
@@ -848,10 +1130,15 @@ int main(int argc, char **argv)
 #endif
             fflush(stdout);
             mount_storage(true);
+#ifdef HIDIZS_AP80_PRO_MAX
+            int copy_status = ap80_copy_bootfile();
+            int chmod_status = copy_status;
+#else
             int copy_status =
                 system("/bin/cp " BASE_DIR "/.rockbox/" BOOTFILE " /tmp");
             int chmod_status = copy_status == 0 ?
                 system("/bin/chmod +x /tmp/" BOOTFILE) : -1;
+#endif
 
             if (copy_status != 0 || chmod_status != 0)
             {

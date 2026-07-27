@@ -286,6 +286,9 @@ static struct tagcache_command_entry command_queue[TAGCACHE_COMMAND_QUEUE_LENGTH
 static volatile int command_queue_widx = 0;
 static volatile int command_queue_ridx = 0;
 static struct mutex command_queue_mutex SHAREDBSS_ATTR;
+#ifdef HAVE_SEMAPHORE_OBJECTS
+static struct semaphore tagcache_init_semaphore SHAREDBSS_ATTR;
+#endif
 #endif
 
 /* Tag database structures. */
@@ -5281,6 +5284,9 @@ static void tagcache_thread(void)
 
     cpu_boost(false);
     tc_stat.initialized = true;
+#ifdef HAVE_SEMAPHORE_OBJECTS
+    semaphore_release(&tagcache_init_semaphore);
+#endif
 
     /* Don't delay bootup with the header check but do it on background. */
     if (!tc_stat.ready)
@@ -5471,6 +5477,9 @@ void tagcache_init(void)
     strmemccpy(tc_stat.db_path, global_settings.tagcache_db_path,
                sizeof(tc_stat.db_path));
     mutex_init(&command_queue_mutex);
+#ifdef HAVE_SEMAPHORE_OBJECTS
+    semaphore_init(&tagcache_init_semaphore, 1, 0);
+#endif
     queue_init(&tagcache_queue, true);
     create_thread(tagcache_thread, tagcache_stack,
                   sizeof(tagcache_stack), 0, tagcache_thread_name
@@ -5499,6 +5508,22 @@ bool tagcache_is_initialized(void)
 {
     return tc_stat.initialized;
 }
+
+bool tagcache_wait_initialized(int timeout)
+{
+#if defined(__PCTOOL__)
+    (void)timeout;
+#elif defined(HAVE_SEMAPHORE_OBJECTS)
+    if (!tc_stat.initialized &&
+        semaphore_wait(&tagcache_init_semaphore, timeout) !=
+            OBJ_WAIT_SUCCEEDED)
+        return false;
+#else
+    sleep(timeout);
+#endif
+    return tc_stat.initialized;
+}
+
 bool tagcache_is_fully_initialized(void)
 {
     return tc_stat.readyvalid;

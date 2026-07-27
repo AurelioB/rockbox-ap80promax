@@ -34,6 +34,7 @@ static inline void core_sleep(void)
 }
 
 #if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+void system_arm_boot_complete_notification(void);
 void system_notify_boot_complete(void);
 #endif
 

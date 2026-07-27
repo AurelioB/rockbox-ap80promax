@@ -91,6 +91,11 @@ if ! unzip -oq "$ap80_archive" -d "$ap80_stage"; then
     ap80_fail "Could not extract the update archive"
 fi
 
+# A new executable must earn fast-start eligibility for itself. Do not carry
+# either the prior success latch or a failed-attempt tombstone into staging.
+rm -f "$ap80_stage/.rockbox/rb_bl_success" \
+      "$ap80_stage/.rockbox/rb_bl_attempt"
+
 ap80_validate_install "$ap80_stage/.rockbox"
 chmod 755 "$ap80_stage/.rockbox/rockbox.ap80promax" ||
     ap80_fail "Could not make the Rockbox executable runnable"

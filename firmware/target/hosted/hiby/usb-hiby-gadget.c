@@ -582,14 +582,9 @@ void usb_init_device(void)
 
     _usb_init = true;
 
-    system("ls -la /sys/kernel/config/usb_gadget");
-
     /* os_mkdir doesn't seem to work here for whatever reason */
     system("mkdir -p /sys/kernel/config/usb_gadget/adb_demo");
     system("mkdir -p /sys/kernel/config/usb_gadget/adb_demo/strings/0x409");
-
-    system("ls -la /sys/kernel/config/usb_gadget/adb_demo");
-    system("ls -la /sys/kernel/config/usb_gadget/adb_demo/configs/");
 
     system("mkdir -p /sys/kernel/config/usb_gadget/adb_demo/configs/c.1/strings/0x409");
 

@@ -28,6 +28,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef BUTTON_DEVINPUT_READ_INITIAL_STATE
+#include <sys/ioctl.h>
+#endif
 
 #include "kernel.h"
 #include "sysfs.h"
@@ -58,6 +61,39 @@
 
 static int num_devices = 0;
 static struct pollfd poll_fds[NR_POLL_DESC];
+static int button_bitmap = 0;
+
+#ifdef BUTTON_DEVINPUT_READ_INITIAL_STATE
+#define DEVINPUT_BITS_PER_LONG (sizeof(unsigned long) * 8)
+#define DEVINPUT_KEY_LONGS \
+    ((KEY_MAX + DEVINPUT_BITS_PER_LONG) / DEVINPUT_BITS_PER_LONG)
+
+static void button_read_initial_state(int fd)
+{
+    unsigned long key_bits[DEVINPUT_KEY_LONGS];
+    memset(key_bits, 0, sizeof(key_bits));
+
+    if (ioctl(fd, EVIOCGKEY(sizeof(key_bits)), key_bits) < 0)
+        return;
+
+    for (int key = 0; key <= KEY_MAX; ++key)
+    {
+        if (!(key_bits[key / DEVINPUT_BITS_PER_LONG] &
+              (1ul << (key % DEVINPUT_BITS_PER_LONG))))
+            continue;
+
+        int mapped = button_map(key);
+#ifdef HAVE_SCROLLWHEEL
+        /*
+         * Wheel keys are momentary events. Their release path deliberately
+         * does not mutate button_bitmap, so never seed them as held.
+         */
+        mapped &= ~(BUTTON_SCROLL_BACK | BUTTON_SCROLL_FWD);
+#endif
+        button_bitmap |= mapped;
+    }
+}
+#endif
 
 void button_add_input_device(int i)
 {
@@ -75,11 +111,15 @@ void button_add_input_device(int i)
         poll_fds[i].revents = 0;
         if (num_devices <= i)
             num_devices = i + 1;
+#ifdef BUTTON_DEVINPUT_READ_INITIAL_STATE
+        button_read_initial_state(fd);
+#endif
     }
 }
 
 void button_init_device(void)
 {
+    button_bitmap = 0;
     for(int i = 0; i < NR_POLL_DESC; i++)
     {
         poll_fds[i].fd = -1;
@@ -207,7 +247,6 @@ static void handle_touchscreen_event(__u16 code, __s32 value)
 #endif
 int button_read_device(BDATA)
 {
-    static int button_bitmap = 0;
     struct input_event event;
 
 #if defined(HAVE_BUTTON_DATA) && !defined(HAVE_TOUCHSCREEN)

@@ -156,7 +156,9 @@ void lcd_init_device(void)
         panicf("Cannot map framebuffer");
     }
 
+#if !defined(HIDIZS_AP80_PRO_MAX) || defined(BOOTLOADER)
     memset(framebuffer, 0, finfo.smem_len);
+#endif
 
 #ifdef HAVE_LCD_ENABLE
     lcd_set_active(true);

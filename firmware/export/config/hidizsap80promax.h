@@ -9,6 +9,8 @@
 
 #define PIVOT_ROOT "/data/mnt/sd_0"
 #define MULTIDRIVE_DIR "/data/mnt/usb"
+#define AP80_BOOT_SUCCESS_FILE PIVOT_ROOT "/.rockbox/rb_bl_success"
+#define AP80_BOOT_ATTEMPT_FILE PIVOT_ROOT "/.rockbox/rb_bl_attempt"
 
 /*
  * The framebuffer scanout reports 480 columns, but the panel, stock UI, and
@@ -87,6 +89,14 @@
  * which vendor input services registered first.
  */
 #define BUTTON_DEVINPUT_COUNT 16
+#ifdef BOOTLOADER
+/*
+ * A recovery key can be held throughout the vendor splash, before the
+ * Rockbox bootloader opens evdev. Seed the bootloader's button state from
+ * EVIOCGKEY so that press is not lost merely because it predates open().
+ */
+#define BUTTON_DEVINPUT_READ_INITIAL_STATE
+#endif
 
 /* Battery and charger are exposed as "battery" and "usb". */
 #define BATTERY_TYPES_COUNT 1

@@ -25,11 +25,13 @@ The default developer layout is documented in `tools/ap80promax/README.md`.
 With the MIPS toolchain installed:
 
 ```sh
+./tools/ap80promax/test.sh
 ./tools/ap80promax/build.sh
 ./tools/ap80promax/package.sh
 ```
 
-`build.sh` creates and verifies:
+`test.sh` runs the host codec, service, theme, update, recovery, and simulator
+checks. `build.sh` then creates and verifies:
 
 - `dist/rockbox.ap80promax`
 - `dist/rockbox-ap80promax.zip`
@@ -41,8 +43,8 @@ With the MIPS toolchain installed:
 `package.sh` requires a legally obtained `ap80max.upt` matching the installed
 firmware. It creates `dist/ap80max_rb.upt` and its checksum without flashing
 the player. It then reopens the completed updater and verifies the embedded
-bootloader, recovery launcher, preserved stock launcher, and readiness
-watchdog.
+bootloader, recovery launcher, preserved stock launcher, readiness watchdog,
+and exact match with the current build outputs.
 
 ## Install
 
@@ -59,9 +61,19 @@ watchdog.
 6. After the update and reboot, select **ROCKBOX** in the boot menu and press
    Play.
 
-The first boot-menu choice waits ten seconds. After a choice has booted
-successfully, that choice is remembered and starts after a five-second delay,
-leaving time to override a failed saved choice.
+The first boot-menu choice waits ten seconds. A saved Tools or HiBy choice,
+and Rockbox before its first confirmed successful start, waits five seconds.
+After Rockbox reaches its usable UI, later boots use one countdown-free
+startup image and a half-second recovery-key sampling window.
+
+To interrupt that fast path, hold Previous, Next, Volume Up, or Volume Down
+while powering on and keep it held until the full boot menu appears. The
+bootloader reads keys which were already down during the HIDIZS splash, so
+the timing does not need to be exact. The bootloader durably arms an attempt
+marker before every Rockbox handoff, and only a clean Rockbox shutdown clears
+it. A failed handoff, crash, hang followed by a forced power-off, or hard power
+cut therefore restores the five-second recovery menu on the following boot.
+The held-button override remains available at any time.
 
 This recovery build starts ADB before Rockbox initializes the display. It also
 requires the bootloader to report that its system, 360 x 640 display,
@@ -75,8 +87,9 @@ A failed or blocked handoff also falls back to the untouched HiBy player.
 
 | Control | Boot menu |
 | --- | --- |
-| Previous / Volume Down | Previous choice |
-| Next / Volume Up | Next choice |
+| Next / Volume Down | Previous choice |
+| Previous / Volume Up | Next choice |
+| Wheel counter-clockwise / clockwise | Previous / next choice |
 | Play | Boot selected choice |
 
 The choices are **ROCKBOX**, **TOOLS**, and **HIBY PLAYER**. The Tools menu

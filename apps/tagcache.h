@@ -206,6 +206,7 @@ void tagcache_unload_ramcache(void);
 void tagcache_commit_finalize(void);
 void tagcache_init(void) INIT_ATTR;
 bool tagcache_is_initialized(void);
+bool tagcache_wait_initialized(int timeout);
 bool tagcache_is_fully_initialized(void);
 bool tagcache_is_usable(void);
 void tagcache_start_scan(void);

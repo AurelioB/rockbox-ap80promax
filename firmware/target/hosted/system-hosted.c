@@ -43,15 +43,54 @@ uintptr_t *stackend;
 /* forward-declare */
 bool os_file_exists(const char *ospath);
 
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR) && !defined(BOOTLOADER)
+static bool ap80_boot_crashed;
+
+static void ap80_mark_graceful_exit(void)
+{
+    int fd = open("/tmp/rockbox-graceful-exit",
+                  O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    if (fd >= 0)
+    {
+        static const char marker[] = "graceful\n";
+        write(fd, marker, sizeof(marker) - 1);
+        close(fd);
+    }
+
+    /*
+     * The bootloader durably arms this before every Rockbox handoff.
+     * Clearing it only on an orderly exit completes the two-phase health
+     * latch; a crash or hard power cut leaves the next boot in recovery mode.
+     */
+    unlink(AP80_BOOT_ATTEMPT_FILE);
+}
+#endif
+
 #if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+static volatile bool boot_complete_notification_armed;
+
+void system_arm_boot_complete_notification(void)
+{
+    boot_complete_notification_armed = true;
+}
+
 void system_notify_boot_complete(void)
 {
+    if (!boot_complete_notification_armed)
+        return;
+#if !defined(BOOTLOADER)
+    if (ap80_boot_crashed)
+        return;
+#endif
+
     int fd = open("/tmp/rockbox-app-ready",
                   O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd >= 0)
     {
         static const char ready[] = "ready\n";
-        write(fd, ready, sizeof(ready) - 1);
+        if (write(fd, ready, sizeof(ready) - 1) ==
+            (ssize_t)(sizeof(ready) - 1))
+            boot_complete_notification_armed = false;
         close(fd);
     }
 }
@@ -59,6 +98,10 @@ void system_notify_boot_complete(void)
 
 static void sig_handler(int sig, siginfo_t *siginfo, void *context)
 {
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR) && !defined(BOOTLOADER)
+    ap80_boot_crashed = true;
+    boot_complete_notification_armed = false;
+#endif
     /* safe guard variable - we call backtrace() only on first
      * UIE call. This prevent endless loop if backtrace() touches
      * memory regions which cause abort
@@ -122,6 +165,9 @@ void power_off(void)
          ++polls)
         usleep(20000);
 #endif
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR) && !defined(BOOTLOADER)
+    ap80_mark_graceful_exit();
+#endif
     backlight_hw_off();
     button_close_device();
     sync();
@@ -154,6 +200,13 @@ void system_init(void)
 
 void system_reboot(void)
 {
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR) && !defined(BOOTLOADER)
+    if (!ap80_boot_crashed)
+    {
+        ap80_mark_graceful_exit();
+        sync();
+    }
+#endif
     backlight_hw_off();
     system("/sbin/reboot");
     while (1) {
@@ -164,6 +217,10 @@ void system_reboot(void)
 
 void system_exception_wait(void)
 {
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR) && !defined(BOOTLOADER)
+    ap80_boot_crashed = true;
+    boot_complete_notification_armed = false;
+#endif
     backlight_hw_on();
     backlight_hw_brightness(DEFAULT_BRIGHTNESS_SETTING);
     /* wait until button press and release */

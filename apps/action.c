@@ -39,6 +39,9 @@
 #include "splash.h"
 #include "settings.h"
 #include "misc.h"
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+#include "system.h"
+#endif
 
 #ifdef HAVE_TOUCHSCREEN
 #include "statusbar-skinned.h"
@@ -1115,6 +1118,15 @@ static inline int do_backlight(action_last_t *last, action_cur_t *cur, int actio
 static int get_action_worker(action_last_t *last, action_cur_t *cur)
 {
     send_event(GUI_EVENT_ACTIONUPDATE, NULL);
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(SIMULATOR)
+    /*
+     * main() arms this only after initialization. Reaching the action loop
+     * after its GUI update proves that a real Rockbox screen reached the
+     * hardware and entered input handling; panic and exception screens never
+     * pass through this path.
+     */
+    system_notify_boot_complete();
+#endif
 
     /*if button = none/special; returns immediately*/
     if (action_poll_button(last, cur))
