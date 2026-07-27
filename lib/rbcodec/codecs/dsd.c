@@ -9,9 +9,10 @@
 
 CODEC_HEADER
 
-#define DSF_BLOCK_MAX 4096u
-#define DSD_IO_SIZE   8192u
-#define DSD_SILENCE   0x69
+#define DSF_BLOCK_MAX     4096u
+#define DSF_BATCH_BLOCKS  8u
+#define DSD_IO_SIZE       (DSF_BLOCK_MAX * 2 * DSF_BATCH_BLOCKS)
+#define DSD_SILENCE       0x69
 
 enum dsd_container
 {
@@ -46,10 +47,10 @@ struct dsd_file
     bool lsb_first;
 };
 
-static uint8_t channel_l[DSF_BLOCK_MAX];
-static uint8_t channel_r[DSF_BLOCK_MAX];
-static uint8_t io_buffer[DSD_IO_SIZE + 4];
+static uint8_t dsf_buffer[DSD_IO_SIZE];
+static uint8_t io_buffer[DSD_IO_SIZE + 8];
 static int32_t pcm_buffer[DSD_IO_SIZE / 2];
+static uint8_t bit_reverse[256];
 
 static uint16_t get_be16(const uint8_t *p)
 {
@@ -250,6 +251,12 @@ static uint8_t reverse_byte(uint8_t value)
     return ((value & 0xaa) >> 1) | ((value & 0x55) << 1);
 }
 
+static void init_bit_reverse(void)
+{
+    for (unsigned int i = 0; i < ARRAYLEN(bit_reverse); ++i)
+        bit_reverse[i] = reverse_byte(i);
+}
+
 static int check_command(uint64_t *byte_position, const struct dsd_file *file,
                          enum dsd_output output,
                          struct dsd2pcm_state *converter)
@@ -328,35 +335,67 @@ static int play_dsf(const struct dsd_file *file, uint64_t *byte_position,
 
         uint64_t block_index = *byte_position / file->block_size;
         size_t skip = *byte_position % file->block_size;
-        size_t valid = MIN((uint64_t)(file->block_size - skip),
-                           bytes_per_channel - *byte_position);
+        size_t blocks = 1;
+        size_t output_size = 0;
         off_t block = file->data_offset +
                       block_index * file->block_size * file->channels;
 
-        if (read_at(block, channel_l, file->block_size) != file->block_size ||
-            read_at(block + file->block_size, channel_r,
-                    file->block_size) != file->block_size)
-            return DSD_PLAY_ERROR;
-
-        for (size_t i = 0; i < valid; ++i)
+        /*
+         * DSF stores one channel block followed by the other. Reading and
+         * submitting every 4 KiB channel block separately creates hundreds
+         * of seeks, scheduler yields, and ALSA calls per second at DSD256.
+         * Batch aligned block pairs while retaining a single-block path for
+         * the first block after a seek.
+         */
+        if (skip == 0)
         {
-            uint8_t left = channel_l[skip + i];
-            uint8_t right = channel_r[skip + i];
-            if (file->lsb_first)
-            {
-                left = reverse_byte(left);
-                right = reverse_byte(right);
-            }
-            io_buffer[i * 2] = left;
-            io_buffer[i * 2 + 1] = right;
+            uint64_t remaining = bytes_per_channel - *byte_position;
+            uint64_t remaining_blocks =
+                (remaining + file->block_size - 1) / file->block_size;
+            blocks = MIN((uint64_t)DSF_BATCH_BLOCKS, remaining_blocks);
         }
 
-        if (!write_audio(io_buffer, valid * 2, output, converter))
+        size_t input_size = blocks * file->block_size * file->channels;
+        if (read_at(block, dsf_buffer, input_size) != input_size)
             return DSD_PLAY_ERROR;
 
-        *byte_position += valid;
+        off_t offset = block;
+        for (size_t n = 0; n < blocks; ++n)
+        {
+            const uint8_t *left =
+                dsf_buffer + n * file->block_size * file->channels;
+            const uint8_t *right = left + file->block_size;
+            size_t block_skip = n == 0 ? skip : 0;
+            size_t valid = MIN((uint64_t)(file->block_size - block_skip),
+                               bytes_per_channel - *byte_position);
+
+            for (size_t i = 0; i < valid; ++i)
+            {
+                uint8_t l = left[block_skip + i];
+                uint8_t r = right[block_skip + i];
+                if (file->lsb_first)
+                {
+                    l = bit_reverse[l];
+                    r = bit_reverse[r];
+                }
+                io_buffer[output_size++] = l;
+                io_buffer[output_size++] = r;
+            }
+
+            *byte_position += valid;
+            offset = block + n * file->block_size * file->channels +
+                     block_skip + valid;
+        }
+
+        /*
+         * Publish the end position before submitting the batch. The DSD
+         * callback synchronizes it after any blocking ALSA write completes,
+         * matching pcmbuf's normal write-completion semantics.
+         */
         ci->set_elapsed(*byte_position * 8000 / file->rate);
-        ci->set_offset(block + skip + valid);
+        ci->set_offset(offset);
+        if (!write_audio(io_buffer, output_size, output, converter))
+            return DSD_PLAY_ERROR;
     }
 
     return DSD_PLAY_OK;
@@ -380,13 +419,12 @@ static int play_dff(const struct dsd_file *file, uint64_t *byte_position,
                     io_buffer, valid) != valid)
             return DSD_PLAY_ERROR;
 
-        if (!write_audio(io_buffer, valid, output, converter))
-            return DSD_PLAY_ERROR;
-
         *byte_position += valid;
         uint64_t per_channel = *byte_position / file->channels;
         ci->set_elapsed(per_channel * 8000 / file->rate);
         ci->set_offset(file->data_offset + *byte_position);
+        if (!write_audio(io_buffer, valid, output, converter))
+            return DSD_PLAY_ERROR;
     }
 
     return DSD_PLAY_OK;
@@ -408,6 +446,8 @@ enum codec_status codec_run(void)
 
     if (codec_init() || !parse_file(&file))
         return CODEC_ERROR;
+
+    init_bit_reverse();
 
     uint64_t per_channel =
         (uint64_t)ci->id3->elapsed * file.rate / 8000;

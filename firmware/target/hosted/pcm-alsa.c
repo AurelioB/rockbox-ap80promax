@@ -125,7 +125,7 @@ static long signal_stack[SIGSTKSZ/sizeof(long)];
 static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
 
 #ifdef HAVE_DSD
-#define DSD_INPUT_CHUNK_MAX 8192u
+#define DSD_INPUT_CHUNK_MAX 65536u
 #define DSD_MAX_PERIOD_FRAMES 32768u
 #define DSD_MAX_FRAME_BYTES 8u
 #define DSD_OUTPUT_BUFFER_SIZE \
@@ -1182,11 +1182,10 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
 }
 
 /*
- * The DSF codec naturally hands us 2,048 carrier frames at a time, but the
- * AP80 negotiates periods of up to 32,768 frames. Submitting sixteen tiny
- * writes per period causes enough scheduler and ioctl churn for DSD256 to
- * underrun every few seconds. Stage one negotiated ALSA period and submit it
- * in a single write instead.
+ * The DSF codec batches up to eight channel-block pairs, while the AP80 can
+ * negotiate periods of up to 32,768 frames. Stage one negotiated ALSA period
+ * and submit it in a single write instead of exposing either block size to
+ * the driver.
  */
 static int dsd_flush_locked(void)
 {
