@@ -30,7 +30,13 @@ do
     grep -Fqx '%T(120,560,120,80,play)' "$ap80_wps"
     grep -Fqx '%T(0,0,120,80,cancel)' "$ap80_sbs"
     grep -Fqx '%T(240,0,120,80,contextmenu)' "$ap80_sbs"
+    grep -Fqx '%T(0,0,360,80,resumeplayback)' "$ap80_sbs"
 done
+
+grep -Fqx '%T(12,62,336,28,volume)' \
+    "$ap80_rockbox_root/wps/Snappy.360x640x16.wps"
+grep -Fqx '%T(78,20,120,28,volume)' \
+    "$ap80_rockbox_root/wps/SNARTYGREY.360x640x16.wps"
 
 grep -Fq '%Cl(2,2,182,182,l,t)' \
     "$ap80_rockbox_root/wps/Snappy.360x640x16.wps"

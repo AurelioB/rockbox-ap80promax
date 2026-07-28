@@ -28,6 +28,7 @@
 
 # A consistent AP80 touch map is layered behind the original visual design.
 %Vl(touch,0,0,360,640,-)
+%T(12,62,336,28,volume)
 %T(0,0,120,80,browse)
 %T(120,0,120,80,menu)
 %T(240,0,120,80,contextmenu)

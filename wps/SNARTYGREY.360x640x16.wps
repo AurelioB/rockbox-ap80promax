@@ -27,6 +27,7 @@
 
 # AP80 touch map.
 %Vl(touch,0,0,360,640,-)
+%T(78,20,120,28,volume)
 %T(0,0,120,80,browse)
 %T(120,0,120,80,menu)
 %T(240,0,120,80,contextmenu)

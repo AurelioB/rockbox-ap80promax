@@ -23,7 +23,7 @@
 %xl(X,seeking_icon.bmp)
 
 #__USB screen
-%?if(%cs, =, 21)<%VI(clearScreen)%Vd(usb)|%Vd(navtouch)%Vd(info)%?or(%if(%ss(0,1,%St(background color)),>,7),%if(%ss(0,1,%St(background color)),>=,a),%if(%ss(2,1,%St(background color)),>,7),%if(%ss(2,1,%St(background color)),>=,a),%if(%ss(4,1,%St(background color)),>,7),%if(%ss(4,1,%St(background color)),>=,a))<%VI(menuDark)%Vd(infoDark)|%VI(menuLight)%Vd(infoLight)>>
+%?if(%cs, =, 21)<%VI(clearScreen)%Vd(usb)|%Vd(navtouch)%Vd(info)%?or(%if(%ss(0,1,%St(background color)),>,7),%if(%ss(0,1,%St(background color)),>=,a),%if(%ss(2,1,%St(background color)),>,7),%if(%ss(2,1,%St(background color)),>=,a),%if(%ss(4,1,%St(background color)),>,7),%if(%ss(4,1,%St(background color)),>=,a))<%VI(menuDark)%Vd(infoDark)|%VI(menuLight)%Vd(infoLight)>%?mp<|%Vd(miniwps)>>
 
 #__Clear Screen
 %Vi(clearScreen,0,0,1,1,-)
@@ -34,6 +34,10 @@
 %Vl(navtouch,0,0,360,80,-)
 %T(0,0,120,80,cancel)
 %T(240,0,120,80,contextmenu)
+
+# The visible playback footer is a full-width shortcut to Now Playing.
+%Vl(miniwps,0,560,360,80,-)
+%T(0,0,360,80,resumeplayback)
 
 # Menu
 %Vi(menuDark,12,90,336,450,-)%Vf(4c4c4c)

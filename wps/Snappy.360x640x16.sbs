@@ -54,6 +54,8 @@
 %Vi(main_l,12,90,336,522,-)
 
 # Now-playing footer.
+%Vl(footer,0,560,360,80,-)
+%T(0,0,360,80,resumeplayback)
 %Vl(footer,12,558,336,2,-)
 %dr(0,0,336,2)
 %Vl(footer,12,574,308,30,3)

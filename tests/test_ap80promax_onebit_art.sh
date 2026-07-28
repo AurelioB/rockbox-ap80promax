@@ -41,4 +41,21 @@ do
     done
 done
 
+for ap80_skin in \
+    OneBitMono \
+    OneBitMono2 \
+    OneBit_Orange \
+    OneBit_Green \
+    OneBit_OLED \
+    OneBit_VFD2 \
+    OneBit_VFD_ALT
+do
+    ap80_sbs="$ap80_rockbox_root/wps/$ap80_skin.360x640x16.sbs"
+    ap80_wps="$ap80_rockbox_root/wps/$ap80_skin.360x640x16.wps"
+
+    grep -Fq '%Vd(miniwps)' "$ap80_sbs"
+    grep -Fqx '%T(0,0,360,80,resumeplayback)' "$ap80_sbs"
+    grep -Fqx '%T(120,560,120,80,play)' "$ap80_wps"
+done
+
 echo "AP80 OneBit artwork tests passed"

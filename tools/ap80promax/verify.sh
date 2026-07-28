@@ -257,6 +257,13 @@ do
         echo "Release theme does not use the full-width touch grid: $ap80_skin" >&2
         exit 1
     fi
+
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
+         grep -Fqx '%T(0,0,360,80,resumeplayback)'
+    then
+        echo "Release theme mini-player does not open Now Playing: $ap80_skin" >&2
+        exit 1
+    fi
 done
 
 for ap80_skin in \
@@ -355,6 +362,12 @@ do
          grep -Fqx '%T(0,0,120,80,cancel)'
     then
         echo "Imported SBS lacks the AP80 back target: $ap80_skin" >&2
+        exit 1
+    fi
+    if ! unzip -p "$ap80_zip" ".rockbox/wps/$ap80_skin.sbs" |
+         grep -Fqx '%T(0,0,360,80,resumeplayback)'
+    then
+        echo "Imported SBS mini-player does not open Now Playing: $ap80_skin" >&2
         exit 1
     fi
 done
