@@ -24,6 +24,17 @@
 
 int kbd_input(char* buffer, int buflen, ucschar_t *kbd);
 
+enum keyboard_input_flags
+{
+    /* Mask the edit line and disable all keyboard speech/audio feedback. */
+    KBD_INPUT_SECURE = 0x1,
+};
+
+/* Core-only extended entry point. The plugin API intentionally continues to
+ * expose kbd_input() so its ABI does not change. */
+int kbd_input_ex(char* buffer, int buflen, ucschar_t *kbd,
+                 unsigned int flags);
+
 int load_kbd(unsigned char* filename);
 
 #endif
