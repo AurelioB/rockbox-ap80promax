@@ -30,11 +30,46 @@ mkdir -p "$ap80_warble_build"
 "$ap80_warble_build/test-dsd2pcm"
 
 "$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -pthread \
     -I"$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax" \
     "$ap80_rockbox_root/tests/test_ap80promax_services.c" \
     "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/services-ap80promax.c" \
     -o "$ap80_warble_build/test-ap80-services"
 "$ap80_warble_build/test-ap80-services"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -pthread -DAP80_WIFI_TEST \
+    -I"$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax" \
+    "$ap80_rockbox_root/tests/test_ap80promax_wifi.c" \
+    "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/wifi-ap80promax.c" \
+    "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/services-ap80promax.c" \
+    -o "$ap80_warble_build/test-ap80-wifi"
+"$ap80_warble_build/test-ap80-wifi"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -pthread -DSIMULATOR \
+    -I"$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax" \
+    "$ap80_rockbox_root/tests/test_ap80promax_wifi.c" \
+    "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/wifi-ap80promax.c" \
+    -o "$ap80_warble_build/test-ap80-wifi-simulator"
+"$ap80_warble_build/test-ap80-wifi-simulator"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -pthread -DAP80_BLUETOOTH_TEST \
+    -DAP80_BT_ROUTE_MONITOR_MS=20 -DAP80_BT_ROUTE_MISSES=1 \
+    -I"$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax" \
+    "$ap80_rockbox_root/tests/test_ap80promax_bluetooth.c" \
+    "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/bluetooth-ap80promax.c" \
+    -o "$ap80_warble_build/test-ap80-bluetooth"
+"$ap80_warble_build/test-ap80-bluetooth"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -pthread -DSIMULATOR \
+    -I"$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax" \
+    "$ap80_rockbox_root/tests/test_ap80promax_bluetooth.c" \
+    "$ap80_rockbox_root/firmware/target/hosted/hiby/ap80promax/bluetooth-ap80promax.c" \
+    -o "$ap80_warble_build/test-ap80-bluetooth-simulator"
+"$ap80_warble_build/test-ap80-bluetooth-simulator"
 
 "$ap80_rockbox_root/tests/test_ap80promax_controls.sh"
 "$ap80_rockbox_root/tests/test_ap80promax_onebit_art.sh"

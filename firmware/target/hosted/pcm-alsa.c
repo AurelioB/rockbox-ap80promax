@@ -33,6 +33,7 @@
 
 #include "autoconf.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -73,6 +74,7 @@
 #ifndef DEFAULT_CAPTURE_DEVICE
 #define DEFAULT_CAPTURE_DEVICE "default"
 #endif
+#define PCM_ALSA_DEVICE_NAME_SIZE 128
 
 #if MIX_FRAME_SAMPLES < 512
 #error "MIX_FRAME_SAMPLES needs to be at least 512!"
@@ -122,7 +124,12 @@ static snd_async_handler_t *ahandler = NULL;
 static long signal_stack[SIGSTKSZ/sizeof(long)];
 #endif
 
-static const char *playback_dev = DEFAULT_PLAYBACK_DEVICE;
+/*
+ * Runtime routes are often assembled in temporary buffers. Keep endpoint
+ * names in backend-owned storage rather than retaining caller pointers.
+ */
+static char playback_dev[PCM_ALSA_DEVICE_NAME_SIZE] =
+    DEFAULT_PLAYBACK_DEVICE;
 
 #ifdef HAVE_DSD
 #define DSD_INPUT_CHUNK_MAX 65536u
@@ -147,13 +154,40 @@ static snd_pcm_stream_t current_alsa_mode;  /* SND_PCM_STREAM_PLAYBACK / _CAPTUR
 static unsigned int recording_restore_rate;
 #endif
 
-static const char *current_alsa_device;
+static char current_alsa_device[PCM_ALSA_DEVICE_NAME_SIZE];
 
 static void sink_dma_start(const void *addr, size_t size);
 
 void pcm_alsa_set_playback_device(const char *device)
 {
-    playback_dev = device;
+    if (!device || strlen(device) >= sizeof(playback_dev))
+        return;
+
+    if (pcm_mtx_initialized)
+        pthread_mutex_lock(&pcm_mtx);
+    memcpy(playback_dev, device, strlen(device) + 1);
+    if (pcm_mtx_initialized)
+        pthread_mutex_unlock(&pcm_mtx);
+}
+
+bool pcm_alsa_get_playback_device(char *device, size_t size)
+{
+    if (!device || size == 0)
+        return false;
+
+    if (pcm_mtx_initialized)
+        pthread_mutex_lock(&pcm_mtx);
+
+    size_t length = strlen(playback_dev);
+    bool copied = length < size;
+    if (copied)
+        memcpy(device, playback_dev, length + 1);
+    else
+        device[0] = '\0';
+
+    if (pcm_mtx_initialized)
+        pthread_mutex_unlock(&pcm_mtx);
+    return copied;
 }
 
 #ifdef HAVE_RECORDING
@@ -450,31 +484,40 @@ static bool copy_frames(bool first)
     return true;
 }
 
-static void pcm_service(snd_pcm_t *handle)
+static void pcm_service(snd_pcm_t *candidate)
 {
     int err;
-
-#ifdef HAVE_DSD
-    /* Direct DSD writes own the ALSA handle while this flag is set. */
-    if (dsd_is_active)
-        return;
-#endif
-
-    if (!handle) return;
+    bool use_current_handle = candidate == NULL;
 
     if (pthread_mutex_trylock(&pcm_mtx) != 0)
         return;
 
+    if (use_current_handle)
+        candidate = handle;
+    else if (candidate != handle)
+        goto abort;
+    if (!candidate)
+        goto abort;
+
+#ifdef HAVE_DSD
+    /*
+     * The unlocked check above is only a fast path. DSD can claim the
+     * endpoint while a polling callback waits for this mutex.
+     */
+    if (dsd_is_active)
+        goto abort;
+#endif
+
     if (period_size <= 0 || !frames)
         goto abort;
 
-    snd_pcm_state_t state = snd_pcm_state(handle);
+    snd_pcm_state_t state = snd_pcm_state(candidate);
 
     if (state == SND_PCM_STATE_XRUN)
     {
         xruns++;
         logf("initial underrun!");
-        err = snd_pcm_recover(handle, -EPIPE, 0);
+        err = snd_pcm_recover(candidate, -EPIPE, 0);
         if (err < 0) {
             logf("XRUN Recovery error: %s", snd_strerror(err));
             goto abort;
@@ -494,17 +537,17 @@ static void pcm_service(snd_pcm_t *handle)
     if (current_alsa_mode == SND_PCM_STREAM_PLAYBACK)
     {
 #endif
-        while (snd_pcm_avail_update(handle) >= period_size)
+        while (snd_pcm_avail_update(candidate) >= period_size)
         {
             if (copy_frames(false))
             {
             retry:
-                err = snd_pcm_writei(handle, frames, period_size);
+                err = snd_pcm_writei(candidate, frames, period_size);
                 if (err == -EPIPE)
                 {
                     logf("mid underrun!");
                     xruns++;
-                    err = snd_pcm_recover(handle, -EPIPE, 0);
+                    err = snd_pcm_recover(candidate, -EPIPE, 0);
                     if (err < 0) {
                        logf("XRUN Recovery error: %s", snd_strerror(err));
                        goto abort;
@@ -527,14 +570,14 @@ static void pcm_service(snd_pcm_t *handle)
     }
     else if (current_alsa_mode == SND_PCM_STREAM_CAPTURE)
     {
-        while (snd_pcm_avail_update(handle) >= period_size)
+        while (snd_pcm_avail_update(candidate) >= period_size)
         {
-            int err = snd_pcm_readi(handle, frames, period_size);
+            int err = snd_pcm_readi(candidate, frames, period_size);
             if (err == -EPIPE)
             {
                 logf("rec mid underrun!");
                 xruns++;
-                err = snd_pcm_recover(handle, -EPIPE, 0);
+                err = snd_pcm_recover(candidate, -EPIPE, 0);
                 if (err < 0) {
                    logf("XRUN Recovery error: %s", snd_strerror(err));
                    goto abort;
@@ -558,9 +601,9 @@ static void pcm_service(snd_pcm_t *handle)
     }
 #endif
 
-    if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED)
+    if (snd_pcm_state(candidate) == SND_PCM_STATE_PREPARED)
     {
-        err = snd_pcm_start(handle);
+        err = snd_pcm_start(candidate);
         if (err < 0) {
             logf("cb start error: %s", snd_strerror(err));
             /* Depending on the error we might be SOL */
@@ -578,7 +621,8 @@ static void *pcm_poll_worker(void *arg)
 
     while (pcm_poll_running)
     {
-        pcm_service(handle);
+        /* Resolve the active handle only after pcm_service owns pcm_mtx. */
+        pcm_service(NULL);
         usleep(2000);
     }
 
@@ -627,7 +671,7 @@ static void close_hwdev(bool drain)
 
         handle = NULL;
     }
-    current_alsa_device = NULL;
+    current_alsa_device[0] = '\0';
 
 #ifdef HAVE_RECORDING
     pcm_data_rec = NULL;
@@ -652,9 +696,12 @@ static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
 {
     int err;
 
+    if (!device || strlen(device) >= sizeof(current_alsa_device))
+        return -ENAMETOOLONG;
+
     logf("opendev %s (%p)", device, handle);
 
-    if (handle && current_alsa_device &&
+    if (handle && current_alsa_device[0] != '\0' &&
         !strcmp(device, current_alsa_device)
 #ifdef HAVE_RECORDING
         && current_alsa_mode == mode
@@ -715,7 +762,7 @@ static int open_hwdev_try(const char *device, snd_pcm_stream_t mode)
 #else
     (void)mode;
 #endif
-    current_alsa_device = device;
+    memcpy(current_alsa_device, device, strlen(device) + 1);
 
     if (!cleanup_registered)
     {
@@ -777,41 +824,30 @@ static void sink_dma_init(void)
     return;
 }
 
-bool pcm_alsa_switch_playback_device(const char *device)
+static bool pcm_alsa_switch_playback_device_locked(const char *device)
 {
-    const char *old_device;
+    char old_device[PCM_ALSA_DEVICE_NAME_SIZE];
     unsigned int restore_rate;
     bool was_playing;
     int err;
 
-    if (!device || !handle)
-        return false;
-
-    pthread_mutex_lock(&pcm_mtx);
-
 #ifdef HAVE_DSD
     if (dsd_is_active)
-    {
-        pthread_mutex_unlock(&pcm_mtx);
         return false;
-    }
 #endif
 #ifdef HAVE_RECORDING
     if (current_alsa_mode != SND_PCM_STREAM_PLAYBACK)
-    {
-        pthread_mutex_unlock(&pcm_mtx);
         return false;
-    }
 #endif
 
-    if (current_alsa_device && !strcmp(device, current_alsa_device))
+    if (current_alsa_device[0] != '\0' &&
+        !strcmp(device, current_alsa_device))
     {
-        playback_dev = device;
-        pthread_mutex_unlock(&pcm_mtx);
+        memcpy(playback_dev, device, strlen(device) + 1);
         return true;
     }
 
-    old_device = playback_dev;
+    memcpy(old_device, playback_dev, strlen(playback_dev) + 1);
     restore_rate = last_sample_rate ?
                    last_sample_rate : hw_freq_sampr[HW_FREQ_DEFAULT];
     was_playing = pcm_is_playing();
@@ -824,7 +860,8 @@ bool pcm_alsa_switch_playback_device(const char *device)
 
     if (err < 0)
     {
-        logf("Playback endpoint %s failed; restoring %s", device, old_device);
+        logf("Playback endpoint %s failed; restoring %s",
+             device, old_device);
         if (open_hwdev_try(old_device, SND_PCM_STREAM_PLAYBACK) >= 0 &&
             set_hwparams(handle, restore_rate) >= 0)
         {
@@ -834,19 +871,75 @@ bool pcm_alsa_switch_playback_device(const char *device)
             if (was_playing)
                 sink_dma_start(pcm_data, pcm_size);
         }
-        pthread_mutex_unlock(&pcm_mtx);
         return false;
     }
 
-    playback_dev = device;
+    memcpy(playback_dev, device, strlen(device) + 1);
     last_sample_rate = restore_rate;
     real_sample_rate = restore_rate;
     if (was_playing)
         sink_dma_start(pcm_data, pcm_size);
 
     logf("Playback endpoint switched to %s", device);
-    pthread_mutex_unlock(&pcm_mtx);
     return true;
+}
+
+bool pcm_alsa_switch_playback_device(const char *device)
+{
+    char requested_device[PCM_ALSA_DEVICE_NAME_SIZE];
+    if (!device || strlen(device) >= sizeof(requested_device) || !handle)
+        return false;
+    memcpy(requested_device, device, strlen(device) + 1);
+
+    pthread_mutex_lock(&pcm_mtx);
+    bool switched =
+        pcm_alsa_switch_playback_device_locked(requested_device);
+    pthread_mutex_unlock(&pcm_mtx);
+    return switched;
+}
+
+bool pcm_alsa_switch_playback_device_with_previous(
+    const char *device, char *previous, size_t previous_size)
+{
+    char requested_device[PCM_ALSA_DEVICE_NAME_SIZE];
+    if (!device || strlen(device) >= sizeof(requested_device) ||
+        !previous || previous_size == 0 || !handle)
+        return false;
+    memcpy(requested_device, device, strlen(device) + 1);
+
+    pthread_mutex_lock(&pcm_mtx);
+    size_t previous_length = strlen(playback_dev);
+    if (previous_length >= previous_size)
+    {
+        previous[0] = '\0';
+        pthread_mutex_unlock(&pcm_mtx);
+        return false;
+    }
+    memcpy(previous, playback_dev, previous_length + 1);
+    bool switched =
+        pcm_alsa_switch_playback_device_locked(requested_device);
+    pthread_mutex_unlock(&pcm_mtx);
+    return switched;
+}
+
+bool pcm_alsa_switch_local_playback_device(const char *device)
+{
+    char requested_device[PCM_ALSA_DEVICE_NAME_SIZE];
+    static const char bluetooth_prefix[] = "bluealsa:";
+    if (!device || strlen(device) >= sizeof(requested_device) || !handle)
+        return false;
+    memcpy(requested_device, device, strlen(device) + 1);
+
+    pthread_mutex_lock(&pcm_mtx);
+    bool bluetooth_owned =
+        strncmp(playback_dev, bluetooth_prefix,
+                sizeof(bluetooth_prefix) - 1) == 0 ||
+        strncmp(current_alsa_device, bluetooth_prefix,
+                sizeof(bluetooth_prefix) - 1) == 0;
+    bool switched = !bluetooth_owned &&
+        pcm_alsa_switch_playback_device_locked(requested_device);
+    pthread_mutex_unlock(&pcm_mtx);
+    return switched;
 }
 
 static void sink_lock(void)
@@ -1140,6 +1233,22 @@ enum dsd_transport pcm_alsa_dsd_open(unsigned int dsd_rate,
         return DSD_TRANSPORT_ERROR;
 
     pthread_mutex_lock(&pcm_mtx);
+
+    /*
+     * BlueALSA's plug PCM accepts ordinary PCM and may silently convert it
+     * for A2DP. DoP and native DSD are encoded bitstreams, however, so that
+     * conversion would corrupt them and can produce full-scale static.
+     * Keep direct DSD on a local endpoint; the codec can fall back to PCM
+     * decoding when this transport request is rejected.
+     */
+    if (strncmp(playback_dev, "bluealsa:", strlen("bluealsa:")) == 0 ||
+        strncmp(current_alsa_device, "bluealsa:",
+                strlen("bluealsa:")) == 0)
+    {
+        logf("DSD direct transport rejected on Bluetooth route");
+        pthread_mutex_unlock(&pcm_mtx);
+        return DSD_TRANSPORT_ERROR;
+    }
 
     if (dsd_is_active)
     {

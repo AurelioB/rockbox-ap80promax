@@ -200,6 +200,11 @@ target/hosted/hiby/hibylinux_codec.c
 #endif
 #endif
 
+#if defined(HIDIZS_AP80_PRO_MAX) && !defined(BOOTLOADER)
+target/hosted/hiby/ap80promax/bluetooth-ap80promax.c
+target/hosted/hiby/ap80promax/wifi-ap80promax.c
+#endif
+
 #if (defined(HIBY_R1) || defined(HIBY_R3PROII) || defined(HIDIZS_AP80_PRO_MAX)) && !defined(SIMULATOR)
 target/hosted/hiby/usb-dac-hiby.c
 #endif

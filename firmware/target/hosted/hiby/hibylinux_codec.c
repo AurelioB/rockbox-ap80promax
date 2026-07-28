@@ -33,6 +33,10 @@
 #include "alsa-controls.h"
 #include "pcm-alsa.h"
 
+#ifdef HIDIZS_AP80_PRO_MAX
+#include "ap80promax/bluetooth-ap80promax.h"
+#endif
+
 #include "logf.h"
 
 int hiby_has_valid_output(void);
@@ -136,6 +140,18 @@ int audiohw_set_output_mode(int mode)
     if (mode == old_mode)
         return mode;
 
+#ifdef HIDIZS_AP80_PRO_MAX
+    /*
+     * Bluetooth owns PCM routing while its route is active. Switching the
+     * local endpoint here would leave its state and volume interception
+     * attached to a route that is no longer selected.
+     */
+    struct ap80_bluetooth_state bluetooth_state;
+    ap80_bluetooth_get_state(&bluetooth_state);
+    if (bluetooth_state.route_active)
+        return old_mode;
+#endif
+
     /*
      * The stock player maps line-out/headset/balanced/S/PDIF to values
      * 1/2/3/4. Mute around both the route and ALSA endpoint transition.
@@ -166,7 +182,7 @@ int audiohw_set_output_mode(int mode)
      * and leave the setting on the last working mode.
      */
     set_output_port(port);
-    if (!pcm_alsa_switch_playback_device(device))
+    if (!pcm_alsa_switch_local_playback_device(device))
     {
         set_output_port(old_port > 0 ? old_port : 2);
         audiohw_mute(false);
@@ -219,10 +235,8 @@ void audiohw_set_frequency(int fsel)
     (void)fsel;
 }
 
-void audiohw_set_volume(int vol_l, int vol_r)
+void hiby_audiohw_set_local_volume(int vol_l, int vol_r)
 {
-    logf("hw vol %d %d", vol_l, vol_r);
-
     long l,r;
 
     vol_l_hw = vol_l;
@@ -247,6 +261,21 @@ void audiohw_set_volume(int vol_l, int vol_r)
 
     alsa_controls_set_ints("Left Playback Volume", 1, &l);
     alsa_controls_set_ints("Right Playback Volume", 1, &r);
+}
+
+void audiohw_set_volume(int vol_l, int vol_r)
+{
+    logf("hw vol %d %d", vol_l, vol_r);
+
+    vol_l_hw = vol_l;
+    vol_r_hw = vol_r;
+
+#ifdef HIDIZS_AP80_PRO_MAX
+    if (ap80_bluetooth_queue_volume(vol_l, vol_r))
+        return;
+#endif
+
+    hiby_audiohw_set_local_volume(vol_l, vol_r);
 }
 
 void audiohw_set_filter_roll_off(int value)

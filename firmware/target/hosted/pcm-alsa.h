@@ -39,7 +39,11 @@ void pcm_set_mixer_volume(int vol_db_l, int vol_db_r);
 
 /* These two should be invoked in your audiohw_preinit() call! */
 void pcm_alsa_set_playback_device(const char *device);
+bool pcm_alsa_get_playback_device(char *device, size_t size);
 bool pcm_alsa_switch_playback_device(const char *device);
+bool pcm_alsa_switch_playback_device_with_previous(
+    const char *device, char *previous, size_t previous_size);
+bool pcm_alsa_switch_local_playback_device(const char *device);
 #if defined(HAVE_RECORDING)
 void pcm_alsa_set_capture_device(const char *device);
 #endif

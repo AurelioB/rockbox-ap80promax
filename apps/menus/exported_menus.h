@@ -34,6 +34,9 @@ extern const struct menu_item_ex
 #endif
         sound_settings,             /* sound_menu.c     */
         settings_menu_item,         /* settings_menu.c  */
+#ifdef HAVE_AP80_CONNECTIVITY
+        connectivity_menu,          /* connectivity_menu.c */
+#endif
         bookmark_settings_menu,
         playlist_settings,          /* playlist_menu.c  */
         viewer_settings_menu,       /* playlist_menu.c  */

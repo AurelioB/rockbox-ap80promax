@@ -67,6 +67,11 @@
 #ifndef BOOTLOADER
 #define HAVE_BUTTON_DATA
 #define HAVE_TOUCHSCREEN
+/* Use a directly tappable, full-screen keyboard instead of the legacy 3x3
+ * touchscreen button grid. */
+#define HAVE_TOUCHSCREEN_POINT_KEYBOARD
+/* Expose the target-owned asynchronous Wi-Fi and Bluetooth controllers. */
+#define HAVE_AP80_CONNECTIVITY
 #define HAVE_MULTIMEDIA_KEYS
 #endif
 
