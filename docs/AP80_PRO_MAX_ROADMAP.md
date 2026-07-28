@@ -123,19 +123,26 @@ TCS1421 interface: that driver controls USB-C source/sink/DRP role.
 ## Wireless and services
 
 - [x] Put ownership of `cywdhd`, `wpa_supplicant`, DHCP, routes,
-      suspend/resume, and HiByOS handoff behind a small hosted platform API.
+      suspend/resume, and a future HiByOS handoff behind a small hosted
+      platform API. The lifecycle functions are deliberately unwired until
+      safe application hooks exist.
 - [x] Validate repeated `wifi_up`/`wifi_down` and
       `bt_suspend`/`bt_resume` transitions and enable the guarded platform
       calls. Track interface/rfkill state rather than long-lived daemons.
-- [ ] Replace or repair the higher-level AP80 Bluetooth control plane. The R1
-      proof of concept assumes a persistent `/var/run/sys_server`, but the
-      AP80 service became stale/one-shot during hardware tests; its
-      `bt_enable` recovery also terminated BlueZ.
-- [ ] Add scan/connect/status UI independently of consumers.
+- [x] Replace the unreliable `sys_server`/`bt_enable` path with an AP80-only,
+      bounded BlueZ/BlueALSA controller and transactional local-route fallback.
+- [x] Add asynchronous Wi-Fi/Bluetooth power, scan, connect, disconnect,
+      forget, status, secure keyboard, and negotiated-codec UI.
+- [ ] Complete the AP80 connectivity hardware matrix: both radio module
+      variants, saved Wi-Fi and BlueZ keys after reboot, receiver volume,
+      remote-disconnect fallback, and repeated radio suspend/resume cycles.
+- [ ] Add controller freeze/cancellation and a bounded suspend-to-RAM path
+      before wiring the reserved service lifecycle functions.
 - [ ] Add file transfer, HiByLink, internet radio, and AirPlay as separate
       consumers.
 - [ ] Treat Tidal/Qobuz as separate protocol, credential, and licensing work.
-- [ ] Rebase the BlueALSA proof of concept only after wired audio is stable.
+- [x] Adapt the useful BlueALSA endpoint/codec ideas without importing the
+      proof of concept's blocking UI, hard-coded local route, or PCM worker.
 
 ## UI and upstream integration
 

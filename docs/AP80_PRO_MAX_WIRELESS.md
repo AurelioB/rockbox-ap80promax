@@ -1,9 +1,9 @@
 # AP80 Pro Max wireless service boundary
 
-Wireless consumers are not enabled in this engineering build. The source has
-a target-specific ownership boundary so future Wi-Fi, HiByLink, network
-playback, and Bluetooth work does not start and stop shared vendor services
-independently.
+The AP80 connectivity feature uses this target-specific ownership boundary so
+Wi-Fi and Bluetooth controllers do not start and stop shared vendor services
+independently. See `AP80_PRO_MAX_CONNECTIVITY.md` for the asynchronous
+controllers, Settings UI, supported operations, and hardware-validation plan.
 
 ## Recovered stock contracts
 
@@ -37,20 +37,34 @@ during suspend, reboot, or a return to HiByOS.
 - read-only process/interface status;
 - explicit Wi-Fi and Bluetooth claims;
 - one transition entry point per service;
-- paired suspend/resume handling; and
-- restoration of the state observed before a HiByOS handoff.
+- dynamically resolved rfkill state;
+- bounded, argv-only process execution without a shell;
+- reserved paired suspend/resume handling; and
+- reserved restoration of the state observed before a future HiByOS handoff.
+
+Those lifecycle functions are building blocks, not active hooks. The AP80
+Rockbox application currently has no suspend-to-RAM path and no process exit
+into HiByOS; poweroff and reboot are not handoffs. Joining a controller and
+running both vendor transitions can exceed the existing forced-poweroff
+watchdog, so wiring them into shutdown would create a new shutdown race.
 
 Transitions call only the recovered stock scripts and are compiled behind
 `AP80_ENABLE_WIRELESS_TRANSITIONS`. The AP80 target enables that gate after
 three repeated Wi-Fi cycles and three repeated Bluetooth suspend/resume
-cycles succeeded on hardware. Bluetooth enabled-state follows rfkill, and
-Wi-Fi enabled-state follows the interface `IFF_UP` flag; the BlueZ and
-BlueALSA daemons intentionally remain alive while the radio is suspended.
+cycles succeeded on hardware. An enabled state requires the radio plus its
+control/audio daemons, preventing a dead daemon from being mistaken for a
+working service. Bluetooth-off follows the stock contract: rfkill and the
+firmware loader are stopped while BlueZ and BlueALSA remain resident for a
+fast resume.
 
-The R1 Bluetooth proof of concept cannot yet be enabled unchanged. It assumes
-that `/var/run/sys_server` remains a persistent command socket and uses the
-stock `bt_enable` recovery path. On the AP80, the socket became stale or
-one-shot during testing, while `bt_enable` could terminate BlueZ when the
-adapter was unavailable. Scan/connect UI and Bluetooth audio routing remain
-blocked on a reliable AP80 control plane; the validated radio lifecycle
-below it is now available to future consumers.
+Saved Wi-Fi credentials remain in the stock
+`/usr/data/wpa_supplicant.conf` (or the absolute path selected by
+`env_wifi_wpa_supplicant_conf`). Rockbox changes that file to owner-only mode
+`0600` both before and after `SAVE_CONFIG`.
+
+The R1 Bluetooth proof of concept is not used unchanged. It assumes that
+`/var/run/sys_server` remains a persistent command socket and uses the stock
+`bt_enable` recovery path. On the AP80, the socket became stale or one-shot
+during testing, while `bt_enable` could terminate BlueZ when the adapter was
+unavailable. The AP80 controllers instead use the validated lifecycle here,
+the `wpa_supplicant` control socket, and bounded BlueZ/BlueALSA commands.
