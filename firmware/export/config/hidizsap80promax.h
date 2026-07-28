@@ -67,6 +67,7 @@
 #ifndef BOOTLOADER
 #define HAVE_BUTTON_DATA
 #define HAVE_TOUCHSCREEN
+#define HAVE_MULTIMEDIA_KEYS
 #endif
 
 #ifndef CONFIG_BACKLIGHT_FADING
@@ -82,6 +83,7 @@
  * for each encoder event. Keep other volume inputs at Rockbox's fine step.
  */
 #define VOLUME_WHEEL_STEP 2
+#define MULTIMEDIA_VOLUME_STEP VOLUME_WHEEL_STEP
 
 /*
  * HiByOS exposes the encoder as a pair of momentary key events. Scan more

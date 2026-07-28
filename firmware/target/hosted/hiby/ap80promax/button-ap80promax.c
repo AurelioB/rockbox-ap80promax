@@ -24,9 +24,82 @@
 #include "button.h"
 #include "button-target.h"
 #include "hibylinux_codec.h"
+#include "powermgmt.h"
 #include "touchscreen.h"
 #ifdef HAVE_BACKLIGHT
 #include "backlight.h"
+#endif
+
+#ifndef BOOTLOADER
+/*
+ * HiByOS treats the side transport controls as global media keys: they keep
+ * controlling playback while a menu, setting, or text field has focus, and
+ * they do not wake the panel.  Post one-shot multimedia events directly so
+ * Rockbox contexts and themes cannot reinterpret the physical controls.
+ */
+bool button_handle_event(int keycode, int value)
+{
+    static bool knob_pressed;
+    static bool screen_was_on;
+    int button = BUTTON_NONE;
+
+    if (keycode == KEY_POWER)
+    {
+#ifdef HAVE_BACKLIGHT
+        if (value == 1 && !knob_pressed)
+        {
+            knob_pressed = true;
+            screen_was_on = is_backlight_on(true);
+            if (!screen_was_on)
+                backlight_on();
+        }
+        else if (value == 0 && knob_pressed)
+        {
+            knob_pressed = false;
+            if (screen_was_on)
+                backlight_off();
+        }
+#endif
+        /* Keep the held state visible to Rockbox's software power-off path. */
+        return false;
+    }
+
+    switch (keycode)
+    {
+        case KEY_LEFT:          /* counter-clockwise encoder rotation */
+        case KEY_VOLUMEDOWN:
+            button = BUTTON_MULTIMEDIA_VOL_DOWN;
+            break;
+        case KEY_RIGHT:         /* clockwise encoder rotation */
+        case KEY_VOLUMEUP:
+            button = BUTTON_MULTIMEDIA_VOL_UP;
+            break;
+        case KEY_PLAYPAUSE:
+            button = BUTTON_MULTIMEDIA_PLAYPAUSE;
+            break;
+        /*
+         * The AP80 kernel names the two transport GPIOs opposite to the
+         * legends on the enclosure.
+         */
+        case KEY_NEXTSONG:
+            button = BUTTON_MULTIMEDIA_PREV;
+            break;
+        case KEY_PREVIOUSSONG:
+            button = BUTTON_MULTIMEDIA_NEXT;
+            break;
+        default:
+            return false;
+    }
+
+    if (value == 1)
+    {
+        button_queue_post(button, 0);
+        reset_poweroff_timer();
+    }
+
+    /* Consume both halves of the evdev key event, including autorepeat. */
+    return true;
+}
 #endif
 
 /*
@@ -40,6 +113,7 @@ int button_map(int keycode)
 {
     switch (keycode)
     {
+#ifdef BOOTLOADER
         case KEY_LEFT:          /* counter-clockwise encoder rotation */
             return BUTTON_SCROLL_BACK;
         case KEY_RIGHT:         /* clockwise encoder rotation */
@@ -62,6 +136,10 @@ int button_map(int keycode)
             return BUTTON_NEXT;
         case KEY_POWER:
             return BUTTON_POWER;
+#else
+        case KEY_POWER:
+            return BUTTON_SCREEN;
+#endif
         case BTN_TOUCH:
 #ifdef HAVE_BACKLIGHT
             return is_backlight_on(true) ? BUTTON_TOUCH : 0;

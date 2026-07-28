@@ -275,6 +275,10 @@ int button_read_device(BDATA)
                 if(size == (int)sizeof(event)) {
                     switch(event.type) {
                     case EV_KEY: {
+#ifdef BUTTON_DEVINPUT_EVENT_HOOK
+                        if (button_handle_event(event.code, event.value))
+                            break;
+#endif
                         /* map linux event code to rockbox button bitmap */
                         int bmap = button_map(event.code);
 

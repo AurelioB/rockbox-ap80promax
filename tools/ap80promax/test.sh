@@ -36,6 +36,7 @@ mkdir -p "$ap80_warble_build"
     -o "$ap80_warble_build/test-ap80-services"
 "$ap80_warble_build/test-ap80-services"
 
+"$ap80_rockbox_root/tests/test_ap80promax_controls.sh"
 "$ap80_rockbox_root/tests/test_ap80promax_onebit_art.sh"
 "$ap80_rockbox_root/tests/test_ap80promax_snappy_snarygrey.sh"
 "$ap80_rockbox_root/tests/test_ap80promax_usb_update.sh"

@@ -34,7 +34,8 @@
 #define BUTTON_TOUCH       0x00000040
 #define BUTTON_SCROLL_FWD  0x00000080
 #define BUTTON_SCROLL_BACK 0x00000100
-#define BUTTON_MAIN        0x000001bf
+#define BUTTON_SCREEN      0x00200000
+#define BUTTON_MAIN        0x002001bf
 
 #define BUTTON_TOPLEFT      0x00001000
 #define BUTTON_TOPMIDDLE    0x00002000
@@ -46,19 +47,24 @@
 #define BUTTON_BOTTOMMIDDLE 0x00080000
 #define BUTTON_BOTTOMRIGHT  0x00100000
 
+#ifdef BOOTLOADER
 #define POWEROFF_BUTTON BUTTON_POWER
+#else
+#define POWEROFF_BUTTON BUTTON_SCREEN
+#endif
 #define POWEROFF_COUNT 25
 
 /*
- * A short volume-knob press wakes the display without also activating the
- * context-dependent BUTTON_POWER action (usually Back).  A held press still
- * reaches the repeat path used by software power-off.
+ * A knob press toggles the display without activating a context-dependent
+ * action. A held press still reaches the raw software power-off path.
  */
-#define BACKLIGHT_FILTER_FIRST_KEYPRESS_BUTTONS BUTTON_POWER
+#define BACKLIGHT_FILTER_FIRST_KEYPRESS_BUTTONS POWEROFF_BUTTON
 
 #ifndef BOOTLOADER
+#define BUTTON_DEVINPUT_EVENT_HOOK
 #define BUTTON_LEFT  BUTTON_NEXT
 #define BUTTON_RIGHT BUTTON_PREV
+bool button_handle_event(int keycode, int value);
 #endif
 
 int button_map(int keycode);

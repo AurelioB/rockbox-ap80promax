@@ -809,6 +809,20 @@ long default_event_handler_ex(long event, void (*callback)(void *), void *parame
         case BUTTON_MULTIMEDIA_STOP:
             list_stop_handler();
             return event;
+        case BUTTON_MULTIMEDIA_VOL_DOWN:
+#ifdef MULTIMEDIA_VOLUME_STEP
+            adjust_volume(-MULTIMEDIA_VOLUME_STEP);
+#else
+            adjust_volume(-1);
+#endif
+            return event;
+        case BUTTON_MULTIMEDIA_VOL_UP:
+#ifdef MULTIMEDIA_VOLUME_STEP
+            adjust_volume(MULTIMEDIA_VOLUME_STEP);
+#else
+            adjust_volume(1);
+#endif
+            return event;
         case BUTTON_MULTIMEDIA_REW:
         case BUTTON_MULTIMEDIA_FFWD:
             /* not supported yet, needs to be done in the WPS */
