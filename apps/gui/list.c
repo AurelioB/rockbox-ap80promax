@@ -620,7 +620,13 @@ bool gui_synclist_do_button(struct gui_synclist * lists, int *actionptr)
     static int last_accel_tick = 0;
 
     if (IS_SYSEVENT(action))
+    {
+#if defined(HAVE_TOUCHSCREEN)
+        /* A system event can tear down a stack-backed list immediately. */
+        _gui_synclist_stop_kinetic_scrolling(lists);
+#endif
         return false;
+    }
 
     if (action != ACTION_TOUCHSCREEN)
     {

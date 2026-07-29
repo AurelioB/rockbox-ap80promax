@@ -9,6 +9,19 @@ ap80_host_cc=${HOSTCC:-cc}
 mkdir -p "$ap80_warble_build"
 
 "$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -DKINETIC_SCROLL_HOST_TEST \
+    -DKINETIC_SCROLL_ACCEL_A0_Q8=81920 \
+    -DKINETIC_SCROLL_BRAKE_A0_Q8=81920 \
+    -DKINETIC_SCROLL_DECEL_A0_Q8=819200 \
+    -DKINETIC_SCROLL_PRESS_A0_Q8=14336000 \
+    -DKINETIC_SCROLL_STOP_VELOCITY_Q8=1280 \
+    -I"$ap80_rockbox_root/apps/gui" \
+    "$ap80_rockbox_root/tests/test_kinetic_scroll.c" \
+    "$ap80_rockbox_root/apps/gui/kinetic_scroll.c" \
+    -o "$ap80_warble_build/test-kinetic-scroll"
+"$ap80_warble_build/test-kinetic-scroll"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
     -I"$ap80_rockbox_root/firmware/export" \
     -DTEST_HW_SAMPR_CAPS=0x3fffu \
     "$ap80_rockbox_root/tests/test_pcm_sampr.c" \

@@ -13,6 +13,9 @@ filetypes.c
 fileop.c
 #ifdef HAVE_TOUCHSCREEN
 gesture.c
+#ifdef HAVE_KINETIC_SCROLL_V3
+gui/kinetic_scroll.c
+#endif
 #endif
 language.c
 main.c

@@ -45,6 +45,17 @@
 #define TOUCHSCREEN_REPEAT_INTERVAL (HZ/50)
 #define KINETIC_SCROLL_INTERVAL (HZ/50)
 #define TOUCHSCREEN_TOUCH_SLOP 8u
+#define HAVE_KINETIC_SCROLL_V3
+/*
+ * Gerrit's v3 coefficients were tuned on a 400-pixel-tall Shanling Q1.
+ * Scale the constant force terms by 640/400 for equivalent screen-relative
+ * motion on this panel. Slopes and time constants remain device-independent.
+ */
+#define KINETIC_SCROLL_ACCEL_A0_Q8 81920
+#define KINETIC_SCROLL_BRAKE_A0_Q8 81920
+#define KINETIC_SCROLL_DECEL_A0_Q8 819200
+#define KINETIC_SCROLL_PRESS_A0_Q8 14336000
+#define KINETIC_SCROLL_STOP_VELOCITY_Q8 1280
 
 #define HAVE_LCD_SLEEP
 #define LCD_SLEEP_TIMEOUT (2*HZ)
