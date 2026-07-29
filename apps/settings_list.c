@@ -37,6 +37,7 @@
 #include "settings.h"
 #include "rbpaths.h"
 #include "settings_list.h"
+#include "eq_config.h"
 #include "usb.h"
 #include "audio.h"
 #include "power.h"
@@ -689,16 +690,16 @@ static int32_t get_precut_talkid(int value, int unit)
 #endif /* __PCTOOL__ */
 
 struct eq_band_setting eq_defaults[EQ_NUM_BANDS] = {
-    { 32, 7, 0 },
-    { 64, 10, 0 },
-    { 125, 10, 0 },
-    { 250, 10, 0 },
-    { 500, 10, 0 },
-    { 1000, 10, 0 },
-    { 2000, 10, 0 },
-    { 4000, 10, 0 },
-    { 8000, 10, 0 },
-    { 16000, 7, 0 },
+    { 32, 7, 0, EQ_FILTER_LOW_SHELF },
+    { 64, 10, 0, EQ_FILTER_PEAK },
+    { 125, 10, 0, EQ_FILTER_PEAK },
+    { 250, 10, 0, EQ_FILTER_PEAK },
+    { 500, 10, 0, EQ_FILTER_PEAK },
+    { 1000, 10, 0, EQ_FILTER_PEAK },
+    { 2000, 10, 0, EQ_FILTER_PEAK },
+    { 4000, 10, 0, EQ_FILTER_PEAK },
+    { 8000, 10, 0, EQ_FILTER_PEAK },
+    { 16000, 7, 0, EQ_FILTER_HIGH_SHELF },
 };
 
 static const int wps_context_menu_default =
@@ -719,36 +720,32 @@ static const int tree_hotkey_default = HOTKEY_OFF;
 #ifndef __PCTOOL__
 static void eq_load_from_cfg(void *setting, char *value)
 {
-    struct eq_band_setting *eq = setting;
-    char *val_end, *end;
+    eq_config_parse(value, setting);
+}
 
-    val_end = value + strlen(value);
+static void eq_load_legacy_low_shelf_from_cfg(void *setting, char *value)
+{
+    eq_config_parse_legacy(value, EQ_FILTER_LOW_SHELF, setting);
+}
 
-    /* cutoff/center */
-    end = strchr(value, ',');
-    if (!end) return;
-    *end = '\0';
-    eq->cutoff = atoi(value);
+static void eq_load_legacy_peak_from_cfg(void *setting, char *value)
+{
+    eq_config_parse_legacy(value, EQ_FILTER_PEAK, setting);
+}
 
-    /* q */
-    value = end + 1;
-    if (value > val_end) return;
-    end = strchr(value, ',');
-    if (!end) return;
-    *end = '\0';
-    eq->q = atoi(value);
-
-    /* gain */
-    value = end + 1;
-    if (value > val_end) return;
-    eq->gain = atoi(value);
+static void eq_load_legacy_high_shelf_from_cfg(void *setting, char *value)
+{
+    eq_config_parse_legacy(value, EQ_FILTER_HIGH_SHELF, setting);
 }
 
 static char* eq_write_to_cfg(void *setting, char *buf, int buf_len)
 {
-    struct eq_band_setting *eq = setting;
-
-    snprintf(buf, buf_len, "%d, %d, %d", eq->cutoff, eq->q, eq->gain);
+    if (buf_len <= 0 ||
+        !eq_config_format(setting, buf, (size_t)buf_len))
+    {
+        if (buf_len > 0)
+            buf[0] = '\0';
+    }
     return buf;
 }
 
@@ -1869,21 +1866,45 @@ const struct settings_list settings[] = {
                        "eq precut", UNIT_DB, 0, 240, 1, eq_precut_format,
                        get_precut_talkid, dsp_set_eq_precut),
 
-#define EQ_BAND(id, string) \
-        CUSTOM_SETTING(F_EQSETTING, eq_band_settings[id], -1,   \
+#define EQ_BAND(id, flags, string, loader) \
+        CUSTOM_SETTING(F_EQSETTING | flags, eq_band_settings[id], -1, \
                   &eq_defaults[id], string,                     \
-                  eq_load_from_cfg, eq_write_to_cfg,            \
+                  loader, eq_write_to_cfg,                      \
                   eq_is_changed, eq_set_default)
-    EQ_BAND(0, "eq low shelf filter"),
-    EQ_BAND(1, "eq peak filter 1"),
-    EQ_BAND(2, "eq peak filter 2"),
-    EQ_BAND(3, "eq peak filter 3"),
-    EQ_BAND(4, "eq peak filter 4"),
-    EQ_BAND(5, "eq peak filter 5"),
-    EQ_BAND(6, "eq peak filter 6"),
-    EQ_BAND(7, "eq peak filter 7"),
-    EQ_BAND(8, "eq peak filter 8"),
-    EQ_BAND(9, "eq high shelf filter"),
+    /* Keep canonical entries first: find_setting() returns the first entry
+     * associated with a variable. */
+    EQ_BAND(0, 0, "eq filter 0", eq_load_from_cfg),
+    EQ_BAND(1, 0, "eq filter 1", eq_load_from_cfg),
+    EQ_BAND(2, 0, "eq filter 2", eq_load_from_cfg),
+    EQ_BAND(3, 0, "eq filter 3", eq_load_from_cfg),
+    EQ_BAND(4, 0, "eq filter 4", eq_load_from_cfg),
+    EQ_BAND(5, 0, "eq filter 5", eq_load_from_cfg),
+    EQ_BAND(6, 0, "eq filter 6", eq_load_from_cfg),
+    EQ_BAND(7, 0, "eq filter 7", eq_load_from_cfg),
+    EQ_BAND(8, 0, "eq filter 8", eq_load_from_cfg),
+    EQ_BAND(9, 0, "eq filter 9", eq_load_from_cfg),
+
+    /* Read existing .cfg/.eqs files without writing the obsolete names back. */
+    EQ_BAND(0, F_DEPRECATED, "eq low shelf filter",
+            eq_load_legacy_low_shelf_from_cfg),
+    EQ_BAND(1, F_DEPRECATED, "eq peak filter 1",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(2, F_DEPRECATED, "eq peak filter 2",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(3, F_DEPRECATED, "eq peak filter 3",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(4, F_DEPRECATED, "eq peak filter 4",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(5, F_DEPRECATED, "eq peak filter 5",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(6, F_DEPRECATED, "eq peak filter 6",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(7, F_DEPRECATED, "eq peak filter 7",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(8, F_DEPRECATED, "eq peak filter 8",
+            eq_load_legacy_peak_from_cfg),
+    EQ_BAND(9, F_DEPRECATED, "eq high shelf filter",
+            eq_load_legacy_high_shelf_from_cfg),
 #undef EQ_BAND
 
     /* dithering */

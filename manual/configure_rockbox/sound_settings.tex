@@ -338,9 +338,10 @@ change to customise your listening experience.
         than are required will waste battery and introduce additional rounding
         noise.  For best results, use the fewest number of bands required.}
 
-  Rockbox's parametric EQ is composed of up to ten different bands:
+  Rockbox's parametric EQ is composed of up to ten independent filters. Each
+  filter can use any of these types:
   \begin{description}
-  \item[Band 0: Low shelf filter.]
+  \item[Low shelf filter.]
         The low shelf filter boosts or lowers all frequencies below a certain
         frequency limit, much as the ``bass'' control found on ordinary
         stereo systems does.
@@ -354,12 +355,11 @@ change to customise your listening experience.
         The ``Q'' parameter should always be set to 0.7 for the shelving
         filters. Higher values will add a small boost around the cutoff
         frequency that is almost always undesirable.
-  \item[Bands 1-8: Peaking filters.]
+  \item[Peaking filter.]
         Peaking EQ filters boost or lower a frequency range centered at the
         centre frequency chosen.
         Graphic equalizers in home stereos are usually peaking
-        filters. The peaking filters in Rockbox's EQ lets you adjust three
-        different parameters for EQ bands 1 through 8. The ``centre'' parameter
+        filters. The ``centre'' parameter
         controls the centre frequency of the frequency range that is affected
         as described above.
         The ``gain'' parameter controls how much each band is adjusted, and
@@ -368,7 +368,7 @@ change to customise your listening experience.
         frequency range is. Higher Q values will affect a narrower band of
         frequencies, while lower Q values will affect a wider band of
         frequencies.
-  \item[Band 9: High shelf filter.]
+  \item[High shelf filter.]
         A high shelf filter boosts or lowers all frequencies above a certain
         frequency limit, much as the ``treble'' control found on ordinary
         stereo systems does.
@@ -376,17 +376,25 @@ change to customise your listening experience.
         except that it works on the high end of the frequency spectrum rather
         than the low end.
   \end{description}
-  As a general guide, EQ band 0 should be used for low frequencies, EQ bands 1
-  through 8 should be used for mids, and EQ band 9 should be used for highs.
+  The defaults retain Rockbox's traditional layout: filter 0 is a low shelf,
+  filters 1 through 8 are peaking filters, and filter 9 is a high shelf.
+  Changing the filter type makes layouts with multiple low or high shelves
+  possible.
+
+  \note{The EQ processes PCM audio. On players with direct native DSD or DoP
+        output, those bit-perfect paths bypass the EQ; DSD-to-PCM fallback is
+        processed by it. Enabling the EQ does not itself force DSD conversion.}
 
 \begin {description}
   \item[Enable EQ.]
   This option controls whether the EQ is on or off.
 
   \item[Graphical EQ.]
-  This option brings up a graphic EQ screen, which allows adjustment of each of
-  the three parameters described above (gain, centre frequency, and Q) for each
-  of the five EQ bands.
+  On targets that provide it, this option brings up a graphic EQ screen, which
+  allows adjustment of each of the four parameters described above (gain,
+  cutoff or centre frequency, Q, and filter type) for each of the ten EQ
+  filters. Some touchscreen targets omit this legacy control grid and expose
+  the same settings through \setting{Advanced EQ}.
 
     \begin{btnmap}
       \opt{IRIVER_H100_PAD,IRIVER_H300_PAD,IAUDIO_X5_PAD,GIGABEAT_PAD%
@@ -476,8 +484,8 @@ change to customise your listening experience.
           \opt{IRIVER_RC_H100_PAD}{\ButtonRCSelect}
           \opt{GIGABEAT_RC_PAD,IAUDIO_RC_PAD}{\ButtonRCPlay}
           &}
-      Toggles the cursor among the three parameters (gain, centre frequency,
-      Q) for the selected EQ band
+      Toggles the cursor among the four parameters (gain, cutoff or centre
+      frequency, Q, and filter type) for the selected EQ filter
           \\
       %
       \opt{IRIVER_H100_PAD,IRIVER_H300_PAD}{\ButtonMode}
@@ -521,9 +529,8 @@ the parameters that can be adjusted using the graphical EQ. With the
 \setting{Simple EQ}, the only parameter that can be adjusted is the gain.
 
 \item[Advanced EQ.]
-This sub menu provides options for adjusting the same parameters as the
-\setting{Graphical EQ}. The only difference is that the parameters are
-adjusted through textual menus rather than through a graphic interface.
+This sub menu provides touch-friendly textual controls for every filter's
+type, cutoff or centre frequency, Q, and gain.
 
 \item[Save EQ Preset.]
 This option saves the current EQ configuration in a \fname{.cfg} file.
@@ -533,7 +540,8 @@ This menu displays a list of EQ presets, as well as any EQ configurations saved
 using the \setting{Save EQ Preset} option. Users unfamiliar with the
 operation of a parametric EQ may wish to use the presets instead of trying to
 configure the EQ, or use the presets for designing their own custom EQ
-settings.
+settings. Presets using the historical fixed low shelf, peak, and high shelf
+setting names remain compatible and are migrated when saved again.
 
 \end{description}
 

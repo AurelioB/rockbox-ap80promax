@@ -2,6 +2,7 @@
 logfdisp.c
 #endif
 action.c
+eq_config.c
 #ifdef HAVE_RTC_ALARM
 alarm_menu.c
 #endif

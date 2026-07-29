@@ -17332,3 +17332,59 @@
     *: "Discard Changes"
   </voice>
 </phrase>
+<phrase>
+  id: LANG_EQUALIZER_BAND
+  desc: generic numbered filter title in the equalizer settings menu
+  user: core
+  <source>
+    *: "Filter %d"
+  </source>
+  <dest>
+    *: "Filter %d"
+  </dest>
+  <voice>
+    *: "Filter"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_EQUALIZER_FILTER_TYPE
+  desc: filter topology in the equalizer settings menu
+  user: core
+  <source>
+    *: "Filter Type"
+  </source>
+  <dest>
+    *: "Filter Type"
+  </dest>
+  <voice>
+    *: "Filter Type"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_EQUALIZER_FILTER_PEAK
+  desc: peak filter choice in the equalizer settings menu
+  user: core
+  <source>
+    *: "Peak Filter"
+  </source>
+  <dest>
+    *: "Peak Filter"
+  </dest>
+  <voice>
+    *: "Peak Filter"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_SYSFONT_EQUALIZER_BAND_CENTER
+  desc: short centre-frequency label in the graphical equalizer
+  user: core
+  <source>
+    *: "Centre"
+  </source>
+  <dest>
+    *: "Centre"
+  </dest>
+  <voice>
+    *: "Centre Frequency"
+  </voice>
+</phrase>

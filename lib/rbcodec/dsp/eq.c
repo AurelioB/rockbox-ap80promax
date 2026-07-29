@@ -30,15 +30,8 @@
 #include "replaygain.h"
 #include <string.h>
 
-/**
- * Current setup is one lowshelf filters eight peaking filters and one
- *  highshelf filter. Varying the number of shelving filters make no sense,
- *  but adding peaking filters is possible. Check EQ_NUM_BANDS to have
- *  2 shelving filters and EQ_NUM_BANDS-2 peaking filters.
- */
-
 #if EQ_NUM_BANDS < 3
-/* No good. Expect at least 1 peaking and low/high shelving filters */
+/* No good. Keep enough slots for the traditional shelf/peak layout. */
 #error Band count must be greater than or equal to 3
 #endif
 
@@ -70,15 +63,22 @@ static void update_band_filter(int band, unsigned int fout)
     /* Convert user settings to format required by coef generator
        functions */
     typeof (filter_pk_coefs) *coef_gen = filter_pk_coefs;
-
-    /* Only first and last bands are not peaking filters */
-    if (band == 0)
-        coef_gen = filter_ls_coefs;
-    else if (band == EQ_NUM_BANDS-1)
-        coef_gen = filter_hs_coefs;
-
     const struct eq_band_setting *setting = &settings[band];
     struct dsp_filter *filter = &eq_data.filters[band];
+
+    switch (setting->type)
+    {
+        case EQ_FILTER_LOW_SHELF:
+            coef_gen = filter_ls_coefs;
+            break;
+        case EQ_FILTER_HIGH_SHELF:
+            coef_gen = filter_hs_coefs;
+            break;
+        case EQ_FILTER_PEAK:
+        default:
+            coef_gen = filter_pk_coefs;
+            break;
+    }
 
     coef_gen(fp_div(setting->cutoff, fout, 32), setting->q ?: 1,
              setting->gain, filter);
@@ -105,10 +105,22 @@ void dsp_set_eq_precut(int precut)
 /* Update the filter configuration for the band */
 void dsp_set_eq_coefs(int band, const struct eq_band_setting *setting)
 {
-    if (band < 0 || band >= EQ_NUM_BANDS)
+    if (band < 0 || band >= EQ_NUM_BANDS || setting == NULL)
         return;
 
-    settings[band] = *setting; /* cache setting */
+    struct eq_band_setting normalized = *setting;
+    normalized.cutoff = MAX(EQ_CUTOFF_MIN,
+                            MIN(normalized.cutoff, EQ_CUTOFF_MAX));
+    normalized.q = MAX(EQ_Q_MIN, MIN(normalized.q, EQ_Q_MAX));
+    normalized.gain = MAX(EQ_GAIN_MIN, MIN(normalized.gain, EQ_GAIN_MAX));
+    if (normalized.type < EQ_FILTER_LOW_SHELF ||
+        normalized.type >= EQ_FILTER_TYPE_COUNT)
+    {
+        normalized.type = EQ_FILTER_PEAK;
+    }
+
+    bool type_changed = settings[band].type != normalized.type;
+    settings[band] = normalized; /* cache setting */
 
     struct dsp_config *dsp = dsp_get_config(CODEC_IDX_AUDIO);
 
@@ -120,14 +132,20 @@ void dsp_set_eq_coefs(int band, const struct eq_band_setting *setting)
     /* Assume a band is disabled if the gain is zero */
     mask &= ~BIT_N(band);
 
-    if (setting->gain != 0)
+    if (normalized.gain != 0)
     {
         mask |= BIT_N(band);
         update_band_filter(band, dsp_get_output_frequency(dsp));
     }
 
     if (mask == eq_data.enabled)
+    {
+        /* A different biquad topology must not inherit the old filter's
+         * recursive state. */
+        if (type_changed && (mask & BIT_N(band)))
+            filter_flush(&eq_data.filters[band]);
         return; /* No change in band-enable state */
+    }
 
     if (mask & BIT_N(band))
         filter_flush(&eq_data.filters[band]); /* Coming online */

@@ -22,6 +22,14 @@ mkdir -p "$ap80_warble_build"
 "$ap80_warble_build/test-kinetic-scroll"
 
 "$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -I"$ap80_rockbox_root/apps" \
+    -I"$ap80_rockbox_root/lib/rbcodec/dsp" \
+    "$ap80_rockbox_root/tests/test_eq_config.c" \
+    "$ap80_rockbox_root/apps/eq_config.c" \
+    -o "$ap80_warble_build/test-eq-config"
+"$ap80_warble_build/test-eq-config"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
     -I"$ap80_rockbox_root/firmware/export" \
     -DTEST_HW_SAMPR_CAPS=0x3fffu \
     "$ap80_rockbox_root/tests/test_pcm_sampr.c" \

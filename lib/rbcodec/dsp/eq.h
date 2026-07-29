@@ -23,11 +23,31 @@
 /* => support from 3 to 32 bands */
 #define EQ_NUM_BANDS 10
 
+/* User-facing and serialized filter limits. Keeping them with the DSP
+ * contract lets every caller validate before coefficient generation. */
+#define EQ_CUTOFF_MIN        20
+#define EQ_CUTOFF_MAX     22040
+#define EQ_GAIN_MIN       (-240)
+#define EQ_GAIN_MAX         240
+#define EQ_Q_MIN              1
+#define EQ_Q_MAX             64
+
+enum eq_filter_type
+{
+    EQ_FILTER_LOW_SHELF = 0,
+    EQ_FILTER_PEAK,
+    EQ_FILTER_HIGH_SHELF,
+    EQ_FILTER_TYPE_COUNT,
+};
+
 struct eq_band_setting
 {
     int cutoff; /* Hz */
     int q;
     int gain;   /* +/- dB */
+    /* Keep the historical numeric fields first: skins address them by
+     * integer offset. */
+    enum eq_filter_type type;
 };
 
 /** DSP interface **/

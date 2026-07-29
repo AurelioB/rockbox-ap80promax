@@ -221,16 +221,10 @@
 %
       eq enabled    & on, off           & N/A\\
       eq precut     & 0 to 240          & 0.1~dB\\
-      eq low shelf filter & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 1 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 2 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 3 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 4 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 5 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 6 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 7 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq peak filter 8 & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240)\\
-      eq high shelf filter & cutoff (in Hz), q (0 to 64), gain ($-240$ to 240 (0.1~dB))\\
+      eq filter 0 -- eq filter 9
+                    & cutoff/centre (20 to 22040), q (1 to 64),
+                      gain ($-240$ to 240), LOW\_SHELF, PEAK, or HIGH\_SHELF
+                    & Hz, N/A, 0.1~dB, N/A\\
 %
       dithering enabled & on, off       & N/A\\
 %
