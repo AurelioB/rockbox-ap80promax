@@ -17220,3 +17220,115 @@
     *: "Finished"
   </voice>
 </phrase>
+<phrase>
+  id: LANG_LRC_PLAYER
+  desc: lrcplayer plugin title
+  user: core
+  <source>
+    *: "LRC Player"
+  </source>
+  <dest>
+    *: "LRC Player"
+  </dest>
+  <voice>
+    *: "L R C Player"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_LYRICS
+  desc: lrcplayer status bar title
+  user: core
+  <source>
+    *: "Lyrics"
+  </source>
+  <dest>
+    *: "Lyrics"
+  </dest>
+  <voice>
+    *: "Lyrics"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_DISPLAY_SETTINGS
+  desc: lrcplayer display settings menu
+  user: core
+  <source>
+    *: "Display Settings"
+  </source>
+  <dest>
+    *: "Display Settings"
+  </dest>
+  <voice>
+    *: "Display Settings"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_LYRICS_SETTINGS
+  desc: lrcplayer lyrics settings menu
+  user: core
+  <source>
+    *: "Lyrics Settings"
+  </source>
+  <dest>
+    *: "Lyrics Settings"
+  </dest>
+  <voice>
+    *: "Lyrics Settings"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_TIME_OFFSET
+  desc: lrcplayer time offset editor
+  user: core
+  <source>
+    *: "Time Offset"
+  </source>
+  <dest>
+    *: "Time Offset"
+  </dest>
+  <voice>
+    *: "Time Offset"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_TIMETAG_EDITOR
+  desc: lrcplayer time tag editor
+  user: core
+  <source>
+    *: "Timetag Editor"
+  </source>
+  <dest>
+    *: "Timetag Editor"
+  </dest>
+  <voice>
+    *: "Time tag Editor"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_SAVE_LATER
+  desc: lrcplayer deferred save option
+  user: core
+  <source>
+    *: "Save Later"
+  </source>
+  <dest>
+    *: "Save Later"
+  </dest>
+  <voice>
+    *: "Save Later"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_DISCARD_CHANGES
+  desc: lrcplayer discard edited time tags option
+  user: core
+  <source>
+    *: "Discard Changes"
+  </source>
+  <dest>
+    *: "Discard Changes"
+  </dest>
+  <voice>
+    *: "Discard Changes"
+  </voice>
+</phrase>

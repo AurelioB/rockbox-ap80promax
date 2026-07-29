@@ -179,8 +179,14 @@ static int lrc_set_time(const char *title, const char *unit, long *pval,
     pos = pos_min;
 
     rb->button_clear_queue();
-    rb->lcd_clear_display();
-    rb->lcd_puts_scroll(0, LST_OFF_Y, title);
+
+    struct screen *display = rb->screens[SCREEN_MAIN];
+    struct viewport *last_vp =
+        display->set_viewport(&vp_info[SCREEN_MAIN]);
+    display->clear_viewport();
+    display->puts_scroll(0, LST_OFF_Y, title);
+    display->set_viewport(last_vp);
+
     while (ret == 10)
     {
         int len = 0;
@@ -217,17 +223,26 @@ static int lrc_set_time(const char *title, const char *unit, long *pval,
         {
             rb->snprintf(&buffer[len], 32-len, " (%s)", unit);
         }
-        rb->lcd_puts(0, LST_OFF_Y+1, buffer);
+        last_vp = display->set_viewport(&vp_info[SCREEN_MAIN]);
+        int value_y = y*(LST_OFF_Y+1);
+        display->set_drawmode(DRMODE_SOLID|DRMODE_INVERSEVID);
+        display->fillrect(0, value_y, vp_info[SCREEN_MAIN].width, y);
+        display->set_drawmode(DRMODE_SOLID);
+        display->putsxy(0, value_y, buffer);
         if (pos_min != pos_max)
         {
             /* draw cursor */
             buffer[p_end-1] = 0;
-            rb->lcd_set_drawmode(DRMODE_SOLID|DRMODE_INVERSEVID);
-            rb->lcd_putsxy(x, y*(1+LST_OFF_Y), &buffer[p_start]);
-            rb->lcd_set_drawmode(DRMODE_SOLID);
+            display->set_drawmode(DRMODE_SOLID|DRMODE_INVERSEVID);
+            display->putsxy(x, y*(1+LST_OFF_Y), &buffer[p_start]);
+            display->set_drawmode(DRMODE_SOLID);
         }
-        rb->lcd_update();
-        int button = pluginlib_getaction(TIMEOUT_BLOCK, lst_contexts, ARRAYLEN(lst_contexts));
+        display->update_viewport();
+        display->set_viewport(last_vp);
+
+        /* Don't block, so an enabled status bar continues to redraw. */
+        int button = pluginlib_getaction(HZ/4, lst_contexts,
+                                         ARRAYLEN(lst_contexts));
         int mult = 1;
         switch (button)
         {
@@ -275,8 +290,10 @@ static int lrc_set_time(const char *title, const char *unit, long *pval,
                 break;
         }
     }
-    rb->lcd_clear_display();
-    rb->lcd_update();
+    last_vp = display->set_viewport(&vp_info[SCREEN_MAIN]);
+    display->clear_viewport(); /* also stop the scrolling title */
+    display->set_viewport(last_vp);
+
     return ret;
 }
 
@@ -2073,14 +2090,15 @@ static int timetag_editor(void)
     rb->gui_synclist_init(&gui_editor, &get_lrc_timeline, NULL, false, 1, NULL);
     rb->gui_synclist_set_nb_items(&gui_editor, current.nlrcline);
     rb->gui_synclist_set_icon_callback(&gui_editor, get_icon);
-    rb->gui_synclist_set_title(&gui_editor, "Timetag Editor",
+    rb->gui_synclist_set_title(&gui_editor, rb->str(LANG_TIMETAG_EDITOR),
                                Icon_Menu_functioncall);
     rb->gui_synclist_select_item(&gui_editor, selected);
     rb->gui_synclist_draw(&gui_editor);
 
     while (!exit)
     {
-        button = rb->get_action(CONTEXT_TREE, TIMEOUT_BLOCK);
+        /* Don't block, so an enabled status bar continues to redraw. */
+        button = rb->get_action(CONTEXT_TREE, HZ/4);
         if (rb->gui_synclist_do_button(&gui_editor, &button))
             continue;
 
@@ -2100,6 +2118,8 @@ static int timetag_editor(void)
                 lrc_line = get_lrc_line(idx);
                 if (lrc_line)
                 {
+                    FOR_NB_SCREENS(screen)
+                        rb->screens[screen]->scroll_stop();
                     long temp_time = get_time_start(lrc_line);
                     if (lrc_set_time(get_lrc_str(lrc_line), NULL,
                                      &temp_time, 10, 0, current.length,
@@ -2125,8 +2145,9 @@ static int timetag_editor(void)
 
     if (current.changed_lrc)
     {
-        MENUITEM_STRINGLIST(save_menu, "Save Changes?", NULL,
-                            "Yes", "No (save later)", "Discard All Changes")
+        MENUITEM_STRINGLIST(save_menu, ID2P(LANG_SAVE_CHANGES), NULL,
+                            ID2P(LANG_SAVE), ID2P(LANG_SAVE_LATER),
+                            ID2P(LANG_DISCARD_CHANGES))
         button = 0;
         exit = false;
         while (!exit)
@@ -2468,16 +2489,17 @@ static int lrc_menu(void)
         LRC_MENU_QUIT,
     };
 
-    MENUITEM_STRINGLIST(menu, "Lrcplayer", NULL,
-                        "Theme Settings",
-                        "Display Settings",
-                        "Lyrics Settings",
-                        "Playback Control",
+    MENUITEM_STRINGLIST(menu, ID2P(LANG_LRC_PLAYER), NULL,
+                        ID2P(LANG_THEME_MENU),
+                        ID2P(LANG_DISPLAY_SETTINGS),
+                        ID2P(LANG_LYRICS_SETTINGS),
+                        ID2P(LANG_PLAYBACK_CONTROL),
 #ifdef LRC_DEBUG
                         "Debug",
 #endif
-                        "Time Offset", "Timetag Editor",
-                        "Quit");
+                        ID2P(LANG_TIME_OFFSET),
+                        ID2P(LANG_TIMETAG_EDITOR),
+                        ID2P(LANG_MENU_QUIT));
     int selected = 0, ret = LRC_GOTO_MENU;
     bool usb = false;
 
@@ -2505,7 +2527,8 @@ static int lrc_menu(void)
                 break;
 #endif
             case LRC_MENU_OFFSET:
-                usb = (lrc_set_time("Time Offset", "sec", &current.offset,
+                usb = (lrc_set_time(rb->str(LANG_TIME_OFFSET), "sec",
+                                    &current.offset,
                                     10, -60*1000, 60*1000,
                                     LST_SET_MSEC|LST_SET_SEC) == 1);
                 ret = LRC_GOTO_MAIN;
@@ -2682,20 +2705,15 @@ static int handle_button(void)
     return ret;
 }
 
-static int lrc_main(void)
+static void reset_viewports(void)
 {
-    int ret = LRC_GOTO_MAIN;
-    long id3_timeout = 0;
-    bool update_display_state = true;
-
     /* y offset of vp_lyrics */
     int h = (prefs.display_title?font_ui_height:0)+
             (prefs.display_time?SYSFONT_HEIGHT*2:0);
 
-
     FOR_NB_SCREENS(i)
     {
-        rb->viewportmanager_theme_enable(i, prefs.statusbar_on, &vp_info[i]);
+        rb->viewport_set_defaults(&vp_info[i], i);
         vp_info[i].font = uifont;
         vp_lyrics[i] = vp_info[i];
         vp_lyrics[i].flags &= ~VP_FLAG_ALIGNMENT_MASK;
@@ -2704,9 +2722,25 @@ static int lrc_main(void)
             vp_lyrics[i].x += LRC_HORIZONTAL_PADDING;
             vp_lyrics[i].width -= LRC_HORIZONTAL_PADDING * 2;
         }
-        vp_lyrics[i].y += h;
-        vp_lyrics[i].height -= h;
+
+        int header_height = MIN(h, vp_lyrics[i].height);
+        vp_lyrics[i].y += header_height;
+        vp_lyrics[i].height -= header_height;
     }
+}
+
+static int lrc_main(void)
+{
+    int ret = LRC_GOTO_MAIN;
+    long id3_timeout = 0;
+    bool update_display_state = true;
+
+    FOR_NB_SCREENS(i)
+    {
+        rb->sb_set_persistent_title(rb->str(LANG_LYRICS), Icon_NOICON, i);
+        rb->viewportmanager_theme_enable(i, prefs.statusbar_on, &vp_info[i]);
+    }
+    reset_viewports();
 
 #ifdef HAVE_BACKLIGHT
     if (prefs.backlight_on)
@@ -2783,6 +2817,8 @@ static int lrc_main(void)
         }
         if (update_display_state)
         {
+            if (prefs.statusbar_on)
+                reset_viewports(); /* status bar dimensions may have changed */
             if (current.type == TXT || current.type == ID3_USLT)
                 current.wipe = false;
             else
@@ -2802,7 +2838,11 @@ static int lrc_main(void)
     }
 
     FOR_NB_SCREENS(i)
+    {
+        rb->screens[i]->scroll_stop_viewport(&vp_info[i]);
+        rb->screens[i]->scroll_stop_viewport(&vp_lyrics[i]);
         rb->viewportmanager_theme_undo(i, false);
+    }
 
 #ifdef HAVE_BACKLIGHT
     if (prefs.backlight_on)
@@ -2860,6 +2900,9 @@ enum plugin_status plugin_start(const void* parameter)
         current.found_lrc = true;
     }
 
+    FOR_NB_SCREENS(i)
+        rb->viewportmanager_theme_enable(i, prefs.statusbar_on, NULL);
+
     while (ret >= PLUGIN_OTHER)
     {
         switch (ret)
@@ -2868,10 +2911,25 @@ enum plugin_status plugin_start(const void* parameter)
                 ret = lrc_main();
                 break;
             case LRC_GOTO_MENU:
+                FOR_NB_SCREENS(i)
+                {
+                    rb->viewportmanager_theme_enable(i, true, &vp_info[i]);
+                    vp_info[i].font = uifont;
+                }
                 ret = lrc_menu();
+                FOR_NB_SCREENS(i)
+                    rb->viewportmanager_theme_undo(i, false);
                 break;
             case LRC_GOTO_EDITOR:
+                FOR_NB_SCREENS(i)
+                {
+                    rb->viewportmanager_theme_enable(
+                        i, prefs.statusbar_on, &vp_info[i]);
+                    vp_info[i].font = uifont;
+                }
                 ret = timetag_editor();
+                FOR_NB_SCREENS(i)
+                    rb->viewportmanager_theme_undo(i, false);
                 break;
             default:
                 ret = PLUGIN_ERROR;
@@ -2880,5 +2938,8 @@ enum plugin_status plugin_start(const void* parameter)
     }
 
     load_or_save_settings(true);
+
+    FOR_NB_SCREENS(i)
+        rb->viewportmanager_theme_undo(i, false);
     return ret;
 }

@@ -898,6 +898,7 @@ int plugin_load(const char* plugin, const void* parameter)
     bool theme_enabled = sepch && (!strcmp("properties.rock", sepch + 1) ||
                                    !strcmp("playing_time.rock", sepch + 1) ||
                                    !strcmp("main_menu_config.rock", sepch + 1) ||
+                                   !strcmp("lrcplayer.rock", sepch + 1) ||
                                    !strcmp("text_viewer.rock", sepch + 1) ||
                                    !strcmp("view_text.rock", sepch + 1) ||
                                    !strcmp("disktidy.rock", sepch + 1) ||
