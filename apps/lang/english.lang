@@ -17388,3 +17388,547 @@
     *: "Centre Frequency"
   </voice>
 </phrase>
+<phrase>
+  id: LANG_MSEB
+  desc: HiBy-compatible subjective equalizer menu
+  user: core
+  <source>
+    *: none
+    mseb: "MSEB"
+  </source>
+  <dest>
+    *: none
+    mseb: "MSEB"
+  </dest>
+  <voice>
+    *: none
+    mseb: "M S E B"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_ENABLED
+  desc: MSEB enable setting
+  user: core
+  <source>
+    *: none
+    mseb: "Enable MSEB"
+  </source>
+  <dest>
+    *: none
+    mseb: "Enable MSEB"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Enable M S E B"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_RANGE
+  desc: MSEB slider range setting
+  user: core
+  <source>
+    *: none
+    mseb: "Adjustment Range"
+  </source>
+  <dest>
+    *: none
+    mseb: "Adjustment Range"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Adjustment Range"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_FINE
+  desc: MSEB plus or minus 20 range
+  user: core
+  <source>
+    *: none
+    mseb: "Fine-tuning (-20 to +20)"
+  </source>
+  <dest>
+    *: none
+    mseb: "Fine-tuning (-20 to +20)"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Fine-tuning"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_MIDDLING
+  desc: MSEB plus or minus 40 range
+  user: core
+  <source>
+    *: none
+    mseb: "Middling (-40 to +40)"
+  </source>
+  <dest>
+    *: none
+    mseb: "Middling (-40 to +40)"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Middling"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_EXCESSIVE
+  desc: MSEB plus or minus 100 range
+  user: core
+  <source>
+    *: none
+    mseb: "Excessive (-100 to +100)"
+  </source>
+  <dest>
+    *: none
+    mseb: "Excessive (-100 to +100)"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Excessive"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_TEMPERATURE
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Overall Temperature"
+  </source>
+  <dest>
+    *: none
+    mseb: "Overall Temperature"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Overall Temperature"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_BASS_EXTENSION
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Bass Extension"
+  </source>
+  <dest>
+    *: none
+    mseb: "Bass Extension"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Bass Extension"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_BASS_TEXTURE
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Bass Texture"
+  </source>
+  <dest>
+    *: none
+    mseb: "Bass Texture"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Bass Texture"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_NOTE_THICKNESS
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Note Thickness"
+  </source>
+  <dest>
+    *: none
+    mseb: "Note Thickness"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Note Thickness"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_VOCALS
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Vocals"
+  </source>
+  <dest>
+    *: none
+    mseb: "Vocals"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Vocals"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_FEMALE_OVERTONES
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Female Overtones"
+  </source>
+  <dest>
+    *: none
+    mseb: "Female Overtones"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Female Overtones"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_SIBILANCE_LF
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Sibilance LF"
+  </source>
+  <dest>
+    *: none
+    mseb: "Sibilance LF"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Sibilance Low Frequency"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_SIBILANCE_HF
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Sibilance HF"
+  </source>
+  <dest>
+    *: none
+    mseb: "Sibilance HF"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Sibilance High Frequency"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_IMPULSE_RESPONSE
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Impulse Response"
+  </source>
+  <dest>
+    *: none
+    mseb: "Impulse Response"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Impulse Response"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_AIR
+  desc: MSEB control
+  user: core
+  <source>
+    *: none
+    mseb: "Air"
+  </source>
+  <dest>
+    *: none
+    mseb: "Air"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Air"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_NEUTRAL
+  desc: neutral MSEB control value
+  user: core
+  <source>
+    *: none
+    mseb: "Neutral"
+  </source>
+  <dest>
+    *: none
+    mseb: "Neutral"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Neutral"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_COOL_BRIGHT
+  desc: negative overall temperature direction
+  user: core
+  <source>
+    *: none
+    mseb: "Cool / Bright"
+  </source>
+  <dest>
+    *: none
+    mseb: "Cool / Bright"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Cool, Bright"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_WARM_DARK
+  desc: positive overall temperature direction
+  user: core
+  <source>
+    *: none
+    mseb: "Warm / Dark"
+  </source>
+  <dest>
+    *: none
+    mseb: "Warm / Dark"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Warm, Dark"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_LIGHT
+  desc: negative bass extension direction
+  user: core
+  <source>
+    *: none
+    mseb: "Light"
+  </source>
+  <dest>
+    *: none
+    mseb: "Light"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Light"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_DEEP
+  desc: positive bass extension direction
+  user: core
+  <source>
+    *: none
+    mseb: "Deep"
+  </source>
+  <dest>
+    *: none
+    mseb: "Deep"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Deep"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_FAST
+  desc: negative bass texture direction
+  user: core
+  <source>
+    *: none
+    mseb: "Fast"
+  </source>
+  <dest>
+    *: none
+    mseb: "Fast"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Fast"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_THUMPY
+  desc: positive bass texture direction
+  user: core
+  <source>
+    *: none
+    mseb: "Thumpy"
+  </source>
+  <dest>
+    *: none
+    mseb: "Thumpy"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Thumpy"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_CRISP
+  desc: crisp MSEB direction
+  user: core
+  <source>
+    *: none
+    mseb: "Crisp"
+  </source>
+  <dest>
+    *: none
+    mseb: "Crisp"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Crisp"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_THICK
+  desc: positive note thickness direction
+  user: core
+  <source>
+    *: none
+    mseb: "Thick"
+  </source>
+  <dest>
+    *: none
+    mseb: "Thick"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Thick"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_RECESSED_CRISP
+  desc: negative vocals direction
+  user: core
+  <source>
+    *: none
+    mseb: "Recessed / Crisp"
+  </source>
+  <dest>
+    *: none
+    mseb: "Recessed / Crisp"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Recessed, Crisp"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_FORWARD_RADIO
+  desc: positive vocals direction
+  user: core
+  <source>
+    *: none
+    mseb: "Forward / Radio Edit"
+  </source>
+  <dest>
+    *: none
+    mseb: "Forward / Radio Edit"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Forward, Radio Edit"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_DETOX
+  desc: negative female overtones direction
+  user: core
+  <source>
+    *: none
+    mseb: "Detox"
+  </source>
+  <dest>
+    *: none
+    mseb: "Detox"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Detox"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_VIVID
+  desc: positive female overtones direction
+  user: core
+  <source>
+    *: none
+    mseb: "Vivid"
+  </source>
+  <dest>
+    *: none
+    mseb: "Vivid"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Vivid"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_SOFT
+  desc: soft MSEB direction
+  user: core
+  <source>
+    *: none
+    mseb: "Soft"
+  </source>
+  <dest>
+    *: none
+    mseb: "Soft"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Soft"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_SLOW_MUSICAL
+  desc: negative impulse response direction
+  user: core
+  <source>
+    *: none
+    mseb: "Slow / Musical"
+  </source>
+  <dest>
+    *: none
+    mseb: "Slow / Musical"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Slow, Musical"
+  </voice>
+</phrase>
+<phrase>
+  id: LANG_MSEB_FAST_HARD
+  desc: positive impulse response direction
+  user: core
+  <source>
+    *: none
+    mseb: "Fast / Hard"
+  </source>
+  <dest>
+    *: none
+    mseb: "Fast / Hard"
+  </dest>
+  <voice>
+    *: none
+    mseb: "Fast, Hard"
+  </voice>
+</phrase>

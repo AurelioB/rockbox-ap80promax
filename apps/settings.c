@@ -1068,6 +1068,10 @@ void settings_apply(bool read_disk)
     for(int i = 0; i < EQ_NUM_BANDS; i++) {
         dsp_set_eq_coefs(i, &global_settings.eq_band_settings[i]);
     }
+#ifdef HAVE_MSEB
+    mseb_normalize_settings(&global_settings.mseb);
+    dsp_mseb_apply(&global_settings.mseb);
+#endif
 
     dsp_dither_enable(global_settings.dithering_enabled);
     dsp_surround_set_balance(global_settings.surround_balance);

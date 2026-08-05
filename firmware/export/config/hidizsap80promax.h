@@ -128,6 +128,9 @@
 /* The vendor ES9219C driver exposes the standard HiBy ALSA controls. */
 #define HAVE_HIBY_LINUX_CODEC
 #define HAVE_SW_TONE_CONTROLS
+#ifndef BOOTLOADER
+#define HAVE_MSEB
+#endif
 /*
  * Repeated hardware tests validate wifi_up/down and the paired
  * bt_suspend/bt_resume lifecycle. Consumers must claim a service before

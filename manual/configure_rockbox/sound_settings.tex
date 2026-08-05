@@ -545,6 +545,43 @@ setting names remain compatible and are migrated when saved again.
 
 \end{description}
 
+\opt{mseb}{
+\section{MSEB-compatible Subjective Equalizer}
+MSEB provides ten plain-language controls that shape several deliberately
+overlapping parametric filters. It is independent of Rockbox's parametric EQ,
+so both effects can be enabled at the same time. A value of zero is neutral and
+does not run that control's filters.
+
+The \setting{Adjustment Range} changes the limits used by the editor.
+Accepting a narrower range clamps any existing values to its new limits;
+cancelling the selection leaves them unchanged:
+\setting{Fine-tuning} is $-20$ to $+20$, \setting{Middling} is $-40$ to
+$+40$, and \setting{Excessive} is $-100$ to $+100$. The controls are:
+
+\begin{description}
+  \item[Overall Temperature.] Moves between cool/bright and warm/dark with a
+        smooth full-spectrum tilt.
+  \item[Bass Extension.] Moves the deepest bass between light and deep.
+  \item[Bass Texture.] Moves upper bass between fast and thumpy.
+  \item[Note Thickness.] Moves lower-midrange notes between crisp and thick.
+  \item[Vocals.] Moves vocals between recessed/crisp and forward/radio edit.
+  \item[Female Overtones.] Moves the upper vocal range between detox and vivid.
+  \item[Sibilance LF and HF.] Soften or emphasize the lower and upper parts of
+        vocal sibilance independently.
+  \item[Impulse Response.] Moves transients between slow/musical and fast/hard.
+  \item[Air.] Softens or emphasizes the highest audible frequencies.
+\end{description}
+
+Rockbox applies safety-first peak normalization automatically as controls
+change. It scans every intermediate filter stage through the digital Nyquist
+and reserves an additional 0.1~dB margin. This intentionally prioritizes
+clipping safety over reproducing HiBy's proprietary loudness compensation.
+The effect processes PCM output from 32 through 96~kHz. It is bypassed at
+higher sample rates and by direct native DSD or DoP output, preserving those
+bit-perfect paths. DSD converted to PCM is affected only when its output rate
+falls within the supported range.
+}
+
 \section{Dithering}
 This setting controls the dithering and noise shaping functionality of Rockbox.
 

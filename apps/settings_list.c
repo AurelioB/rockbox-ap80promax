@@ -53,6 +53,9 @@
 #include "rbunicode.h"
 #include "peakmeter.h"
 #include "menus/eq_menu.h"
+#ifdef HAVE_MSEB
+#include "menus/mseb_menu.h"
+#endif
 #if CONFIG_TUNER
 #include "radio.h"
 #endif
@@ -1906,6 +1909,49 @@ const struct settings_list settings[] = {
     EQ_BAND(9, F_DEPRECATED, "eq high shelf filter",
             eq_load_legacy_high_shelf_from_cfg),
 #undef EQ_BAND
+
+#ifdef HAVE_MSEB
+    /* MSEB values remain canonical -100..100. Accepting a narrower range
+     * clamps existing values without rescaling; cancelling leaves them intact. */
+    OFFON_SETTING(F_SOUNDSETTING | F_BANFROMQS, mseb.enabled,
+                  LANG_MSEB_ENABLED, false, "mseb enabled",
+                  mseb_enabled_option_callback),
+    CHOICE_SETTING(F_SOUNDSETTING | F_BANFROMQS | F_CB_ON_SELECT_ONLY |
+                   F_CB_ONLY_IF_CHANGED, mseb.range,
+                   LANG_MSEB_RANGE, MSEB_RANGE_FINE, "mseb range",
+                   "fine,middling,excessive", mseb_range_option_callback,
+                   MSEB_NUM_RANGES, ID2P(LANG_MSEB_FINE),
+                   ID2P(LANG_MSEB_MIDDLING), ID2P(LANG_MSEB_EXCESSIVE)),
+#define MSEB_VALUE_SETTING(field, lang, cfg, callback) \
+    INT_SETTING_NOWRAP(F_SOUNDSETTING | F_BANFROMQS, mseb.values[field], \
+                       lang, 0, cfg, UNIT_INT, MSEB_VALUE_MIN, \
+                       MSEB_VALUE_MAX, 1, NULL, NULL, callback)
+    MSEB_VALUE_SETTING(MSEB_TEMPERATURE, LANG_MSEB_TEMPERATURE,
+                       "mseb temperature", mseb_temperature_option_callback),
+    MSEB_VALUE_SETTING(MSEB_BASS_EXTENSION, LANG_MSEB_BASS_EXTENSION,
+                       "mseb bass extension",
+                       mseb_bass_extension_option_callback),
+    MSEB_VALUE_SETTING(MSEB_BASS_TEXTURE, LANG_MSEB_BASS_TEXTURE,
+                       "mseb bass texture", mseb_bass_texture_option_callback),
+    MSEB_VALUE_SETTING(MSEB_NOTE_THICKNESS, LANG_MSEB_NOTE_THICKNESS,
+                       "mseb note thickness",
+                       mseb_note_thickness_option_callback),
+    MSEB_VALUE_SETTING(MSEB_VOCALS, LANG_MSEB_VOCALS,
+                       "mseb vocals", mseb_vocals_option_callback),
+    MSEB_VALUE_SETTING(MSEB_FEMALE_OVERTONES, LANG_MSEB_FEMALE_OVERTONES,
+                       "mseb female overtones",
+                       mseb_female_overtones_option_callback),
+    MSEB_VALUE_SETTING(MSEB_SIBILANCE_LF, LANG_MSEB_SIBILANCE_LF,
+                       "mseb sibilance lf", mseb_sibilance_lf_option_callback),
+    MSEB_VALUE_SETTING(MSEB_SIBILANCE_HF, LANG_MSEB_SIBILANCE_HF,
+                       "mseb sibilance hf", mseb_sibilance_hf_option_callback),
+    MSEB_VALUE_SETTING(MSEB_IMPULSE_RESPONSE, LANG_MSEB_IMPULSE_RESPONSE,
+                       "mseb impulse response",
+                       mseb_impulse_response_option_callback),
+    MSEB_VALUE_SETTING(MSEB_AIR, LANG_MSEB_AIR,
+                       "mseb air", mseb_air_option_callback),
+#undef MSEB_VALUE_SETTING
+#endif
 
     /* dithering */
     OFFON_SETTING(F_SOUNDSETTING, dithering_enabled, LANG_DITHERING, false,

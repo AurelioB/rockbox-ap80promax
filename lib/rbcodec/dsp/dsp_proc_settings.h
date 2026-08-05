@@ -26,6 +26,9 @@
 #include "crossfeed.h"
 #include "dsp_misc.h"
 #include "eq.h"
+#ifdef HAVE_MSEB
+#include "mseb.h"
+#endif
 #include "pga.h"
 #include "surround.h"
 #include "afr.h"

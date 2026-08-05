@@ -42,6 +42,9 @@ DSP_PROC_DB_START
     DSP_PROC_DB_ITEM(RESAMPLE)      /* resampler providing output frequency */
     DSP_PROC_DB_ITEM(CROSSFEED)     /* stereo crossfeed */
     DSP_PROC_DB_ITEM(EQUALIZER)     /* n-band equalizer */
+#ifdef HAVE_MSEB
+    DSP_PROC_DB_ITEM(MSEB)          /* HiBy-compatible subjective equalizer */
+#endif
 #ifdef HAVE_SW_TONE_CONTROLS
     DSP_PROC_DB_ITEM(TONE_CONTROLS) /* bass and treble */
 #endif
