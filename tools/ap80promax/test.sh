@@ -30,6 +30,14 @@ mkdir -p "$ap80_warble_build"
 "$ap80_warble_build/test-eq-config"
 
 "$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
+    -I"$ap80_rockbox_root/lib/rbcodec/dsp" \
+    "$ap80_rockbox_root/tests/test_mseb.c" \
+    "$ap80_rockbox_root/lib/rbcodec/dsp/mseb_model.c" \
+    "$ap80_rockbox_root/lib/rbcodec/dsp/mseb_math.c" \
+    -lm -o "$ap80_warble_build/test-mseb"
+"$ap80_warble_build/test-mseb"
+
+"$ap80_host_cc" -std=gnu11 -Wall -Wextra -Werror \
     -I"$ap80_rockbox_root/firmware/export" \
     -DTEST_HW_SAMPR_CAPS=0x3fffu \
     "$ap80_rockbox_root/tests/test_pcm_sampr.c" \
@@ -110,6 +118,8 @@ mkdir -p "$ap80_warble_build"
 "$ap80_rockbox_root/tests/run_ap80promax_dsd_tests.sh"
 AP80_WARBLE_BUILD="$ap80_warble_build" \
     "$ap80_rockbox_root/tests/run_dsd_codec_tests.sh"
+AP80_WARBLE_BUILD="$ap80_warble_build" HOSTCC="$ap80_host_cc" \
+    "$ap80_rockbox_root/tests/run_mseb_codec_tests.sh"
 
 AP80_SIM_BUILD_ONLY=1 \
     "$ap80_rockbox_root/tools/ap80promax/simulator.sh"

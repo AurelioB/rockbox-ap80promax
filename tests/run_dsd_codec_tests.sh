@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+LC_ALL=C
+export LC_ALL
+
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 work_dir="${TMPDIR:-/tmp}/rockbox-dsd-tests"
 fixture_tool="$work_dir/make_dsd_fixtures"

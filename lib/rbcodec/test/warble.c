@@ -405,6 +405,18 @@ static void perform_config(void)
                 codec_action = CODEC_ACTION_HALT;
         } else if (!strncmp(name, "loop=", 5)) {
             enable_loop = atoi(val) != 0;
+#ifdef HAVE_MSEB
+        } else if (!strncmp(name, "mseb=", 5)) {
+            global_settings.mseb.enabled = atoi(val) != 0;
+            dsp_mseb_enable(global_settings.mseb.enabled);
+        } else if (!strncmp(name, "mseb", 4) && eq - name == 5 &&
+                   name[4] >= '0' && name[4] <= '9') {
+            int parameter = name[4] - '0';
+            int value = mseb_clamp_value(atoi(val));
+            global_settings.mseb.range = MSEB_RANGE_EXCESSIVE;
+            global_settings.mseb.values[parameter] = value;
+            dsp_mseb_set_value(parameter, value);
+#endif
         } else if (!strncmp(name, "offset=", 7)) {
             ci.id3->offset = atoi(val);
         } else if (!strncmp(name, "rate=", 5)) {
@@ -801,6 +813,9 @@ static void decode_file(const char *input_fn)
     /* Set up global settings */
     memset(&global_settings, 0, sizeof(global_settings));
     global_settings.timestretch_enabled = true;
+#ifdef HAVE_MSEB
+    global_settings.mseb.range = MSEB_RANGE_EXCESSIVE;
+#endif
     dsp_timestretch_enable(true);
 
     /* Open file */
@@ -891,6 +906,10 @@ static void print_help(const char *progname)
                     "  dsdpcm=<0|1>  Force DSD-to-PCM fallback [0]\n"
                     "  halt=<0|1>    Stop decoding if 1 [0]\n"
                     "  loop=<0|1>    Enable/disable looping [0]\n"
+#ifdef HAVE_MSEB
+                    "  mseb=<0|1>    Enable/disable MSEB [0]\n"
+                    "  mseb0..9=<n>  Set MSEB controls from -100 to +100 [0]\n"
+#endif
                     "  offset=<n>    Start at byte offset within the file [0]\n"
                     "  rate=<n>      Multiply rate by <n> [1.0]\n"
                     "  seek=<n>      Seek <n> ms into the file\n"
